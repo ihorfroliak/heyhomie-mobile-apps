@@ -7,10 +7,10 @@
   "dependencies": {
     "@heyhomie/design": "*",
     "@heyhomie/domain": "*",
-    "expo-font": "~12.0.10"
+    "expo-font": "~14.0.12"
   },
   "peerDependencies": {
-    "@expo/vector-icons": "^14.0.4",
+    "@expo/vector-icons": "^15.0.3",
     "react": "*",
     "react-native": "*"
   }
