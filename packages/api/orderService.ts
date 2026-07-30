@@ -121,7 +121,11 @@ export interface OrderService {
 }
 
 let seq = 0;
-const uid = (p: string) => `${p}-${Date.now()}-${++seq}`;
+// Prefer a real UUID (globally unique — no cross-instance collision, not guessable).
+// `globalThis.crypto.randomUUID` exists on Node 20 (the server), web and modern RN
+// (Hermes); the timestamp+counter is only a fallback where it's unavailable. No
+// `node:crypto` import → this module stays RN-safe.
+const uid = (p: string) => `${p}-${globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${++seq}`}`;
 
 /** Max optimistic retries. Losers become idempotent no-ops fast, so this is
  *  ample even for hundreds of contenders on one row. */

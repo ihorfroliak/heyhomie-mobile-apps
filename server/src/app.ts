@@ -62,6 +62,10 @@ export function buildApp(config: ServerConfig, repo: OrderRepo, checkDb: () => P
     // Rate limit BEFORE auth so unauthenticated floods are shed cheaply. Per-IP,
     // in-memory (single-instance; multi-instance needs a shared store — INFRA PENDING).
     const limiter = new RateLimiter({ capacity: config.rateCapacity, refillPerSec: config.rateRefillPerSec });
+    // A much stricter per-IP bucket for the sensitive PRE-AUTH routes — brute-force /
+    // credential-stuffing defense that the generous general limit can't provide.
+    const authLimiter = new RateLimiter({ capacity: config.authRateCapacity, refillPerSec: config.authRateRefillPerSec });
+    const AUTH_THROTTLED = new Set(['/auth/login', '/auth/register', '/auth/password-reset/request', '/auth/accept-invite']);
     app.addHook('onRequest', async (req, reply) => {
         reply.header('x-correlation-id', req.id); // echo so clients can report it
         // SSE hijacks the reply → onResponse never fires for it, so don't count it
@@ -75,6 +79,8 @@ export function buildApp(config: ServerConfig, repo: OrderRepo, checkDb: () => P
         }
         if (req.url.startsWith('/health')) return; // never throttle probes
         if (!limiter.allow(req.ip)) throw new RateLimitedError();
+        // Second, stricter gate for sensitive auth routes (login/register/reset/accept).
+        if (AUTH_THROTTLED.has(req.url.split('?')[0]) && !authLimiter.allow(req.ip)) throw new RateLimitedError();
     });
 
     // Structured completion log + request metrics.

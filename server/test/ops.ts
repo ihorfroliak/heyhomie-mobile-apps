@@ -17,7 +17,7 @@ const H = { authorization: `Bearer ${tok}`, 'content-type': 'application/json' }
 const body = JSON.stringify({ contact: { phone: '600100200' }, cityId: 'krakow', serviceId: 'standard_cleaning' });
 
 async function boot(pool: ReturnType<typeof makePool>) {
-    const cfg = loadServerConfig({ DATABASE_URL: PG_URL, AUTH_SECRET, PORT: '8098', AUTH_DEV_MODE: '1', RATE_CAPACITY: '100000000', RATE_REFILL: '100000000' });
+    const cfg = loadServerConfig({ DATABASE_URL: PG_URL, AUTH_SECRET, PORT: '8098', AUTH_DEV_MODE: '1', RATE_CAPACITY: '100000000', RATE_REFILL: '100000000', AUTH_RATE_CAPACITY: '100000000', AUTH_RATE_REFILL: '100000000' });
     const { app, beginShutdown } = buildApp(cfg, pgOrderRepo(pool), async () => { await pool.query('SELECT 1'); });
     await app.listen({ port: 0, host: '127.0.0.1' });
     return { app, beginShutdown, base: `http://127.0.0.1:${(app.server.address() as { port: number }).port}` };

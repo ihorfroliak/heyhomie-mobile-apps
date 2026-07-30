@@ -60,7 +60,7 @@ async function main() {
     const AUTH_SECRET = 'live-test-secret-16chars-min';
     const bootT0 = Date.now();
     // PORT in config is validated (1..65535); the test listens on an ephemeral port explicitly.
-    const config = loadServerConfig({ DATABASE_URL: 'postgres://unused/live', AUTH_SECRET, PORT: '8091', AUTH_DEV_MODE: '1' });
+    const config = loadServerConfig({ DATABASE_URL: 'postgres://unused/live', AUTH_SECRET, PORT: '8091', AUTH_DEV_MODE: '1', AUTH_RATE_CAPACITY: '1000000', AUTH_RATE_REFILL: '1000000' });
     // Build 18: wire the real crypto (scrypt/HMAC) over a memory auth repo so the
     // full register→login→refresh→logout path runs over genuine HTTP without pg.
     const authDeps = { repo: memoryAuthRepo(), crypto: makeAuthCrypto(AUTH_SECRET, config.accessTtlSec) };

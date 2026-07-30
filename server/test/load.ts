@@ -35,7 +35,7 @@ async function runLoad(task: () => Promise<boolean>, total: number, concurrency:
 async function main() {
     const AUTH_SECRET = 'load-test-secret-16chars';
     // Rate limit raised out of the way — we're measuring the app, not the limiter.
-    const config = loadServerConfig({ DATABASE_URL: PG_URL, AUTH_SECRET, PORT: '8097', AUTH_DEV_MODE: '1', RATE_CAPACITY: '100000000', RATE_REFILL: '100000000' });
+    const config = loadServerConfig({ DATABASE_URL: PG_URL, AUTH_SECRET, PORT: '8097', AUTH_DEV_MODE: '1', RATE_CAPACITY: '100000000', RATE_REFILL: '100000000', AUTH_RATE_CAPACITY: '100000000', AUTH_RATE_REFILL: '100000000' });
     const pool = makePool(PG_URL);
     // clean slate
     await pool.query('DROP TABLE IF EXISTS orders'); await pool.query('DROP TABLE IF EXISTS schema_migrations'); await pool.query('DROP TYPE IF EXISTS order_status');

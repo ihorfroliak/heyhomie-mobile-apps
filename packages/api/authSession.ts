@@ -582,7 +582,11 @@ export function makeAuthService(repo: AuthRepo, crypto: AuthCrypto, opts: AuthSe
 
         async listAuditEvents(auth, limit) {
             if (auth.role !== 'owner' && auth.role !== 'admin') throw new ForbiddenError('insufficient role');
-            return audit.listByTenant(auth.tenantId, limit);
+            // Clamp at the choke point so EVERY AuditPort impl is bounded (the pg port
+            // clamps too; the memory port did not) — a caller-supplied huge/NaN limit
+            // can never trigger an unbounded read.
+            const safe = Number.isFinite(limit) ? Math.max(1, Math.min(Math.floor(limit as number), 500)) : undefined;
+            return audit.listByTenant(auth.tenantId, safe);
         },
 
         async purgeExpired() {

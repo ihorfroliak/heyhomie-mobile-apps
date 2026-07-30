@@ -60,7 +60,7 @@ async function main() {
     // AUTH_DEV_MODE=1 so /auth/password-reset/request echoes the token (local only,
     // same gate as /dev/token) — lets the e2e complete the reset flow without email.
     // SSE_HEARTBEAT_SEC=1 so a revoked stream is cut within ~1s (Build 30) — testable.
-    const config = loadServerConfig({ DATABASE_URL: 'postgres://unused/e2e', AUTH_SECRET, PORT: '8092', AUTH_DEV_MODE: '1', SSE_HEARTBEAT_SEC: '1' });
+    const config = loadServerConfig({ DATABASE_URL: 'postgres://unused/e2e', AUTH_SECRET, PORT: '8092', AUTH_DEV_MODE: '1', SSE_HEARTBEAT_SEC: '1', AUTH_RATE_CAPACITY: '1000000', AUTH_RATE_REFILL: '1000000' });
     // Spy NotificationPort — records every delivery (with its raw token) so the e2e
     // can prove the SAME minted token is handed to delivery.
     const sent: { type: string; email: string; token: string }[] = [];
@@ -236,7 +236,7 @@ async function main() {
             async sendInvitation() { throw new Error('smtp down'); },
             async sendPasswordReset() { throw new Error('smtp down'); },
         };
-        const cfg2 = loadServerConfig({ DATABASE_URL: 'postgres://unused/e2e2', AUTH_SECRET, PORT: '8092', AUTH_DEV_MODE: '1' });
+        const cfg2 = loadServerConfig({ DATABASE_URL: 'postgres://unused/e2e2', AUTH_SECRET, PORT: '8092', AUTH_DEV_MODE: '1', AUTH_RATE_CAPACITY: '1000000', AUTH_RATE_REFILL: '1000000' });
         const { app: app2 } = buildApp(cfg2, memoryOrderRepo(), async () => {}, { repo: memoryAuthRepo(), crypto: makeAuthCrypto(AUTH_SECRET, cfg2.accessTtlSec), notifications: throwPort });
         await app2.listen({ port: 0, host: '127.0.0.1' });
         const b2 = `http://127.0.0.1:${(app2.server.address() as { port: number }).port}`;

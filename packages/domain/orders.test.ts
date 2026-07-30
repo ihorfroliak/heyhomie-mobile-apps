@@ -105,10 +105,15 @@ const cardPay = createPaymentIntent({ orderId: 'o1', method: 'card', amount: 200
 eq('nothing due at booking', cardPay.status, 'awaiting_completion');
 eq('provider is stripe', cardPay.provider, 'stripe');
 ok('no charge scheduled yet', !cardPay.chargeAt);
-// 03:00 the day AFTER completion (checked in local time, TZ-robust).
-const charge = new Date(nextChargeAt('2025-06-01T22:30:00'));
-ok('charge is at 03:00 local', charge.getHours() === 3 && charge.getMinutes() === 0);
-ok('charge is the next calendar day', charge.getDate() === 2 && charge.getMonth() === 5);
+// 03:00 Europe/Warsaw the day AFTER completion — asserted in Warsaw time (the
+// prod TZ), independent of the machine running the test.
+const chargeWarsaw = Object.fromEntries(
+    new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Warsaw', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
+        .formatToParts(new Date(nextChargeAt('2025-06-01T20:30:00.000Z'))) // 22:30 Warsaw (CEST)
+        .map(p => [p.type, p.value]),
+) as Record<string, string>;
+ok('charge is at 03:00 Warsaw', chargeWarsaw.hour === '03' && chargeWarsaw.minute === '00');
+ok('charge is the next calendar day (Warsaw)', chargeWarsaw.year === '2025' && chargeWarsaw.month === '06' && chargeWarsaw.day === '02');
 // Card on file → mission done → due → auto-charged.
 const cardDue = markDue(cardPay, '2025-06-01T14:00:00.000Z');
 eq('completion makes it due', cardDue.status, 'due');

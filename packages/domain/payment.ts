@@ -99,12 +99,42 @@ export const isPaid = (p: PaymentIntent): boolean => p.status === 'paid';
 /** Stripe-hosted payment link for pay-later. Backend returns the real Checkout URL. */
 export const payLaterLink = (orderId: string): string => `https://pay.heyhomie.pl/o/${orderId}`;
 
-/** 03:00 local time on the day AFTER the mission completed — when settlement runs. */
+/** The business timezone — settlement is scheduled in Polish local time. */
+const WARSAW_TZ = 'Europe/Warsaw';
+
+/** UTC-offset (ms) of `tz` at a given instant: (wall-clock read in tz) − instant. */
+function tzOffsetMs(instant: Date, tz: string): number {
+    const p = new Intl.DateTimeFormat('en-US', {
+        timeZone: tz, hourCycle: 'h23',
+        year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit',
+    }).formatToParts(instant);
+    const g = Object.fromEntries(p.map(x => [x.type, x.value])) as Record<string, string>;
+    const asUtc = Date.UTC(+g.year, +g.month - 1, +g.day, +g.hour, +g.minute, +g.second);
+    return asUtc - instant.getTime();
+}
+
+/** The UTC instant for a wall-clock time in `tz`. One offset correction is exact
+ *  away from the DST-transition minute; 03:00 Warsaw is always unambiguous (the
+ *  CET/CEST switches happen at 02:00–02:59), so this is safe for settlement. */
+function zonedWallClockToUtcIso(tz: string, y: number, m: number, d: number, h: number, min: number): string {
+    const guess = Date.UTC(y, m - 1, d, h, min, 0); // treat wall-clock as if UTC
+    const off = tzOffsetMs(new Date(guess), tz);
+    return new Date(guess - off).toISOString();
+}
+
+/**
+ * 03:00 **Europe/Warsaw** on the day AFTER the mission completed — when settlement
+ * runs — returned as a UTC ISO instant. Uses the IANA zone so the charge fires at
+ * 03:00 Polish local time regardless of the SERVER's timezone and across CET/CEST
+ * (the old `setHours(3)` used the container's local TZ → wrong hour on a UTC host).
+ */
 export function nextChargeAt(completedAtIso: string): string {
-    const d = new Date(completedAtIso);
-    d.setDate(d.getDate() + 1);
-    d.setHours(3, 0, 0, 0);
-    return d.toISOString();
+    const completed = new Date(completedAtIso);
+    // Warsaw calendar date of completion.
+    const p = new Intl.DateTimeFormat('en-CA', { timeZone: WARSAW_TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(completed);
+    const g = Object.fromEntries(p.map(x => [x.type, x.value])) as Record<string, string>;
+    // Date.UTC rolls a day-overflow (e.g. the 31st + 1) into the next month/year.
+    return zonedWallClockToUtcIso(WARSAW_TZ, +g.year, +g.month, +g.day + 1, 3, 0);
 }
 
 export interface CreatePaymentInput {
