@@ -23,7 +23,17 @@ export interface OrderBackendPort {
     markPaid(id: string): Promise<void>;
 }
 
-export function makeHttpOrderGateway(port: OrderBackendPort): OrderGateway {
+export type MutationOp = 'confirm' | 'complete' | 'cancel' | 'markPaid';
+
+export interface HttpGatewayOptions {
+    /** Surfaced when a fire-and-reconcile mutation's POST fails. The stream still
+     *  reconciles the cache to server truth, but WITHOUT this the rejection is
+     *  unhandled and the user is never told the write didn't land (silent failure).
+     *  The composition root wires this to a toast / optimistic-revert. */
+    onMutationError?: (info: { op: MutationOp; id: string; error: unknown }) => void;
+}
+
+export function makeHttpOrderGateway(port: OrderBackendPort, opts: HttpGatewayOptions = {}): OrderGateway {
     let cache: Order[] = [];
     let index = new Map<string, Order>();
     const listeners = new Set<() => void>();
@@ -33,6 +43,14 @@ export function makeHttpOrderGateway(port: OrderBackendPort): OrderGateway {
         cache = orders; // new reference each snapshot → useSyncExternalStore-safe
         index = new Map(orders.map(o => [o.id, o]));
         listeners.forEach(l => l());
+    };
+
+    // Fire-and-reconcile: POST async (the SSE stream delivers truth), but ALWAYS
+    // handle the rejection — never leak an unhandled promise, and report the failure
+    // so the UI can surface it instead of falsely showing the action as done.
+    const onMutationError = opts.onMutationError ?? (() => {});
+    const fire = (op: MutationOp, id: string, p: Promise<unknown>): void => {
+        p.catch((error: unknown) => onMutationError({ op, id, error }));
     };
 
     return {
@@ -47,10 +65,11 @@ export function makeHttpOrderGateway(port: OrderBackendPort): OrderGateway {
         getOrder: (id) => index.get(id),
         listOrders: () => cache,
         // Sync mutations: fire-and-reconcile — POST async, stream delivers truth.
-        confirmOrder: (id) => { void port.confirm(id); return index.get(id); },
-        completeOrder: (id, at) => { void port.complete(id, at); return index.get(id); },
-        cancelOrder: (id) => { void port.cancel(id); return index.get(id); },
-        markPaid: (id) => { void port.markPaid(id); return index.get(id); },
+        // Errors are caught + reported (no silent failure, no unhandled rejection).
+        confirmOrder: (id) => { fire('confirm', id, port.confirm(id)); return index.get(id); },
+        completeOrder: (id, at) => { fire('complete', id, port.complete(id, at)); return index.get(id); },
+        cancelOrder: (id) => { fire('cancel', id, port.cancel(id)); return index.get(id); },
+        markPaid: (id) => { fire('markPaid', id, port.markPaid(id)); return index.get(id); },
         settleOrder: async (id, now) => { await port.settle(id, now); return index.get(id); },
         ordersSnapshot: () => cache,
         leadsSnapshot: () => [], // leads are a separate context, out of Build 04 scope

@@ -37,7 +37,11 @@ export class ConfigError extends Error {
     }
 }
 
-const DEFAULT_SECRET = 'dev-secret-change-me';
+// Reject the whole placeholder FAMILY in production — not just the exact literal.
+// The docker-compose default (`dev-secret-change-me-16+`) is ≥16 chars and differed
+// from the old exact literal, so a literal-only check let it pass prod validation
+// and ship a publicly-known HMAC secret (forgeable tokens). Match the prefix instead.
+const PLACEHOLDER_SECRET_RE = /^dev-secret-change-me/i;
 
 /** Validate env → typed config, or throw ConfigError listing EVERY problem. */
 export function loadServerConfig(env: Record<string, string | undefined>): ServerConfig {
@@ -50,8 +54,15 @@ export function loadServerConfig(env: Record<string, string | undefined>): Serve
 
     const authSecret = env.AUTH_SECRET;
     if (!authSecret) issues.push('AUTH_SECRET is required');
-    else if (authSecret.length < 16) issues.push('AUTH_SECRET must be at least 16 characters');
-    else if (production && authSecret === DEFAULT_SECRET) issues.push('AUTH_SECRET must not be the default value in production');
+    else {
+        if (authSecret.length < 16) issues.push('AUTH_SECRET must be at least 16 characters');
+        if (production) {
+            // Any placeholder-family secret (incl. the compose default) is forbidden.
+            if (PLACEHOLDER_SECRET_RE.test(authSecret)) issues.push('AUTH_SECRET must not be the default value in production');
+            // Raise the entropy floor for the HMAC signing key in production.
+            else if (authSecret.length < 32) issues.push('AUTH_SECRET must be at least 32 characters in production');
+        }
+    }
 
     const portRaw = env.PORT ?? '8090';
     const port = Number(portRaw);

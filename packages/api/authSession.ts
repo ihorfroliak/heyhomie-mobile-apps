@@ -148,7 +148,10 @@ export interface AuthRepo {
     findSessionByRefreshHash(hash: string): Promise<AuthSession | undefined>;
     findSessionById(id: string): Promise<AuthSession | undefined>;
     listSessionsByUser(userId: string): Promise<AuthSession[]>;
-    revokeSession(id: string, at: string, reason: RevokedReason): Promise<void>;
+    /** Atomically revoke a still-live session. Returns whether THIS call performed
+     *  the revoke (row was live) — the compare-and-swap gate for refresh rotation:
+     *  only the caller that wins the rotation may mint a new session. */
+    revokeSession(id: string, at: string, reason: RevokedReason): Promise<boolean>;
     /** Theft / global response: revoke every (still-live) session for a user. */
     revokeAllUserSessions(userId: string, at: string, reason: RevokedReason): Promise<void>;
     // Invitations (Build 23/24).
@@ -180,8 +183,10 @@ export interface AuthRepo {
 export interface AuthCrypto {
     /** Fresh opaque id (user id, session id, tenant id). */
     newId(): string;
-    hashPassword(password: string): { hash: string; salt: string };
-    verifyPassword(password: string, hash: string, salt: string): boolean;
+    /** Async so the real impl runs scrypt on the libuv threadpool, NOT the main
+     *  event loop (a sync hash blocks every concurrent request during auth). */
+    hashPassword(password: string): Promise<{ hash: string; salt: string }>;
+    verifyPassword(password: string, hash: string, salt: string): Promise<boolean>;
     /** Mint the existing HMAC access token for an identity. `sid` (Build 29)
      *  binds it to the issuing refresh session for per-session revocation. */
     mintAccess(identity: AuthContext, sid?: string): { token: string; expiresIn: number };
@@ -337,7 +342,7 @@ export function makeAuthService(repo: AuthRepo, crypto: AuthCrypto, opts: AuthSe
             const email = normalizeEmail(input.email);
             const password = requirePassword(input.password, minPw);
             if (await repo.findUserByEmail(email)) throw new ConflictError('email already registered');
-            const { hash, salt } = crypto.hashPassword(password);
+            const { hash, salt } = await crypto.hashPassword(password);
             // Self-registration provisions a business: a new tenant, owned by its
             // creator (role `owner` — Build 23). Owners may later invite members.
             const user: User = {
@@ -361,7 +366,7 @@ export function makeAuthService(repo: AuthRepo, crypto: AuthCrypto, opts: AuthSe
             // Enumeration-safe: ALWAYS run one verify (decoy hash when no user) so
             // unknown-email and wrong-password paths cost the same time. The `!user`
             // check gates the result, not whether the crypto work happens.
-            const okPw = crypto.verifyPassword(password, user?.passwordHash ?? DECOY_HASH, user?.passwordSalt ?? DECOY_SALT);
+            const okPw = await crypto.verifyPassword(password, user?.passwordHash ?? DECOY_HASH, user?.passwordSalt ?? DECOY_SALT);
             // A disabled account is rejected with the SAME generic 401 (no enumeration,
             // no "your account is disabled" leak). Sessions were revoked at disable time.
             if (!user || !okPw || user.disabledAt) throw new UnauthorizedError('invalid credentials');
@@ -393,9 +398,14 @@ export function makeAuthService(repo: AuthRepo, crypto: AuthCrypto, opts: AuthSe
             // user is still active before minting a new token (Build 25).
             const su = await repo.findUserById(session.userId);
             if (!su || su.disabledAt) throw new UnauthorizedError('invalid refresh token');
-            // Single-use rotation: revoke the presented session, issue a fresh one
-            // (carrying its device label forward).
-            await repo.revokeSession(session.id, iso(t), 'rotated');
+            // Single-use rotation as a COMPARE-AND-SWAP: revoke the presented session
+            // and mint a new one ONLY if this call actually performed the revoke. Two
+            // concurrent refreshes of the same token both read revokedAt==null, but the
+            // atomic revoke (WHERE revoked_at IS NULL) lets exactly one win — the loser
+            // must NOT issue a second session (that would break single-use + mask the
+            // reuse-detection under the race). The loser is a benign retry → generic 401.
+            const rotated = await repo.revokeSession(session.id, iso(t), 'rotated');
+            if (!rotated) throw new UnauthorizedError('invalid refresh token');
             return issue({ userId: session.userId, tenantId: session.tenantId, role: session.role }, session.deviceLabel);
         },
 
@@ -443,7 +453,7 @@ export function makeAuthService(repo: AuthRepo, crypto: AuthCrypto, opts: AuthSe
             if (!inv || inv.revokedAt || inv.acceptedAt || new Date(inv.expiresAt).getTime() <= t) {
                 throw new UnauthorizedError('invalid or expired invitation');
             }
-            const { hash, salt } = crypto.hashPassword(password);
+            const { hash, salt } = await crypto.hashPassword(password);
             const user: User = {
                 id: crypto.newId(),
                 tenantId: inv.tenantId, // JOIN the inviter's tenant (from the invite, not the client)
@@ -504,7 +514,7 @@ export function makeAuthService(repo: AuthRepo, crypto: AuthCrypto, opts: AuthSe
             const pr = await repo.findPasswordResetByTokenHash(crypto.hashRefresh(input.resetToken));
             const t = now();
             if (!pr || pr.usedAt || new Date(pr.expiresAt).getTime() <= t) throw new UnauthorizedError('invalid or expired reset token');
-            const { hash, salt } = crypto.hashPassword(password);
+            const { hash, salt } = await crypto.hashPassword(password);
             await repo.updateUserPassword(pr.userId, hash, salt);
             await repo.markPasswordResetUsed(pr.id, iso(t)); // single-use
             // Force a fresh login everywhere: revoke every existing session AND
@@ -641,7 +651,8 @@ export function memoryAuthRepo(): AuthRepo {
         async listSessionsByUser(userId) { return [...sessionsById.values()].filter(s => s.userId === userId); },
         async revokeSession(id, at, reason) {
             const s = sessionsById.get(id);
-            if (s && !s.revokedAt) { s.revokedAt = at; s.revokedReason = reason; }
+            if (s && !s.revokedAt) { s.revokedAt = at; s.revokedReason = reason; return true; }
+            return false; // already revoked / missing → this caller did NOT win the CAS
         },
         async revokeAllUserSessions(userId, at, reason) {
             for (const s of sessionsById.values()) if (s.userId === userId && !s.revokedAt) { s.revokedAt = at; s.revokedReason = reason; }

@@ -24,8 +24,10 @@ services:
     environment:
       DATABASE_URL: postgres://postgres:postgres@db:5432/heyhomie
       PORT: "8090"
-      # Override in a real deploy. Must be >=16 chars; default is a placeholder.
-      AUTH_SECRET: ${AUTH_SECRET:-dev-secret-change-me-16+}
+      # REQUIRED — no default. Compose refuses to start unless AUTH_SECRET is set
+      # (>=32 chars in production). A shipped default here would be a public HMAC
+      # signing key → forgeable access tokens for any tenant/role.
+      AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET to a strong 32+ char secret (e.g. openssl rand -base64 36)}
       # The image runs NODE_ENV=production, which forbids dev mode — so this MUST
       # default to 0 or the container fail-fasts on boot (found in Build 11).
       # For a local dev-token workflow, run outside the prod image (npm run server).

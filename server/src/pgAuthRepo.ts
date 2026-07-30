@@ -118,7 +118,10 @@ export function pgAuthRepo(pool: Pool): AuthRepo {
             return r.rows.map(toSession);
         },
         async revokeSession(id, at, reason) {
-            await pool.query('UPDATE auth_sessions SET revoked_at = $2, revoked_reason = $3 WHERE id = $1 AND revoked_at IS NULL', [id, at, reason]);
+            // Atomic CAS: only a still-live row is revoked. rowCount tells the caller
+            // whether IT won (refresh rotation relies on this to stay single-use).
+            const r = await pool.query('UPDATE auth_sessions SET revoked_at = $2, revoked_reason = $3 WHERE id = $1 AND revoked_at IS NULL', [id, at, reason]);
+            return (r.rowCount ?? 0) > 0;
         },
         async revokeAllUserSessions(userId, at, reason) {
             await pool.query('UPDATE auth_sessions SET revoked_at = $2, revoked_reason = $3 WHERE user_id = $1 AND revoked_at IS NULL', [userId, at, reason]);

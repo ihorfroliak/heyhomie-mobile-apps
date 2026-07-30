@@ -6,27 +6,31 @@
  *  - refresh token: 256-bit random, returned once; only its sha256 is stored.
  */
 import crypto from 'node:crypto';
+import { promisify } from 'node:util';
 import type { AuthContext } from '@heyhomie/api';
 import type { AuthCrypto } from '@heyhomie/api';
 import { signAuthToken } from './auth.js';
 
 const SCRYPT_KEYLEN = 64;
+// Async scrypt runs on the libuv threadpool instead of blocking the event loop —
+// a burst of logins/registrations no longer stalls every concurrent request.
+const scryptAsync = promisify(crypto.scrypt) as (password: string, salt: string, keylen: number) => Promise<Buffer>;
 
 export function makeAuthCrypto(secret: string, accessTtlSec: number): AuthCrypto {
     return {
         newId: () => crypto.randomUUID(),
 
-        hashPassword(password) {
+        async hashPassword(password) {
             const salt = crypto.randomBytes(16).toString('base64');
-            const hash = crypto.scryptSync(password, salt, SCRYPT_KEYLEN).toString('base64');
+            const hash = (await scryptAsync(password, salt, SCRYPT_KEYLEN)).toString('base64');
             return { hash, salt };
         },
 
-        verifyPassword(password, hash, salt) {
+        async verifyPassword(password, hash, salt) {
             const expected = Buffer.from(hash, 'base64');
             let actual: Buffer;
             try {
-                actual = crypto.scryptSync(password, salt, expected.length || SCRYPT_KEYLEN);
+                actual = await scryptAsync(password, salt, expected.length || SCRYPT_KEYLEN);
             } catch {
                 return false; // malformed stored hash
             }

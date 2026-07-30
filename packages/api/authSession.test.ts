@@ -26,8 +26,8 @@ function fakeCrypto(): AuthCrypto {
     let n = 0;
     return {
         newId: () => `id-${++n}`,
-        hashPassword: (pw) => ({ hash: `h(${pw})`, salt: 's' }),
-        verifyPassword: (pw, hash) => `h(${pw})` === hash,
+        hashPassword: async (pw) => ({ hash: `h(${pw})`, salt: 's' }),
+        verifyPassword: async (pw, hash) => `h(${pw})` === hash,
         mintAccess: (identity: AuthContext) => ({ token: `access.${identity.userId}.${identity.tenantId}.${identity.role}`, expiresIn: 900 }),
         newRefresh: () => { const tok = `refresh-${++n}`; return { token: tok, hash: `H(${tok})` }; },
         hashRefresh: (tok) => `H(${tok})`,
