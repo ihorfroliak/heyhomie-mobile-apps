@@ -4,6 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Read [docs/PROJECT_MEMORY.md](docs/PROJECT_MEMORY.md) first** — the compact entry point (current state, frozen boundaries, standards index, what's left, reading order). Then [docs/PROJECT_STATE.md](docs/PROJECT_STATE.md) (architecture + engineering standards) and [docs/INDEX.md](docs/INDEX.md) (file-by-file map). This file is the short orientation.
 
+**Cross-repo source of truth (shared with the client web site):** before changing any pricing, brand token, product copy or cleaning-domain rule, read [`../heyhomie-shared/`](../heyhomie-shared/README.md) — `PRODUCT.md`, `DOMAIN_RULES.md`, `BRAND.md`, `ROADMAP.md`. HeyHomie is one product across four surfaces (this mobile monorepo + `heyhomie-web`); pricing/brand/domain changes go **into `heyhomie-shared` first**, then here. `packages/domain` and `packages/design` are the mobile *implementations* of that shared canon — keep them matched.
+
 **Project memory rules** (the repo docs ARE the persistent memory):
 - PROJECT_MEMORY → PROJECT_STATE → OPEN_ITEMS are the first sources of truth. OPEN_ITEMS drives the next Build.
 - Completed Build history is archived in [docs/archive/](docs/archive/README.md) — **do NOT re-audit closed Builds** when gate/typecheck/CI are green; trust the record. Full-project audits only when memory is stale/contradictory or a major architectural change is proposed; otherwise do targeted audits.

@@ -3,16 +3,21 @@
  * Single source of truth for the brand look so every surface stays consistent.
  */
 
+// Brand tokens migrated to the shared canon (heyhomie-shared/BRAND.md, 2026-07):
+// the refreshed web palette is now the single brand for all four surfaces. Keys are
+// kept (426 refs across apps/ui) — only the values changed. Canon name in comments.
 export const colors = {
     // Brand
-    primary: '#14133A', // dark navy — text & primary surfaces
-    salad: '#36F0C7', // teal/mint — primary CTA
-    pink: '#FF3C87', // accent / highlights
-    blue: '#5465FC', // links, icons, admin accent
-    grey: '#727189', // secondary text
-    bgLight: '#F4F7FF', // light surface / fills
+    primary: '#141338', // ink — text & primary surfaces (was #14133A)
+    salad: '#77ECC8', // mint — primary CTA (canon 'mint'; was #36F0C7)
+    pink: '#EB4E87', // accent / highlights (was #FF3C87)
+    blue: '#414483', // indigo — links, icons, admin accent (was #5465FC)
+    grey: '#52516B', // slate — secondary text (was #727189)
+    bgLight: '#F6FBFF', // light surface / fills (was #F4F7FF)
     white: '#FFFFFF',
-    border: '#E7EBF6',
+    border: '#EDEEEF', // (was #E7EBF6)
+    yellow: '#F4D779', // canon extra — badges / highlights
+    peri: '#C8CFF0', // canon extra — periwinkle tint
 
     // Semantic
     success: '#1D9E75',
@@ -36,11 +41,16 @@ export const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 } as cons
 
 export const radii = { sm: 8, md: 12, lg: 16, pill: 999 } as const;
 
+// Canon type (heyhomie-shared/BRAND.md): Manrope everywhere, Montserrat wordmark.
+// NOTE: no font is bundled in the apps yet (nothing calls expo-font/useFonts), so
+// these currently fall back to the system font — same as Quicksand/Lato did before.
+// To actually render Manrope: add @expo-google-fonts/manrope + useFonts in _layout.
 export const typography = {
-    fontHeading: 'Quicksand',
-    fontBody: 'Lato',
+    fontHeading: 'Manrope', // was 'Quicksand'
+    fontBody: 'Manrope', // was 'Lato'
+    fontAccent: 'Montserrat', // logo wordmark ("homie")
     sizes: { caption: 11, small: 13, body: 15, h3: 17, h2: 22, h1: 28 },
-    weights: { regular: '400', medium: '500', bold: '700' },
+    weights: { regular: '400', medium: '500', semibold: '600', bold: '700', extrabold: '800' },
 } as const;
 
 export const shadow = {
