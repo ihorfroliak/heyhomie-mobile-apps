@@ -53,17 +53,21 @@ export function computeBaseMinutes(params: CleaningParams): number {
 /* Add-ons                                                             */
 /* ------------------------------------------------------------------ */
 
+// Canonical add-on ids — aligned to heyhomie-shared/DOMAIN_RULES.md §3 (the web
+// calculator set) so web + mobile speak the same add-on vocabulary. Prices are NOT
+// here (they come from the backend per the pricing decision); this carries only the
+// planning minutes + the included-in-general flag the time calculator/UI need.
 export type AddOnId =
-    | 'extra_hours'
-    | 'ironing'
-    | 'windows'
-    | 'balcony'
-    | 'dishes_large'
-    | 'fridge'
-    | 'microwave'
     | 'oven'
+    | 'fridge'
     | 'hood'
-    | 'ventilator';
+    | 'cabinets'
+    | 'microwave'
+    | 'bins'
+    | 'balcony'
+    | 'windows'
+    | 'ironing'
+    | 'hours';
 
 export type AddOnPricing = 'flat' | 'per_unit' | 'per_hour';
 
@@ -83,14 +87,73 @@ export interface AddOn {
     includedInGeneral: boolean;
 }
 
+// Order + ids + minutes + includedInGeneral match DOMAIN_RULES.md §3. The seven
+// includedInGeneral add-ons collapse out of the list on GENERAL (already covered);
+// windows/ironing/hours stay on every plan. Minutes feed the time calculator (§5).
 export const addOns: AddOn[] = [
     {
-        id: 'extra_hours',
-        label: L('Dodatkowe godziny', 'Additional hours', 'Додаткові години'),
-        description: L('Wydłuż sprzątanie o dodatkowy czas', 'Extend the cleaning by extra time', 'Подовжити прибирання на додатковий час'),
-        pricing: 'per_hour',
-        unitLabel: L('godz.', 'hour', 'год'),
-        addedMinutesPerUnit: 60,
+        id: 'oven',
+        label: L('Mycie piekarnika', 'Oven cleaning', 'Миття духовки'),
+        description: L('Wyczyszczenie piekarnika wewnątrz', 'Cleaning the oven inside', 'Чищення духовки всередині'),
+        pricing: 'flat',
+        addedMinutesPerUnit: 30,
+        includedInGeneral: true,
+    },
+    {
+        id: 'fridge',
+        label: L('Mycie lodówki', 'Fridge cleaning', 'Миття холодильника'),
+        description: L('Umycie wnętrza lodówki', 'Cleaning the inside of the fridge', 'Миття всередині холодильника'),
+        pricing: 'flat',
+        addedMinutesPerUnit: 25,
+        includedInGeneral: true,
+    },
+    {
+        id: 'hood',
+        label: L('Mycie okapu', 'Cooker hood cleaning', 'Миття витяжки'),
+        description: L('Umycie okapu wraz z filtrami tłuszczowymi', 'Cleaning the cooker hood incl. grease filters', 'Миття витяжки разом із жировими фільтрами'),
+        pricing: 'flat',
+        addedMinutesPerUnit: 30,
+        includedInGeneral: true,
+    },
+    {
+        id: 'cabinets',
+        label: L('Szafki w środku', 'Cabinets inside', 'Шафки всередині'),
+        description: L('Umycie i uporządkowanie wnętrza szafek i szuflad', 'Cleaning and tidying the inside of cabinets and drawers', 'Миття та впорядкування всередині шафок і шухляд'),
+        pricing: 'flat',
+        addedMinutesPerUnit: 30,
+        includedInGeneral: true,
+    },
+    {
+        id: 'microwave',
+        label: L('Mycie mikrofalówki', 'Microwave cleaning', 'Миття мікрохвильовки'),
+        description: L('Wyczyszczenie mikrofalówki wewnątrz', 'Cleaning the microwave inside', 'Чищення мікрохвильовки всередині'),
+        pricing: 'flat',
+        addedMinutesPerUnit: 15,
+        includedInGeneral: true,
+    },
+    {
+        id: 'bins',
+        label: L('Wyczyszczenie koszy', 'Bins cleaned', 'Чищення сміттєвих кошиків'),
+        description: L('Umycie i dezynfekcja koszy na śmieci', 'Washing and disinfecting the waste bins', 'Миття та дезінфекція сміттєвих кошиків'),
+        pricing: 'flat',
+        addedMinutesPerUnit: 15,
+        includedInGeneral: true,
+    },
+    {
+        id: 'balcony',
+        label: L('Balkon / taras', 'Balcony / terrace', 'Балкон / тераса'),
+        description: L('Umycie podłogi i barierek balkonu', 'Cleaning balcony floor and railings', 'Миття підлоги та поручнів балкона'),
+        pricing: 'flat',
+        addedMinutesPerUnit: 25,
+        includedInGeneral: true,
+    },
+    {
+        id: 'windows',
+        label: L('Mycie okien', 'Window washing', 'Миття вікон'),
+        description: L('Policz każde skrzydło lub taflę szkła wydzieloną ramą', 'Count each sash or glass pane separated by frames', 'Рахуйте кожну стулку або скляну панель, відокремлену рамою'),
+        pricing: 'per_unit',
+        unitLabel: L('okno', 'window', 'вікно'),
+        addedMinutesPerUnit: 20,
         includedInGeneral: false,
     },
     {
@@ -103,69 +166,13 @@ export const addOns: AddOn[] = [
         includedInGeneral: false,
     },
     {
-        id: 'windows',
-        label: L('Mycie okien', 'Window washing', 'Миття вікон'),
-        description: L('Policz każde skrzydło lub taflę szkła wydzieloną ramą', 'Count each sash or glass pane separated by frames', 'Рахуйте кожну стулку або скляну панель, відокремлену рамою'),
-        pricing: 'per_unit',
-        unitLabel: L('okno', 'window', 'вікно'),
-        addedMinutesPerUnit: 30,
-        includedInGeneral: false,
-    },
-    {
-        id: 'balcony',
-        label: L('Balkon / taras', 'Balcony / terrace', 'Балкон / тераса'),
-        description: L('Umycie podłogi i barierek balkonu', 'Cleaning balcony floor and railings', 'Миття підлоги та поручнів балкона'),
-        pricing: 'flat',
-        addedMinutesPerUnit: 30,
-        includedInGeneral: false,
-    },
-    {
-        id: 'dishes_large',
-        label: L('Mycie naczyń (duża ilość)', 'Dishes (large load)', 'Миття посуду (велика кількість)'),
-        description: L('Załadunek zmywarki jest w cenie; duża ilość lub tłuste garnki i sprzęty — osobno', 'Loading the dishwasher is free; a large load or greasy pots and appliances is extra', 'Завантаження посудомийки безкоштовно; велика кількість або жирні каструлі та техніка — окремо'),
-        pricing: 'flat',
-        addedMinutesPerUnit: 30,
-        includedInGeneral: false,
-    },
-    {
-        id: 'fridge',
-        label: L('Mycie lodówki', 'Fridge cleaning', 'Миття холодильника'),
-        description: L('Umycie wnętrza lodówki', 'Cleaning the inside of the fridge', 'Миття всередині холодильника'),
-        pricing: 'flat',
+        id: 'hours',
+        label: L('Dodatkowa godzina', 'Extra hour', 'Додаткова година'),
+        description: L('Wydłuż sprzątanie o dodatkowy czas', 'Extend the cleaning by extra time', 'Подовжити прибирання на додатковий час'),
+        pricing: 'per_hour',
+        unitLabel: L('godz.', 'hour', 'год'),
         addedMinutesPerUnit: 60,
-        includedInGeneral: true,
-    },
-    {
-        id: 'oven',
-        label: L('Mycie piekarnika', 'Oven cleaning', 'Миття духовки'),
-        description: L('Wyczyszczenie piekarnika wewnątrz', 'Cleaning the oven inside', 'Чищення духовки всередині'),
-        pricing: 'flat',
-        addedMinutesPerUnit: 60,
-        includedInGeneral: true,
-    },
-    {
-        id: 'hood',
-        label: L('Mycie okapu', 'Cooker hood cleaning', 'Миття витяжки'),
-        description: L('Umycie okapu wraz z filtrami tłuszczowymi', 'Cleaning the cooker hood incl. grease filters', 'Миття витяжки разом із жировими фільтрами'),
-        pricing: 'flat',
-        addedMinutesPerUnit: 60,
-        includedInGeneral: true,
-    },
-    {
-        id: 'microwave',
-        label: L('Mycie mikrofalówki', 'Microwave cleaning', 'Миття мікрохвильовки'),
-        description: L('Wyczyszczenie mikrofalówki wewnątrz', 'Cleaning the microwave inside', 'Чищення мікрохвильовки всередині'),
-        pricing: 'flat',
-        addedMinutesPerUnit: 15,
-        includedInGeneral: true,
-    },
-    {
-        id: 'ventilator',
-        label: L('Wentylator / kratka went.', 'Extractor fan / vent grille', 'Вентилятор / вент. решітка'),
-        description: L('Czyszczenie wentylatora lub kratki wentylacyjnej', 'Cleaning the extractor fan or vent grille', 'Чищення вентилятора або вентиляційної решітки'),
-        pricing: 'flat',
-        addedMinutesPerUnit: 15,
-        includedInGeneral: true,
+        includedInGeneral: false,
     },
 ];
 

@@ -44,7 +44,8 @@ const makeMission = (over: Partial<Mission> = {}): Mission => ({
 eq('1 bath + 1 kitchen + 1 room + corridor = 3h', computeBaseMinutes({ rooms: 1, kitchens: 1, bathrooms: 1 }), 180);
 eq('3 rooms + 1 kitchen + 2 baths', computeBaseMinutes({ rooms: 3, kitchens: 1, bathrooms: 2 }), 300);
 eq('empty still clamps to 3h minimum', computeBaseMinutes({ rooms: 0, kitchens: 0, bathrooms: 0 }), 180);
-eq('standard + 2 windows adds 60 min', estimateMissionMinutes({ rooms: 1, kitchens: 1, bathrooms: 1 }, [{ id: 'windows', quantity: 2 }]), 240);
+// windows = 20 min/sash (canon DOMAIN_RULES §3): base 180 + 2·20 = 220.
+eq('standard + 2 windows adds 40 min', estimateMissionMinutes({ rooms: 1, kitchens: 1, bathrooms: 1 }, [{ id: 'windows', quantity: 2 }]), 220);
 
 // --- add-ons per plan ---
 ok('general hides fridge (already included)', !addOnsFor('general').some(a => a.id === 'fridge'));
