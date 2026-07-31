@@ -9,6 +9,7 @@ import {
     makeOrderService, makeAuthService, fromUnknown, AppError, RateLimiter, RateLimitedError, IdempotencyStore, RevocationIndex,
     type AuthContext, type AuthRepo, type AuthCrypto, type NotificationPort, type AuditPort, type Role, type OrderRepo, type ServerConfig, type SubmitOrderResult,
 } from '@heyhomie/api';
+import { CLEANING_PRICE_TABLE } from '@heyhomie/domain';
 import { registerRoutes, registerStream, registerAuthRoutes } from './routes.js';
 import { authenticateRequest, signAuthToken } from './auth.js';
 import { makeServerMetrics, type ServerMetrics } from './metrics.js';
@@ -154,6 +155,10 @@ export function buildApp(config: ServerConfig, repo: OrderRepo, checkDb: () => P
 
     // Prometheus scrape endpoint — counts + latencies only (no ids/PII/secrets).
     app.get('/metrics', async (_req, reply) => reply.type('text/plain; version=0.0.4').send(metrics.registry.render()));
+
+    // Canonical cleaning price table (DOMAIN_RULES §1–§7) — PUBLIC, no tenant/secrets.
+    // The single source clients read so web + mobile show identical prices. Cacheable.
+    app.get('/pricing/cleaning', async (_req, reply) => reply.header('cache-control', 'public, max-age=300').send(CLEANING_PRICE_TABLE));
 
     if (config.devMode) {
         app.get<{ Querystring: { tenant?: string; user?: string; role?: string } }>('/dev/token', async (req) => {

@@ -52,7 +52,8 @@ const PRE_AUTH_ROUTES = new Set([
     '/auth/password-reset/request', '/auth/password-reset/confirm', // Build 24: pre-auth by nature
 ]);
 const isPublic = (url: string) => {
-    if (url.startsWith('/health') || url.startsWith('/metrics') || url.startsWith('/dev/token')) return true;
+    // /pricing/* is public canon (the cleaning price table) — no tenant, no secrets.
+    if (url.startsWith('/health') || url.startsWith('/metrics') || url.startsWith('/dev/token') || url.startsWith('/pricing')) return true;
     const path = url.split('?')[0];
     return PRE_AUTH_ROUTES.has(path);
 };

@@ -11,7 +11,8 @@
   "dependencies": {
     "@heyhomie/api": "*",
     "fastify": "^4.28.0",
-    "pg": "^8.12.0"
+    "pg": "^8.12.0",
+    "@heyhomie/domain": "*"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

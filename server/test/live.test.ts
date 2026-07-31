@@ -77,6 +77,10 @@ async function main() {
     console.log(`  [perf] first request latency ${Date.now() - t1st}ms`);
     eq('live probe 200 public', live.status, 200);
     eq('ready probe 200 public', (await fetch(`${base}/health/ready`)).status, 200);
+    // Canonical price table — public (no auth) + carries the canon base price.
+    const price = await fetch(`${base}/pricing/cleaning`);
+    eq('pricing/cleaning 200 public (no auth)', price.status, 200);
+    eq('pricing table standard base = 119', ((await price.json()) as { plans: { standard: { base: number } } }).plans.standard.base, 119);
     const noTok = await fetch(`${base}/orders`);
     eq('no token → 401', noTok.status, 401);
     const body401 = await noTok.json() as Record<string, unknown>;
