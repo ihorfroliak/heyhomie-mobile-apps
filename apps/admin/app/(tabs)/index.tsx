@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { orderGateway, demoAvailableMissions, demoAnalyticsMissions } from '@heyhomie/api';
-import { dashboardSummary, formatDuration } from '@heyhomie/domain';
+import { dashboardSummary, formatDuration, formatMoney, orderKpis } from '@heyhomie/domain';
 import { colors, spacing, typography } from '@heyhomie/design';
 import { Card } from '@heyhomie/ui';
 
@@ -31,10 +31,10 @@ const MANAGE_LINKS: { href: string; label: string; icon: IconName }[] = [
 export default function Dashboard() {
     const router = useRouter();
     const [showMore, setShowMore] = useState(false);
-    // LIVE order counts from the gateway (Local offline / HTTP when wired).
+    // LIVE orders from the gateway (Local offline / HTTP when wired) → real KPIs.
     const orders = useSyncExternalStore(orderGateway.subscribe, orderGateway.ordersSnapshot);
-    const count = (s: string) => orders.filter(o => o.status === s).length;
-    const confirmed = count('confirmed');
+    const k = orderKpis(orders);
+    const confirmed = k.confirmed;
     // Secondary "additional metrics" stay on demo aggregates (no backend domain yet).
     const extra = dashboardSummary([...demoAnalyticsMissions, ...demoAvailableMissions], { capacityMinutes: 3 * 30 * 60 }).secondary;
 
@@ -46,10 +46,19 @@ export default function Dashboard() {
             </View>
             <ScrollView contentContainerStyle={styles.body}>
                 <View style={styles.grid}>
-                    <Kpi icon="briefcase-outline" label="Orders" value={String(orders.length)} />
+                    <Kpi icon="briefcase-outline" label="Orders" value={String(k.total)} />
                     <Kpi icon="pulse-outline" label="Confirmed" value={String(confirmed)} accent={colors.blue} />
-                    <Kpi icon="checkmark-done-outline" label="Paid" value={String(count('paid'))} accent={colors.success} />
-                    <Kpi icon="close-circle-outline" label="Canceled" value={String(count('canceled'))} />
+                    <Kpi icon="checkmark-done-outline" label="Paid" value={String(k.paid)} accent={colors.success} />
+                    <Kpi icon="close-circle-outline" label="Canceled" value={String(k.canceled)} />
+                </View>
+
+                {/* Money — real amounts off the same live orders. */}
+                <Txt style={styles.section}>Money</Txt>
+                <View style={styles.grid}>
+                    <Kpi icon="wallet-outline" label="Collected" value={formatMoney(k.revenue, k.currency, 'en')} accent={colors.success} />
+                    <Kpi icon="hourglass-outline" label="Outstanding" value={formatMoney(k.outstanding, k.currency, 'en')} accent={colors.warning} />
+                    <Kpi icon="trending-up-outline" label="Avg order" value={formatMoney(k.avgOrder, k.currency, 'en')} />
+                    <Kpi icon="remove-circle-outline" label="Cancel rate" value={`${k.cancelRate}%`} accent={k.cancelRate > 20 ? colors.danger : undefined} />
                 </View>
 
                 <Txt style={styles.section}>Needs attention</Txt>

@@ -63,7 +63,14 @@ export type Segment = 'champion' | 'loyal' | 'new' | 'at_risk' | 'lost';
  *  new       — 1 order, within 30 days
  *  loyal     — everything else active
  */
-export function segmentFor(p: ClientProfile, refIso: string): Segment {
+/** The only fields segmentation actually needs — so order-derived profiles
+ *  (`OrderClientProfile`) can be segmented too, not just mission-derived ones. */
+export interface Segmentable {
+    orders: number;
+    lastOrderAt?: string;
+}
+
+export function segmentFor(p: Segmentable, refIso: string): Segment {
     if (!p.lastOrderAt) return 'lost';
     const recency = daysBetween(p.lastOrderAt, refIso);
     if (recency > 180) return 'lost';
@@ -73,7 +80,7 @@ export function segmentFor(p: ClientProfile, refIso: string): Segment {
     return 'loyal';
 }
 
-export function segmentCounts(profiles: ClientProfile[], refIso: string): Record<Segment, number> {
+export function segmentCounts(profiles: Segmentable[], refIso: string): Record<Segment, number> {
     const counts: Record<Segment, number> = { champion: 0, loyal: 0, new: 0, at_risk: 0, lost: 0 };
     for (const p of profiles) counts[segmentFor(p, refIso)] += 1;
     return counts;
