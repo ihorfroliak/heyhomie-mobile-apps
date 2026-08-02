@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ScrollView, Text, View, StyleSheet } from 'react-native';
+import { ScrollView, View, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -27,9 +28,9 @@ export default function AdminMissionDetail() {
             <Stack.Screen options={{ headerShown: true, title: `Mission #${mission.id}` }} />
             <ScrollView contentContainerStyle={styles.body}>
                 <View style={styles.row}>
-                    <Text style={styles.title}>
+                    <Txt style={styles.title}>
                         {mission.plan === 'general' ? 'General' : 'Standard'} · {formatDuration(mission.durationMinutes)}
-                    </Text>
+                    </Txt>
                     <StatusBadge status={mission.status} locale={locale} />
                 </View>
 
@@ -45,19 +46,19 @@ export default function AdminMissionDetail() {
                     <>
                         <View style={styles.sectionRow}>
                             <Ionicons name="people-outline" size={14} color={colors.grey} />
-                            <Text style={styles.sectionText}>Available &amp; nearby</Text>
+                            <Txt style={styles.sectionText}>Available &amp; nearby</Txt>
                         </View>
                         {candidates.map(h => (
                             <View key={h.id} style={styles.candidate}>
                                 <View style={styles.cLeft}>
                                     <View style={styles.avatar}>
-                                        <Text style={styles.avatarText}>{h.firstName.slice(0, 2).toUpperCase()}</Text>
+                                        <Txt style={styles.avatarText}>{h.firstName.slice(0, 2).toUpperCase()}</Txt>
                                     </View>
                                     <View>
-                                        <Text style={styles.cName}>{h.firstName}</Text>
+                                        <Txt style={styles.cName}>{h.firstName}</Txt>
                                         <View style={styles.cRatingRow}>
                                             <Ionicons name="star" size={11} color={colors.warning} />
-                                            <Text style={styles.cRating}>{h.rating?.toFixed(1)}</Text>
+                                            <Txt style={styles.cRating}>{h.rating?.toFixed(1)}</Txt>
                                         </View>
                                     </View>
                                 </View>
@@ -69,7 +70,7 @@ export default function AdminMissionDetail() {
                 ) : (
                     <View style={styles.lockedRow}>
                         <Ionicons name="lock-closed-outline" size={13} color={colors.grey} />
-                        <Text style={styles.locked}>Attributes are locked after a homie is found (Rails↔Go sync). Status: {mission.status}.</Text>
+                        <Txt style={styles.locked}>Attributes are locked after a homie is found (Rails↔Go sync). Status: {mission.status}.</Txt>
                     </View>
                 )}
             </ScrollView>
@@ -81,9 +82,9 @@ const Kv = ({ icon, label, value }: { icon: keyof typeof Ionicons.glyphMap; labe
     <View style={styles.kv}>
         <View style={styles.kLeft}>
             <Ionicons name={icon} size={15} color={colors.grey} />
-            <Text style={styles.k}>{label}</Text>
+            <Txt style={styles.k}>{label}</Txt>
         </View>
-        <Text style={styles.v}>{value}</Text>
+        <Txt style={styles.v}>{value}</Txt>
     </View>
 );
 

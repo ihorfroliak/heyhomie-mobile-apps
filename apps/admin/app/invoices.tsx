@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ScrollView, Text, View, Pressable, StyleSheet } from 'react-native';
+import { ScrollView, View, Pressable, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -49,20 +50,20 @@ export default function Invoices() {
                     <Kpi icon="alert-circle-outline" label="Overdue" value={money(s.overdue)} color={s.overdue > 0 ? colors.danger : colors.primary} />
                 </View>
                 <View style={styles.statusRow}>
-                    <View style={styles.statusDot}><View style={[styles.dot, { backgroundColor: colors.success }]} /><Text style={[styles.statusPill, { color: colors.success }]}>Paid {money(s.paid)}</Text></View>
-                    <View style={styles.statusDot}><View style={[styles.dot, { backgroundColor: colors.warning }]} /><Text style={[styles.statusPill, { color: colors.warning }]}>Unpaid {money(s.unpaid)}</Text></View>
-                    <View style={styles.statusDot}><View style={[styles.dot, { backgroundColor: colors.danger }]} /><Text style={[styles.statusPill, { color: colors.danger }]}>Overdue {money(s.overdue)}</Text></View>
+                    <View style={styles.statusDot}><View style={[styles.dot, { backgroundColor: colors.success }]} /><Txt style={[styles.statusPill, { color: colors.success }]}>Paid {money(s.paid)}</Txt></View>
+                    <View style={styles.statusDot}><View style={[styles.dot, { backgroundColor: colors.warning }]} /><Txt style={[styles.statusPill, { color: colors.warning }]}>Unpaid {money(s.unpaid)}</Txt></View>
+                    <View style={styles.statusDot}><View style={[styles.dot, { backgroundColor: colors.danger }]} /><Txt style={[styles.statusPill, { color: colors.danger }]}>Overdue {money(s.overdue)}</Txt></View>
                 </View>
 
                 <Pressable style={styles.jpkBtn} onPress={onExportJpk} disabled={busy === 'jpk'}>
                     <Ionicons name="download-outline" size={15} color={colors.primary} />
-                    <Text style={styles.jpkText}>{busy === 'jpk' ? 'Preparing…' : 'Export JPK_V7 (May 2025) — draft'}</Text>
+                    <Txt style={styles.jpkText}>{busy === 'jpk' ? 'Preparing…' : 'Export JPK_V7 (May 2025) — draft'}</Txt>
                 </Pressable>
 
                 <View style={styles.filters}>
                     {(['all', 'stripe', 'fakturownia'] as Filter[]).map(f => (
                         <Pressable key={f} onPress={() => setFilter(f)} style={[styles.fchip, filter === f && styles.fchipOn]}>
-                            <Text style={[styles.fchipText, filter === f && styles.fchipTextOn]}>{f === 'all' ? 'All' : SOURCE[f]}</Text>
+                            <Txt style={[styles.fchipText, filter === f && styles.fchipTextOn]}>{f === 'all' ? 'All' : SOURCE[f]}</Txt>
                         </Pressable>
                     ))}
                 </View>
@@ -72,21 +73,21 @@ export default function Invoices() {
                     return (
                         <Card key={inv.id} style={styles.card}>
                             <View style={styles.row}>
-                                <Text style={styles.num}>{inv.number}</Text>
+                                <Txt style={styles.num}>{inv.number}</Txt>
                                 <View style={[styles.badge, { backgroundColor: `${STATUS[st].color}1A` }]}>
-                                    <Text style={[styles.badgeText, { color: STATUS[st].color }]}>{STATUS[st].label}</Text>
+                                    <Txt style={[styles.badgeText, { color: STATUS[st].color }]}>{STATUS[st].label}</Txt>
                                 </View>
                             </View>
                             <View style={styles.metaRow}>
                                 <Ionicons name="person-outline" size={12} color={colors.grey} />
-                                <Text style={styles.meta}>
+                                <Txt style={styles.meta}>
                                     {inv.clientName} · {SOURCE[inv.source]} · {inv.issueDate}
                                     {inv.dueDate ? ` · due ${inv.dueDate}` : ''}
-                                </Text>
+                                </Txt>
                             </View>
                             <View style={styles.amounts}>
-                                <Text style={styles.amtMeta}>net {money(inv.net)} · VAT {money(inv.vat)}</Text>
-                                <Text style={styles.gross}>{money(inv.gross)}</Text>
+                                <Txt style={styles.amtMeta}>net {money(inv.net)} · VAT {money(inv.vat)}</Txt>
+                                <Txt style={styles.gross}>{money(inv.gross)}</Txt>
                             </View>
                             <Pressable
                                 style={styles.pdfBtn}
@@ -97,7 +98,7 @@ export default function Invoices() {
                                 }}
                             >
                                 <Ionicons name="document-outline" size={13} color={colors.primary} />
-                                <Text style={styles.pdfText}>{busy === inv.id ? 'Preparing…' : 'Export PDF'}</Text>
+                                <Txt style={styles.pdfText}>{busy === inv.id ? 'Preparing…' : 'Export PDF'}</Txt>
                             </Pressable>
                         </Card>
                     );
@@ -110,8 +111,8 @@ export default function Invoices() {
 const Kpi = ({ icon, label, value, color }: { icon: keyof typeof Ionicons.glyphMap; label: string; value: string; color?: string }) => (
     <Card variant="fill" style={styles.kpi}>
         <Ionicons name={icon} size={15} color={color ?? colors.grey} />
-        <Text style={styles.kLabel}>{label}</Text>
-        <Text style={[styles.kValue, color ? { color } : null]}>{value}</Text>
+        <Txt style={styles.kLabel}>{label}</Txt>
+        <Txt style={[styles.kValue, color ? { color } : null]}>{value}</Txt>
     </Card>
 );
 

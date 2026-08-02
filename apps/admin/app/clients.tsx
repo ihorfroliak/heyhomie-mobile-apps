@@ -1,5 +1,6 @@
 import React from 'react';
-import { ScrollView, Text, View, Pressable, StyleSheet } from 'react-native';
+import { ScrollView, View, Pressable, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -33,9 +34,9 @@ export default function Clients() {
                         .filter(s => counts[s] > 0)
                         .map(s => (
                             <View key={s} style={[styles.chip, { backgroundColor: `${SEGMENT_META[s].color}1A` }]}>
-                                <Text style={[styles.chipText, { color: SEGMENT_META[s].color }]}>
+                                <Txt style={[styles.chipText, { color: SEGMENT_META[s].color }]}>
                                     {SEGMENT_META[s].label} · {counts[s]}
-                                </Text>
+                                </Txt>
                             </View>
                         ))}
                 </View>
@@ -46,24 +47,24 @@ export default function Clients() {
                         <Pressable key={p.id} onPress={() => router.push(`/client/${p.id}`)}>
                             <Card style={styles.row}>
                                 <View style={styles.avatar}>
-                                    <Text style={styles.avatarText}>
+                                    <Txt style={styles.avatarText}>
                                         {p.firstName.slice(0, 1)}
                                         {p.lastInitial ?? ''}
-                                    </Text>
+                                    </Txt>
                                 </View>
                                 <View style={{ flex: 1 }}>
-                                    <Text style={styles.name}>
+                                    <Txt style={styles.name}>
                                         {p.firstName} {p.lastInitial ? `${p.lastInitial}.` : ''}
-                                    </Text>
+                                    </Txt>
                                     <View style={styles.metaRow}>
                                         <Ionicons name="location-outline" size={11} color={colors.grey} />
-                                        <Text style={styles.meta}>{p.city} · {p.orders} orders</Text>
+                                        <Txt style={styles.meta}>{p.city} · {p.orders} orders</Txt>
                                     </View>
                                 </View>
                                 <View style={{ alignItems: 'flex-end' }}>
-                                    <Text style={styles.ltv}>{formatMoney(p.totalSpent, 'PLN', locale)}</Text>
+                                    <Txt style={styles.ltv}>{formatMoney(p.totalSpent, 'PLN', locale)}</Txt>
                                     <View style={[styles.seg, { backgroundColor: `${SEGMENT_META[seg].color}1A` }]}>
-                                        <Text style={[styles.segText, { color: SEGMENT_META[seg].color }]}>{SEGMENT_META[seg].label}</Text>
+                                        <Txt style={[styles.segText, { color: SEGMENT_META[seg].color }]}>{SEGMENT_META[seg].label}</Txt>
                                     </View>
                                 </View>
                                 <Ionicons name="chevron-forward" size={16} color={colors.grey} style={{ marginLeft: spacing.sm }} />

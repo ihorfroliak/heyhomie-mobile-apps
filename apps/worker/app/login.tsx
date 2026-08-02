@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
+import { View, TextInput, Pressable, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import { auth } from '@heyhomie/api';
@@ -34,14 +35,14 @@ export default function Login() {
         <SafeAreaView style={styles.safe}>
             <Stack.Screen options={{ headerShown: false }} />
             <View style={styles.body}>
-                <Text style={styles.h1}>HeyHomie for Pros</Text>
-                <Text style={styles.sub}>Sign in to see your jobs.</Text>
+                <Txt style={styles.h1}>HeyHomie for Pros</Txt>
+                <Txt style={styles.sub}>Sign in to see your jobs.</Txt>
                 <TextInput style={styles.input} placeholder="Email" placeholderTextColor={colors.grey} autoCapitalize="none" autoCorrect={false} keyboardType="email-address" value={email} onChangeText={setEmail} />
                 <TextInput style={styles.input} placeholder="Password" placeholderTextColor={colors.grey} secureTextEntry value={password} onChangeText={setPassword} />
-                {error ? <Text style={styles.error}>{error}</Text> : null}
+                {error ? <Txt style={styles.error}>{error}</Txt> : null}
                 <Button label={busy ? 'Signing in...' : 'Sign in'} variant="teal" disabled={busy || !email || !password} style={{ marginTop: spacing.lg }} onPress={submit} />
                 <Pressable onPress={() => router.push('/accept-invite')} style={styles.linkWrap}>
-                    <Text style={styles.link}>Have an invitation? Accept it</Text>
+                    <Txt style={styles.link}>Have an invitation? Accept it</Txt>
                 </Pressable>
             </View>
         </SafeAreaView>

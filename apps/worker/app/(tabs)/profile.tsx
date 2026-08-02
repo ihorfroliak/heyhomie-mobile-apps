@@ -1,5 +1,6 @@
 import React from 'react';
-import { ScrollView, Text, View, Pressable, StyleSheet } from 'react-native';
+import { ScrollView, View, Pressable, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,15 +17,15 @@ export default function Profile() {
     return (
         <SafeAreaView style={styles.safe} edges={['top']}>
             <ScrollView contentContainerStyle={styles.body}>
-                <Text style={styles.h1}>Profile</Text>
+                <Txt style={styles.h1}>Profile</Txt>
                 <Card variant="fill" style={{ alignItems: 'center', marginBottom: spacing.lg }}>
                     <View style={styles.avatar}>
-                        <Text style={styles.avatarText}>OL</Text>
+                        <Txt style={styles.avatarText}>OL</Txt>
                     </View>
-                    <Text style={styles.name}>Olena Kovalenko</Text>
+                    <Txt style={styles.name}>Olena Kovalenko</Txt>
                     <View style={styles.verifiedRow}>
                         <Ionicons name="checkmark-circle" size={14} color={colors.success} />
-                        <Text style={styles.verified}>Verified homie</Text>
+                        <Txt style={styles.verified}>Verified homie</Txt>
                     </View>
                 </Card>
                 <View style={styles.statsRow}>
@@ -32,9 +33,9 @@ export default function Profile() {
                     <Stat value="128" label="missions" />
                     <Stat value="2024" label="since" />
                 </View>
-                <Text style={styles.section}>Services</Text>
+                <Txt style={styles.section}>Services</Txt>
                 <Tags items={services} />
-                <Text style={styles.section}>Languages</Text>
+                <Txt style={styles.section}>Languages</Txt>
                 <Tags items={langs} />
 
                 <Pressable
@@ -46,7 +47,7 @@ export default function Profile() {
                     }}
                 >
                     <Ionicons name="log-out-outline" size={18} color={colors.danger} />
-                    <Text style={styles.logoutText}>Log out</Text>
+                    <Txt style={styles.logoutText}>Log out</Txt>
                 </Pressable>
             </ScrollView>
         </SafeAreaView>
@@ -55,17 +56,17 @@ export default function Profile() {
 
 const Stat = ({ value, label }: { value: string; label: string }) => (
     <View style={styles.stat}>
-        <Text style={styles.statValue}>{value}</Text>
-        <Text style={styles.statLabel}>{label}</Text>
+        <Txt style={styles.statValue}>{value}</Txt>
+        <Txt style={styles.statLabel}>{label}</Txt>
     </View>
 );
 
 const Tags = ({ items }: { items: string[] }) => (
     <View style={styles.tags}>
         {items.map(t => (
-            <Text key={t} style={styles.tag}>
+            <Txt key={t} style={styles.tag}>
                 {t}
-            </Text>
+            </Txt>
         ))}
     </View>
 );

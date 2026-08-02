@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ScrollView, Text, View, TextInput, StyleSheet } from 'react-native';
+import { ScrollView, View, TextInput, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -50,16 +51,16 @@ export default function Pay() {
         <SafeAreaView style={styles.safe} edges={['top']}>
             <Stack.Screen options={{ headerShown: true, title: 'Worker pay' }} />
             <ScrollView contentContainerStyle={styles.body}>
-                <Text style={styles.sub}>Adjust the final pay per mission. Leave blank to use the rate for the homie's engagement type.</Text>
+                <Txt style={styles.sub}>Adjust the final pay per mission. Leave blank to use the rate for the homie's engagement type.</Txt>
 
                 <View style={styles.sectionRow}>
                     <Ionicons name="options-outline" size={14} color={colors.grey} />
-                    <Text style={styles.sectionText}>Payout rates by engagement type</Text>
+                    <Txt style={styles.sectionText}>Payout rates by engagement type</Txt>
                 </View>
                 <Card style={{ marginBottom: spacing.md }}>
                     {(['employee', 'b2b'] as WorkerType[]).map(t => (
                         <View key={t} style={styles.rateRow}>
-                            <Text style={styles.rateLabel}>{t === 'employee' ? 'Employee (umowa zlecenia)' : 'B2B (subcontractor)'}</Text>
+                            <Txt style={styles.rateLabel}>{t === 'employee' ? 'Employee (umowa zlecenia)' : 'B2B (subcontractor)'}</Txt>
                             <View style={styles.rateCtrl}>
                                 <TextInput
                                     style={styles.rateInput}
@@ -67,7 +68,7 @@ export default function Pay() {
                                     value={ratesText[t]}
                                     onChangeText={v => setRatesText(prev => ({ ...prev, [t]: v }))}
                                 />
-                                <Text style={styles.ratePct}>%</Text>
+                                <Txt style={styles.ratePct}>%</Txt>
                             </View>
                         </View>
                     ))}
@@ -81,19 +82,19 @@ export default function Pay() {
                     return (
                         <Card key={m.id} style={styles.row}>
                             <View style={styles.avatar}>
-                                <Text style={styles.avatarText}>{initials}</Text>
+                                <Txt style={styles.avatarText}>{initials}</Txt>
                             </View>
                             <View style={{ flex: 1 }}>
-                                <Text style={styles.title}>
+                                <Txt style={styles.title}>
                                     {m.homie?.firstName} · {m.scheduledAt.slice(0, 10)}
-                                </Text>
-                                <Text style={styles.meta}>
+                                </Txt>
+                                <Txt style={styles.meta}>
                                     {m.plan} · {t === 'b2b' ? 'B2B' : 'UZ'} {Math.round(rateOf(t) * 100)}% · price {formatMoney(m.price, 'PLN', locale)} · default {formatMoney(def, 'PLN', locale)}
-                                </Text>
+                                </Txt>
                                 {tip > 0 ? (
                                     <View style={styles.tipRow}>
                                         <Ionicons name="heart" size={11} color={colors.success} />
-                                        <Text style={styles.tipText}>tip {formatMoney(tip, 'PLN', locale)}</Text>
+                                        <Txt style={styles.tipText}>tip {formatMoney(tip, 'PLN', locale)}</Txt>
                                     </View>
                                 ) : null}
                             </View>
@@ -111,7 +112,7 @@ export default function Pay() {
 
                 <View style={styles.sectionRow}>
                     <Ionicons name="add-circle-outline" size={14} color={colors.grey} />
-                    <Text style={styles.sectionText}>Monthly bonus / adjustment</Text>
+                    <Txt style={styles.sectionText}>Monthly bonus / adjustment</Txt>
                 </View>
                 <TextInput
                     style={[styles.input, { width: '100%' }]}
@@ -138,8 +139,8 @@ export default function Pay() {
 
 const Line = ({ label, value, strong }: { label: string; value: string; strong?: boolean }) => (
     <View style={styles.line}>
-        <Text style={[styles.lineLabel, strong && styles.strong]}>{label}</Text>
-        <Text style={[styles.lineValue, strong && styles.strong]}>{value}</Text>
+        <Txt style={[styles.lineLabel, strong && styles.strong]}>{label}</Txt>
+        <Txt style={[styles.lineValue, strong && styles.strong]}>{value}</Txt>
     </View>
 );
 

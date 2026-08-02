@@ -1,5 +1,6 @@
 import React, { useState, useSyncExternalStore } from 'react';
-import { ScrollView, Text, View, Pressable, StyleSheet } from 'react-native';
+import { ScrollView, View, Pressable, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -40,8 +41,8 @@ export default function Dashboard() {
     return (
         <SafeAreaView style={styles.safe} edges={['top']}>
             <View style={styles.hero}>
-                <Text style={styles.heroSub}>Good to see you</Text>
-                <Text style={styles.heroTitle}>Dashboard</Text>
+                <Txt style={styles.heroSub}>Good to see you</Txt>
+                <Txt style={styles.heroTitle}>Dashboard</Txt>
             </View>
             <ScrollView contentContainerStyle={styles.body}>
                 <View style={styles.grid}>
@@ -51,15 +52,15 @@ export default function Dashboard() {
                     <Kpi icon="close-circle-outline" label="Canceled" value={String(count('canceled'))} />
                 </View>
 
-                <Text style={styles.section}>Needs attention</Text>
+                <Txt style={styles.section}>Needs attention</Txt>
                 {confirmed > 0 ? (
                     <Pressable onPress={() => router.push('/missions')}>
                         <Card style={styles.alert}>
                             <View style={styles.alertRow}>
                                 <Ionicons name="alert-circle" size={20} color={colors.danger} />
                                 <View style={{ flex: 1 }}>
-                                    <Text style={styles.alertTitle}>{confirmed} order{confirmed > 1 ? 's' : ''} to fulfil</Text>
-                                    <Text style={styles.alertSub}>Confirmed — complete once the job is done</Text>
+                                    <Txt style={styles.alertTitle}>{confirmed} order{confirmed > 1 ? 's' : ''} to fulfil</Txt>
+                                    <Txt style={styles.alertSub}>Confirmed — complete once the job is done</Txt>
                                 </View>
                                 <Ionicons name="chevron-forward" size={16} color={colors.grey} />
                             </View>
@@ -68,17 +69,17 @@ export default function Dashboard() {
                 ) : (
                     <View style={styles.okRow}>
                         <Ionicons name="checkmark-circle" size={16} color={colors.success} />
-                        <Text style={styles.ok}>No open orders.</Text>
+                        <Txt style={styles.ok}>No open orders.</Txt>
                     </View>
                 )}
 
-                <Text style={styles.section}>Manage</Text>
+                <Txt style={styles.section}>Manage</Txt>
                 {MANAGE_LINKS.map(l => (
                     <Pressable key={l.href} onPress={() => router.push(l.href)}>
                         <Card style={styles.link}>
                             <View style={styles.linkLeft}>
                                 <Ionicons name={l.icon} size={17} color={colors.blue} />
-                                <Text style={styles.linkText}>{l.label}</Text>
+                                <Txt style={styles.linkText}>{l.label}</Txt>
                             </View>
                             <Ionicons name="chevron-forward" size={16} color={colors.grey} />
                         </Card>
@@ -86,7 +87,7 @@ export default function Dashboard() {
                 ))}
 
                 <Pressable style={styles.moreToggle} onPress={() => setShowMore(v => !v)}>
-                    <Text style={styles.moreText}>Additional metrics</Text>
+                    <Txt style={styles.moreText}>Additional metrics</Txt>
                     <Ionicons name={showMore ? 'chevron-up' : 'chevron-down'} size={16} color={colors.grey} />
                 </Pressable>
                 {showMore ? (
@@ -105,15 +106,15 @@ export default function Dashboard() {
 const Kpi = ({ icon, label, value, accent }: { icon: IconName; label: string; value: string; accent?: string }) => (
     <Card variant="fill" style={styles.kpi}>
         <Ionicons name={icon} size={16} color={accent ?? colors.grey} />
-        <Text style={styles.kLabel}>{label}</Text>
-        <Text style={[styles.kValue, accent ? { color: accent } : null]}>{value}</Text>
+        <Txt style={styles.kLabel}>{label}</Txt>
+        <Txt style={[styles.kValue, accent ? { color: accent } : null]}>{value}</Txt>
     </Card>
 );
 
 const Mini = ({ label, value }: { label: string; value: string }) => (
     <View style={styles.mini}>
-        <Text style={styles.miniValue}>{value}</Text>
-        <Text style={styles.miniLabel}>{label}</Text>
+        <Txt style={styles.miniValue}>{value}</Txt>
+        <Txt style={styles.miniLabel}>{label}</Txt>
     </View>
 );
 

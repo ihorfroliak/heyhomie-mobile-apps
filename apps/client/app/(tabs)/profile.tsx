@@ -1,5 +1,6 @@
 import React from 'react';
-import { ScrollView, Text, View, Pressable, StyleSheet } from 'react-native';
+import { ScrollView, View, Pressable, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -32,20 +33,20 @@ export default function Profile() {
     return (
         <SafeAreaView style={styles.safe} edges={['top']}>
             <ScrollView contentContainerStyle={styles.body}>
-                <Text style={styles.h1}>Profile</Text>
+                <Txt style={styles.h1}>Profile</Txt>
                 <Card variant="fill" style={{ marginBottom: spacing.lg, alignItems: 'center' }}>
                     <View style={styles.avatar}>
-                        <Text style={styles.avatarText}>MR</Text>
+                        <Txt style={styles.avatarText}>MR</Txt>
                     </View>
-                    <Text style={styles.name}>Marek Rutkowski</Text>
-                    <Text style={styles.meta}>+48 600 000 000</Text>
+                    <Txt style={styles.name}>Marek Rutkowski</Txt>
+                    <Txt style={styles.meta}>+48 600 000 000</Txt>
                 </Card>
 
-                <Text style={styles.section}>Language</Text>
+                <Txt style={styles.section}>Language</Txt>
                 <View style={styles.langRow}>
                     {languages.map(l => (
                         <Pressable key={l.key} onPress={() => setLocale(l.key)} style={[styles.lang, locale === l.key && styles.langOn]}>
-                            <Text style={[styles.langText, locale === l.key && styles.langTextOn]}>{l.label}</Text>
+                            <Txt style={[styles.langText, locale === l.key && styles.langTextOn]}>{l.label}</Txt>
                         </Pressable>
                     ))}
                 </View>
@@ -66,7 +67,7 @@ export default function Profile() {
                     >
                         <View style={styles.rowLeft}>
                             <Ionicons name={it.icon} size={18} color={it.danger ? colors.danger : colors.blue} />
-                            <Text style={[styles.row, it.danger && { color: colors.danger }]}>{it.label}</Text>
+                            <Txt style={[styles.row, it.danger && { color: colors.danger }]}>{it.label}</Txt>
                         </View>
                         {it.route ? <Ionicons name="chevron-forward" size={18} color={colors.grey} /> : null}
                     </Pressable>

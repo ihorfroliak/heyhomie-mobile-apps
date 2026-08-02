@@ -1,5 +1,6 @@
 import React, { useSyncExternalStore } from 'react';
-import { ScrollView, Text, View, StyleSheet } from 'react-native';
+import { ScrollView, View, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,9 +20,9 @@ const DetailRow = ({ icon, label, value }: { icon: keyof typeof Ionicons.glyphMa
     <View style={styles.detailRow}>
         <View style={styles.detailLeft}>
             <Ionicons name={icon} size={15} color={colors.grey} />
-            <Text style={styles.detailLabel}>{label}</Text>
+            <Txt style={styles.detailLabel}>{label}</Txt>
         </View>
-        <Text style={styles.detailValue} numberOfLines={1}>{value}</Text>
+        <Txt style={styles.detailValue} numberOfLines={1}>{value}</Txt>
     </View>
 );
 
@@ -38,7 +39,7 @@ export default function WorkerJobDetail() {
                 <Stack.Screen options={{ headerShown: true, title: 'Job' }} />
                 <View style={styles.missing}>
                     <Ionicons name="alert-circle-outline" size={26} color={colors.grey} />
-                    <Text style={styles.missingText}>This job is no longer available.</Text>
+                    <Txt style={styles.missingText}>This job is no longer available.</Txt>
                 </View>
             </SafeAreaView>
         );
@@ -49,8 +50,8 @@ export default function WorkerJobDetail() {
             <Stack.Screen options={{ headerShown: true, title: 'Job' }} />
             <ScrollView contentContainerStyle={styles.body}>
                 <View style={styles.row}>
-                    <Text style={styles.title}>{order.serviceId ? serviceName(order.serviceId, locale) : 'Cleaning job'}</Text>
-                    <Text style={styles.status}>{STATUS_LABEL[order.status]}</Text>
+                    <Txt style={styles.title}>{order.serviceId ? serviceName(order.serviceId, locale) : 'Cleaning job'}</Txt>
+                    <Txt style={styles.status}>{STATUS_LABEL[order.status]}</Txt>
                 </View>
 
                 <Card variant="fill" style={{ marginTop: spacing.md }}>
@@ -61,7 +62,7 @@ export default function WorkerJobDetail() {
 
                 <View style={styles.note}>
                     <Ionicons name="eye-off-outline" size={13} color={colors.grey} />
-                    <Text style={styles.noteText}>You see what a job needs — never client prices or payouts.</Text>
+                    <Txt style={styles.noteText}>You see what a job needs — never client prices or payouts.</Txt>
                 </View>
 
                 <View style={styles.action}>
@@ -70,17 +71,17 @@ export default function WorkerJobDetail() {
                     ) : order.status === 'completed' ? (
                         <View style={styles.infoRow}>
                             <Ionicons name="time-outline" size={18} color={colors.warning} />
-                            <Text style={styles.infoText}>Completed. Waiting for the client payment to settle.</Text>
+                            <Txt style={styles.infoText}>Completed. Waiting for the client payment to settle.</Txt>
                         </View>
                     ) : order.status === 'paid' ? (
                         <View style={styles.infoRow}>
                             <Ionicons name="checkmark-circle" size={18} color={colors.success} />
-                            <Text style={[styles.infoText, { color: colors.success }]}>Paid. This job is fully settled.</Text>
+                            <Txt style={[styles.infoText, { color: colors.success }]}>Paid. This job is fully settled.</Txt>
                         </View>
                     ) : (
                         <View style={styles.infoRow}>
                             <Ionicons name="close-circle-outline" size={18} color={colors.grey} />
-                            <Text style={styles.infoText}>This job was canceled.</Text>
+                            <Txt style={styles.infoText}>This job was canceled.</Txt>
                         </View>
                     )}
                 </View>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ScrollView, Text, View, StyleSheet } from 'react-native';
+import { ScrollView, View, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -26,41 +27,41 @@ export default function Verification() {
         <SafeAreaView style={styles.safe} edges={['top']}>
             <Stack.Screen options={{ headerShown: true, title: 'Verification' }} />
             <ScrollView contentContainerStyle={styles.body}>
-                <Text style={styles.h1}>{queue.length} pending</Text>
+                <Txt style={styles.h1}>{queue.length} pending</Txt>
                 {queue.length === 0 ? (
                     <View style={styles.emptyRow}>
                         <Ionicons name="checkmark-circle" size={16} color={colors.success} />
-                        <Text style={styles.empty}>Queue is clear.</Text>
+                        <Txt style={styles.empty}>Queue is clear.</Txt>
                     </View>
                 ) : null}
                 {queue.map(p => (
                     <Card key={p.id} style={{ marginBottom: spacing.md }}>
                         <View style={styles.row}>
                             <View style={styles.avatar}>
-                                <Text style={styles.avatarText}>
+                                <Txt style={styles.avatarText}>
                                     {p.name
                                         .split(' ')
                                         .map(n => n[0])
                                         .join('')
                                         .slice(0, 2)}
-                                </Text>
+                                </Txt>
                             </View>
                             <View style={{ flex: 1 }}>
-                                <Text style={styles.name}>{p.name}</Text>
+                                <Txt style={styles.name}>{p.name}</Txt>
                                 <View style={styles.metaRow}>
                                     <Ionicons name="time-outline" size={11} color={colors.grey} />
-                                    <Text style={styles.meta}>Submitted {p.submitted} · {p.city}</Text>
+                                    <Txt style={styles.meta}>Submitted {p.submitted} · {p.city}</Txt>
                                 </View>
                             </View>
                         </View>
                         <View style={styles.docs}>
                             <View style={styles.doc}>
                                 <Ionicons name="card-outline" size={18} color={colors.grey} />
-                                <Text style={styles.docText}>ID</Text>
+                                <Txt style={styles.docText}>ID</Txt>
                             </View>
                             <View style={styles.doc}>
                                 <Ionicons name="home-outline" size={18} color={colors.grey} />
-                                <Text style={styles.docText}>Address</Text>
+                                <Txt style={styles.docText}>Address</Txt>
                             </View>
                         </View>
                         <View style={styles.actions}>

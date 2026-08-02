@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
+import { View, TextInput, Pressable, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -40,26 +41,26 @@ export default function InviteMember() {
             <View style={styles.body}>
                 {token ? (
                     <Card variant="fill">
-                        <Text style={styles.h2}>Invitation ready</Text>
-                        <Text style={styles.sub}>Share this one-time code with {email}. It expires and can be used once.</Text>
-                        <Text selectable style={styles.token}>{token}</Text>
+                        <Txt style={styles.h2}>Invitation ready</Txt>
+                        <Txt style={styles.sub}>Share this one-time code with {email}. It expires and can be used once.</Txt>
+                        <Txt selectable style={styles.token}>{token}</Txt>
                         <Button label="Invite another" variant="teal" style={{ marginTop: spacing.lg }} onPress={() => { setToken(null); setEmail(''); }} />
                     </Card>
                 ) : (
                     <>
-                        <Text style={styles.h1}>Invite a member</Text>
-                        <Text style={styles.sub}>They join your team and see only your jobs.</Text>
+                        <Txt style={styles.h1}>Invite a member</Txt>
+                        <Txt style={styles.sub}>They join your team and see only your jobs.</Txt>
                         <TextInput style={styles.input} placeholder="Email" placeholderTextColor={colors.grey} autoCapitalize="none" autoCorrect={false} keyboardType="email-address" value={email} onChangeText={setEmail} />
-                        <Text style={styles.label}>Role</Text>
+                        <Txt style={styles.label}>Role</Txt>
                         <View style={styles.roleRow}>
                             {(['worker', 'admin'] as InviteRole[]).map(r => (
                                 <Pressable key={r} onPress={() => setRole(r)} style={[styles.role, role === r && styles.roleOn]}>
                                     <Ionicons name={r === 'admin' ? 'shield-outline' : 'briefcase-outline'} size={16} color={role === r ? colors.primary : colors.grey} />
-                                    <Text style={[styles.roleText, role === r && styles.roleTextOn]}>{r === 'admin' ? 'Admin' : 'Worker'}</Text>
+                                    <Txt style={[styles.roleText, role === r && styles.roleTextOn]}>{r === 'admin' ? 'Admin' : 'Worker'}</Txt>
                                 </Pressable>
                             ))}
                         </View>
-                        {error ? <Text style={styles.error}>{error}</Text> : null}
+                        {error ? <Txt style={styles.error}>{error}</Txt> : null}
                         <Button label={busy ? 'Creating...' : 'Create invitation'} variant="teal" disabled={busy || !email} style={{ marginTop: spacing.lg }} onPress={submit} />
                     </>
                 )}

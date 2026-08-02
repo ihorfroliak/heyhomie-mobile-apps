@@ -1,5 +1,6 @@
 import React from 'react';
-import { ScrollView, Text, View, StyleSheet } from 'react-native';
+import { ScrollView, View, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { demoMissions, demoTips } from '@heyhomie/api';
@@ -22,17 +23,17 @@ export default function WorkLog() {
     return (
         <SafeAreaView style={styles.safe} edges={['top']}>
             <ScrollView contentContainerStyle={styles.body}>
-                <Text style={styles.h1}>Work log</Text>
+                <Txt style={styles.h1}>Work log</Txt>
                 <View style={styles.kpis}>
                     <Card variant="fill" style={styles.kpi}>
                         <Ionicons name="time-outline" size={16} color={colors.grey} />
-                        <Text style={styles.kLabel}>Time worked</Text>
-                        <Text style={styles.kValue}>{formatDuration(totalMinutes)}</Text>
+                        <Txt style={styles.kLabel}>Time worked</Txt>
+                        <Txt style={styles.kValue}>{formatDuration(totalMinutes)}</Txt>
                     </Card>
                     <Card style={[styles.kpi, styles.tipKpi]}>
                         <Ionicons name="heart" size={16} color={colors.success} />
-                        <Text style={[styles.kLabel, { color: colors.success }]}>Tips received</Text>
-                        <Text style={[styles.kValue, { color: colors.success }]}>{money(tipsTotal)}</Text>
+                        <Txt style={[styles.kLabel, { color: colors.success }]}>Tips received</Txt>
+                        <Txt style={[styles.kValue, { color: colors.success }]}>{money(tipsTotal)}</Txt>
                     </Card>
                 </View>
 
@@ -41,27 +42,27 @@ export default function WorkLog() {
                     const tip = totalTips(tipsForOrder(demoTips, m.id));
                     return (
                         <Card key={m.id} style={styles.card}>
-                            <Text style={styles.title}>
+                            <Txt style={styles.title}>
                                 {m.plan === 'general' ? 'General' : 'Standard'} · {dmy(m.scheduledAt)}
-                            </Text>
+                            </Txt>
                             <View style={styles.times}>
                                 <View style={styles.col}>
-                                    <Text style={styles.colLabel}>Planned</Text>
-                                    <Text style={styles.colValue}>
+                                    <Txt style={styles.colLabel}>Planned</Txt>
+                                    <Txt style={styles.colValue}>
                                         {hhmm(t.scheduledStart)}–{hhmm(t.scheduledEnd)}
-                                    </Text>
+                                    </Txt>
                                 </View>
                                 <View style={styles.col}>
-                                    <Text style={styles.colLabel}>Actual</Text>
-                                    <Text style={styles.colValue}>
+                                    <Txt style={styles.colLabel}>Actual</Txt>
+                                    <Txt style={styles.colValue}>
                                         {hhmm(t.actualStart)}–{hhmm(t.actualEnd)}
-                                    </Text>
+                                    </Txt>
                                 </View>
                             </View>
                             {tip > 0 ? (
                                 <View style={styles.tipRow}>
                                     <Ionicons name="heart" size={13} color={colors.success} />
-                                    <Text style={styles.tip}>Tip from client: +{money(tip)}</Text>
+                                    <Txt style={styles.tip}>Tip from client: +{money(tip)}</Txt>
                                 </View>
                             ) : null}
                         </Card>

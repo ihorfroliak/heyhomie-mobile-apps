@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ScrollView, Text, View, Pressable, StyleSheet } from 'react-native';
+import { ScrollView, View, Pressable, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, spacing, typography } from '@heyhomie/design';
 import { Card } from '@heyhomie/ui';
@@ -29,15 +30,15 @@ export default function Schedule() {
     return (
         <SafeAreaView style={styles.safe} edges={['top']}>
             <ScrollView contentContainerStyle={styles.body}>
-                <Text style={styles.h1}>Schedule</Text>
-                <Text style={styles.sub}>Your weekly availability</Text>
+                <Txt style={styles.h1}>Schedule</Txt>
+                <Txt style={styles.sub}>Your weekly availability</Txt>
                 {days.map(d => (
                     <View key={d.key} style={styles.row}>
                         <View style={{ flex: 1 }}>
-                            <Text style={styles.day}>
-                                {d.label} <Text style={styles.hours}>{d.on ? d.hours : 'Day off'}</Text>
-                            </Text>
-                            {d.committed ? <Text style={styles.committed}>{d.committed}</Text> : null}
+                            <Txt style={styles.day}>
+                                {d.label} <Txt style={styles.hours}>{d.on ? d.hours : 'Day off'}</Txt>
+                            </Txt>
+                            {d.committed ? <Txt style={styles.committed}>{d.committed}</Txt> : null}
                         </View>
                         <Pressable onPress={() => toggle(d.key)} style={[styles.switch, d.on && styles.switchOn]}>
                             <View style={[styles.knob, d.on && styles.knobOn]} />
@@ -45,7 +46,7 @@ export default function Schedule() {
                     </View>
                 ))}
                 <Card variant="fill" style={{ marginTop: spacing.lg }}>
-                    <Text style={styles.note}>Recurring clients are auto-booked into your free slots.</Text>
+                    <Txt style={styles.note}>Recurring clients are auto-booked into your free slots.</Txt>
                 </Card>
             </ScrollView>
         </SafeAreaView>

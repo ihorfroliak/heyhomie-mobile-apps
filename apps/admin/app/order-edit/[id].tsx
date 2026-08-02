@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { ScrollView, Text, View, Pressable, TextInput, Switch, StyleSheet } from 'react-native';
+import { ScrollView, View, Pressable, TextInput, Switch, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -25,7 +26,7 @@ import { Card, Button } from '@heyhomie/ui';
 const SectionLabel = ({ icon, text }: { icon: keyof typeof Ionicons.glyphMap; text: string }) => (
     <View style={styles.sectionRow}>
         <Ionicons name={icon} size={14} color={colors.grey} />
-        <Text style={styles.sectionText}>{text}</Text>
+        <Txt style={styles.sectionText}>{text}</Txt>
     </View>
 );
 
@@ -92,13 +93,13 @@ export default function OrderEdit() {
                         const on = a.id === clientId;
                         return (
                             <Pressable key={a.id} onPress={() => setClientId(a.id)} style={[styles.clientChip, on && styles.clientChipOn]}>
-                                <Text style={[styles.clientText, on && styles.clientTextOn]}>{displayName(a)}</Text>
+                                <Txt style={[styles.clientText, on && styles.clientTextOn]}>{displayName(a)}</Txt>
                             </Pressable>
                         );
                     })}
                     <Pressable onPress={() => setClientId('new')} style={[styles.clientChip, styles.clientChipNew, isNewClient && styles.clientChipOn]}>
                         <Ionicons name="add" size={14} color={isNewClient ? colors.white : colors.blue} />
-                        <Text style={[styles.clientText, isNewClient && styles.clientTextOn]}>New</Text>
+                        <Txt style={[styles.clientText, isNewClient && styles.clientTextOn]}>New</Txt>
                     </Pressable>
                 </View>
                 {isNewClient ? (
@@ -114,7 +115,7 @@ export default function OrderEdit() {
                 <Card style={styles.rowBetween}>
                     <View style={styles.priceCtrl}>
                         <Pressable style={styles.pBtn} onPress={() => setPrice(p => Math.max(0, p - 10))}>
-                            <Text style={styles.pBtnText}>−10</Text>
+                            <Txt style={styles.pBtnText}>−10</Txt>
                         </Pressable>
                         <TextInput
                             style={styles.priceInput}
@@ -123,10 +124,10 @@ export default function OrderEdit() {
                             onChangeText={t => setPrice(Number(t.replace(/[^0-9]/g, '')) || 0)}
                         />
                         <Pressable style={styles.pBtn} onPress={() => setPrice(p => p + 10)}>
-                            <Text style={styles.pBtnText}>+10</Text>
+                            <Txt style={styles.pBtnText}>+10</Txt>
                         </Pressable>
                     </View>
-                    <Text style={styles.priceLabel}>{money(price)}</Text>
+                    <Txt style={styles.priceLabel}>{money(price)}</Txt>
                 </Card>
 
                 {/* Add-ons — add or remove */}
@@ -136,7 +137,7 @@ export default function OrderEdit() {
                     return (
                         <Pressable key={a.id} onPress={() => toggle(a.id)}>
                             <Card style={[styles.addon, on && styles.addonOn]}>
-                                <Text style={[styles.addonName, { flex: 1 }]}>{tr(a.label, locale)}</Text>
+                                <Txt style={[styles.addonName, { flex: 1 }]}>{tr(a.label, locale)}</Txt>
                                 <View style={[styles.check, on && styles.checkOn]}>{on ? <Ionicons name="checkmark" size={14} color={colors.primary} /> : null}</View>
                             </Card>
                         </Pressable>
@@ -153,18 +154,18 @@ export default function OrderEdit() {
                 {/* Equipment (cleaning) */}
                 <SectionLabel icon="home-outline" text="At the apartment" />
                 <Card style={styles.switchRow}>
-                    <Text style={styles.swLabel}>Mop & bucket available</Text>
+                    <Txt style={styles.swLabel}>Mop & bucket available</Txt>
                     <Switch value={mopPresent} onValueChange={setMopPresent} trackColor={{ false: colors.border, true: colors.salad }} thumbColor={colors.white} />
                 </Card>
                 <Card style={styles.switchRow}>
-                    <Text style={styles.swLabel}>Vacuum cleaner available</Text>
+                    <Txt style={styles.swLabel}>Vacuum cleaner available</Txt>
                     <Switch value={vacuumPresent} onValueChange={setVacuumPresent} trackColor={{ false: colors.border, true: colors.salad }} thumbColor={colors.white} />
                 </Card>
 
                 {/* Billing — add/edit even backdated */}
                 <SectionLabel icon="document-text-outline" text="Company invoice" />
                 <Card style={styles.switchRow}>
-                    <Text style={styles.swLabel}>Issue a faktura to a company</Text>
+                    <Txt style={styles.swLabel}>Issue a faktura to a company</Txt>
                     <Switch value={wantInvoice} onValueChange={setWantInvoice} trackColor={{ false: colors.border, true: colors.salad }} thumbColor={colors.white} />
                 </Card>
                 {wantInvoice ? (
@@ -176,7 +177,7 @@ export default function OrderEdit() {
                             <TextInput style={[styles.tInput, { width: 110 }]} placeholder="00-000" placeholderTextColor={colors.grey} value={billing.zipCode ?? ''} onChangeText={t => setBill('zipCode', t)} />
                             <TextInput style={[styles.tInput, { flex: 1, marginLeft: spacing.sm }]} placeholder="City" placeholderTextColor={colors.grey} value={billing.city ?? ''} onChangeText={t => setBill('city', t)} />
                         </View>
-                        {(billing.nip ?? '').length > 0 && !billingCheck.nipValid ? <Text style={styles.err}>Invalid NIP checksum</Text> : null}
+                        {(billing.nip ?? '').length > 0 && !billingCheck.nipValid ? <Txt style={styles.err}>Invalid NIP checksum</Txt> : null}
                     </Card>
                 ) : null}
 
@@ -184,28 +185,28 @@ export default function OrderEdit() {
                 <SectionLabel icon="swap-horizontal-outline" text="Reschedule" />
                 <View style={styles.modeRow}>
                     <Pressable style={[styles.modeChip, rescheduleMode === 'move' && styles.modeChipOn]} onPress={() => setRescheduleMode('move')}>
-                        <Text style={[styles.modeText, rescheduleMode === 'move' && styles.modeTextOn]}>Move this visit</Text>
+                        <Txt style={[styles.modeText, rescheduleMode === 'move' && styles.modeTextOn]}>Move this visit</Txt>
                     </Pressable>
                     <Pressable style={[styles.modeChip, rescheduleMode === 'shift' && styles.modeChipOn]} onPress={() => setRescheduleMode('shift')}>
-                        <Text style={[styles.modeText, rescheduleMode === 'shift' && styles.modeTextOn]}>Shift series</Text>
+                        <Txt style={[styles.modeText, rescheduleMode === 'shift' && styles.modeTextOn]}>Shift series</Txt>
                     </Pressable>
                 </View>
-                <Text style={styles.hint}>
+                <Txt style={styles.hint}>
                     {rescheduleMode === 'move'
                         ? 'Moves only this visit to the new date/time above. The rest of the cycle keeps its cadence. No fee.'
                         : 'Moves this visit and re-syncs every later visit from the new date by the original cadence.'}
-                </Text>
+                </Txt>
                 <Button label="Apply reschedule" variant="ghost" style={{ marginTop: spacing.sm }} onPress={() => {}} />
 
                 <SectionLabel icon="close-circle-outline" text="Cancel visit" />
                 <Card variant="fill" style={late ? styles.warnCard : undefined}>
                     <View style={styles.warnRow}>
                         <Ionicons name={late ? 'alert-circle' : 'information-circle-outline'} size={16} color={late ? colors.danger : colors.grey} />
-                        <Text style={[styles.hint, { flex: 1 }, late && styles.warnText]}>
+                        <Txt style={[styles.hint, { flex: 1 }, late && styles.warnText]}>
                             {late
                                 ? `Less than 24h before the visit — a 50% fee of ${money(fee)} applies.`
                                 : 'More than 24h before the visit — no cancellation fee.'}
-                        </Text>
+                        </Txt>
                     </View>
                     <Button label={late ? `Cancel with ${money(fee)} fee` : 'Cancel (no fee)'} variant="ghost" style={{ marginTop: spacing.sm }} onPress={() => {}} />
                 </Card>

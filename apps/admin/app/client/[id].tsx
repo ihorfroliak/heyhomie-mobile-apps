@@ -1,5 +1,6 @@
 import React from 'react';
-import { ScrollView, Text, View, StyleSheet } from 'react-native';
+import { ScrollView, View, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -31,7 +32,7 @@ export default function ClientDetail() {
         return (
             <SafeAreaView style={styles.safe} edges={['top']}>
                 <Stack.Screen options={{ headerShown: true, title: 'Client' }} />
-                <Text style={styles.empty}>Client not found.</Text>
+                <Txt style={styles.empty}>Client not found.</Txt>
             </SafeAreaView>
         );
     }
@@ -43,26 +44,26 @@ export default function ClientDetail() {
             <ScrollView contentContainerStyle={styles.body}>
                 <View style={styles.header}>
                     <View style={styles.avatar}>
-                        <Text style={styles.avatarText}>
+                        <Txt style={styles.avatarText}>
                             {profile.firstName.slice(0, 1)}
                             {profile.lastInitial ?? ''}
-                        </Text>
+                        </Txt>
                     </View>
                     <View style={{ flex: 1 }}>
-                        <Text style={styles.name}>
+                        <Txt style={styles.name}>
                             {profile.firstName} {profile.lastInitial ? `${profile.lastInitial}.` : ''}
-                        </Text>
-                        <Text style={styles.meta}>{profile.city}</Text>
+                        </Txt>
+                        <Txt style={styles.meta}>{profile.city}</Txt>
                     </View>
                     <View style={[styles.segBadge, { backgroundColor: `${SEG[seg].color}1A` }]}>
-                        <Text style={[styles.segText, { color: SEG[seg].color }]}>{SEG[seg].label}</Text>
+                        <Txt style={[styles.segText, { color: SEG[seg].color }]}>{SEG[seg].label}</Txt>
                     </View>
                 </View>
 
                 <View style={styles.ltvCard}>
                     <View>
-                        <Text style={styles.ltvLabel}>Lifetime value</Text>
-                        <Text style={styles.ltvValue}>{formatMoney(profile.totalSpent, 'PLN', locale)}</Text>
+                        <Txt style={styles.ltvLabel}>Lifetime value</Txt>
+                        <Txt style={styles.ltvValue}>{formatMoney(profile.totalSpent, 'PLN', locale)}</Txt>
                     </View>
                     <Ionicons name="trophy" size={26} color={colors.salad} />
                 </View>
@@ -74,35 +75,35 @@ export default function ClientDetail() {
 
                 <View style={styles.sectionRow}>
                     <Ionicons name="time-outline" size={14} color={colors.grey} />
-                    <Text style={styles.sectionText}>Order history</Text>
+                    <Txt style={styles.sectionText}>Order history</Txt>
                 </View>
                 {missions.map(m => (
                     <View key={m.id} style={styles.histRow}>
                         <View style={{ flex: 1 }}>
-                            <Text style={styles.histTitle}>
+                            <Txt style={styles.histTitle}>
                                 {m.plan === 'general' ? 'General' : 'Standard'} · {formatDuration(m.durationMinutes)}
-                            </Text>
-                            <Text style={styles.meta}>
+                            </Txt>
+                            <Txt style={styles.meta}>
                                 {dmy(m.scheduledAt)} · {tr(missionStatusLabel[m.status], locale)}
-                            </Text>
+                            </Txt>
                         </View>
-                        <Text style={styles.price}>{formatMoney(m.price, m.currency, locale)}</Text>
+                        <Txt style={styles.price}>{formatMoney(m.price, m.currency, locale)}</Txt>
                     </View>
                 ))}
 
                 <View style={styles.sectionRow}>
                     <Ionicons name="chatbubbles-outline" size={14} color={colors.grey} />
-                    <Text style={styles.sectionText}>Communication</Text>
+                    <Txt style={styles.sectionText}>Communication</Txt>
                 </View>
-                {comms.length === 0 ? <Text style={styles.meta}>No messages yet.</Text> : null}
+                {comms.length === 0 ? <Txt style={styles.meta}>No messages yet.</Txt> : null}
                 {comms.map(c => (
                     <View key={c.id} style={styles.commRow}>
                         <Ionicons name={CH_ICON[c.channel]} size={18} color={c.direction === 'in' ? colors.blue : colors.grey} />
                         <View style={{ flex: 1 }}>
-                            <Text style={styles.commText}>{c.summary}</Text>
-                            <Text style={styles.meta}>
+                            <Txt style={styles.commText}>{c.summary}</Txt>
+                            <Txt style={styles.meta}>
                                 {c.direction === 'in' ? 'Inbound' : 'Outbound'} · {new Date(c.at).toLocaleString()}
-                            </Text>
+                            </Txt>
                         </View>
                     </View>
                 ))}
@@ -113,8 +114,8 @@ export default function ClientDetail() {
 
 const Stat = ({ label, value }: { label: string; value: string }) => (
     <Card variant="fill" style={styles.stat}>
-        <Text style={styles.statLabel}>{label}</Text>
-        <Text style={styles.statValue}>{value}</Text>
+        <Txt style={styles.statLabel}>{label}</Txt>
+        <Txt style={styles.statValue}>{value}</Txt>
     </Card>
 );
 

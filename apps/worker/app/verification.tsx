@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ScrollView, Text, View, Pressable, StyleSheet } from 'react-native';
+import { ScrollView, View, Pressable, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,10 +21,10 @@ function Check({ label, value, onToggle }: { label: string; value: boolean; onTo
     return (
         <Pressable style={styles.check} onPress={onToggle}>
             <View style={[styles.box, value && styles.boxOn]}>{value ? <Ionicons name="checkmark" size={14} color={colors.primary} /> : null}</View>
-            <Text style={styles.checkLabel}>
+            <Txt style={styles.checkLabel}>
                 {label}
-                <Text style={{ color: colors.pink }}> *</Text>
-            </Text>
+                <Txt style={{ color: colors.pink }}> *</Txt>
+            </Txt>
         </Pressable>
     );
 }
@@ -40,14 +41,14 @@ export default function Verification() {
                 <Card variant="fill" style={{ alignItems: 'center', marginBottom: spacing.lg }}>
                     <View style={styles.pendingRow}>
                         <Ionicons name="time-outline" size={16} color={colors.warning} />
-                        <Text style={styles.pending}>Verification in review</Text>
+                        <Txt style={styles.pending}>Verification in review</Txt>
                     </View>
-                    <Text style={styles.note}>We'll notify you within 24 hours.</Text>
+                    <Txt style={styles.note}>We'll notify you within 24 hours.</Txt>
                 </Card>
 
                 <View style={styles.sectionRow}>
                     <Ionicons name="list-outline" size={14} color={colors.grey} />
-                    <Text style={styles.sectionText}>Your steps</Text>
+                    <Txt style={styles.sectionText}>Your steps</Txt>
                 </View>
                 {steps.map(s => (
                     <View key={s.label} style={styles.step}>
@@ -55,23 +56,23 @@ export default function Verification() {
                             {s.state === 'done' ? <Ionicons name="checkmark" size={9} color={colors.primary} /> : null}
                         </View>
                         <View style={{ flex: 1 }}>
-                            <Text style={styles.label}>{s.label}</Text>
-                            <Text style={styles.sub}>{s.sub}</Text>
+                            <Txt style={styles.label}>{s.label}</Txt>
+                            <Txt style={styles.sub}>{s.sub}</Txt>
                         </View>
                     </View>
                 ))}
 
                 <View style={styles.sectionRow}>
                     <Ionicons name="document-text-outline" size={14} color={colors.grey} />
-                    <Text style={styles.sectionText}>Agreements</Text>
+                    <Txt style={styles.sectionText}>Agreements</Txt>
                 </View>
                 <Check label="I accept the Homie Terms" value={terms} onToggle={() => setTerms(v => !v)} />
                 <Check label="I have read the Privacy Policy" value={privacy} onToggle={() => setPrivacy(v => !v)} />
 
                 <Button label="Start accepting missions" variant="primary" disabled={!consented} style={{ marginTop: spacing.lg }} onPress={() => {}} />
-                <Text style={styles.foot}>
+                <Txt style={styles.foot}>
                     {consented ? 'Approval pending — you can already set your availability in Schedule.' : 'Accept both agreements to continue.'}
-                </Text>
+                </Txt>
             </ScrollView>
         </SafeAreaView>
     );

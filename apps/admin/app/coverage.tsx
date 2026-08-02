@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ScrollView, Text, View, Pressable, Switch, StyleSheet } from 'react-native';
+import { ScrollView, View, Pressable, Switch, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -39,7 +40,7 @@ export default function Coverage() {
                     <Kpi label="Live cities" value={`${stats.citiesLive}/${stats.citiesTotal}`} />
                     <Kpi label="Live offerings" value={`${stats.liveOfferings}/${stats.maxOfferings}`} />
                 </View>
-                <Text style={styles.hint}>Turn a city on/off, then tap it to choose which services it offers. A service is bookable only when both the city and the service are on.</Text>
+                <Txt style={styles.hint}>Turn a city on/off, then tap it to choose which services it offers. A service is bookable only when both the city and the service are on.</Txt>
 
                 {map.map(c => {
                     const liveCount = availableServices(map, c.cityId).length;
@@ -50,10 +51,10 @@ export default function Coverage() {
                                 <Pressable style={styles.cityTap} onPress={() => setExpanded(isOpen ? null : c.cityId)}>
                                     <Ionicons name={isOpen ? 'chevron-down' : 'chevron-forward'} size={16} color={colors.grey} />
                                     <View>
-                                        <Text style={styles.cityName}>{cityName(c.cityId, locale)}</Text>
-                                        <Text style={[styles.citySub, { color: c.enabled ? colors.success : colors.grey }]}>
+                                        <Txt style={styles.cityName}>{cityName(c.cityId, locale)}</Txt>
+                                        <Txt style={[styles.citySub, { color: c.enabled ? colors.success : colors.grey }]}>
                                             {c.enabled ? `Live · ${liveCount} service${liveCount === 1 ? '' : 's'}` : 'Not launched'}
-                                        </Text>
+                                        </Txt>
                                     </View>
                                 </Pressable>
                                 <Switch
@@ -69,8 +70,8 @@ export default function Coverage() {
                                     {SERVICES.map(s => (
                                         <View key={s.id} style={styles.svcRow}>
                                             <View style={styles.svcInfo}>
-                                                <Text style={styles.svcName}>{serviceName(s.id, locale)}</Text>
-                                                <Text style={styles.svcCat}>{s.category}</Text>
+                                                <Txt style={styles.svcName}>{serviceName(s.id, locale)}</Txt>
+                                                <Txt style={styles.svcCat}>{s.category}</Txt>
                                             </View>
                                             <Switch
                                                 value={!!c.services[s.id]}
@@ -81,7 +82,7 @@ export default function Coverage() {
                                             />
                                         </View>
                                     ))}
-                                    {!c.enabled ? <Text style={styles.svcNote}>City is off — these selections are saved but nothing is bookable until you launch the city.</Text> : null}
+                                    {!c.enabled ? <Txt style={styles.svcNote}>City is off — these selections are saved but nothing is bookable until you launch the city.</Txt> : null}
                                 </View>
                             ) : null}
                         </Card>
@@ -94,8 +95,8 @@ export default function Coverage() {
 
 const Kpi = ({ label, value }: { label: string; value: string }) => (
     <Card variant="fill" style={styles.kpi}>
-        <Text style={styles.kLabel}>{label}</Text>
-        <Text style={styles.kValue}>{value}</Text>
+        <Txt style={styles.kLabel}>{label}</Txt>
+        <Txt style={styles.kValue}>{value}</Txt>
     </Card>
 );
 

@@ -1,5 +1,6 @@
 import React, { useSyncExternalStore } from 'react';
-import { ScrollView, Text, View, StyleSheet } from 'react-native';
+import { ScrollView, View, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,8 +18,8 @@ const STATUS_LABEL: Record<OrderStatus, string> = {
 
 const DetailRow = ({ icon, label, value }: { icon: keyof typeof Ionicons.glyphMap; label: string; value: string }) => (
     <View style={styles.detailRow}>
-        <View style={styles.detailLeft}><Ionicons name={icon} size={15} color={colors.grey} /><Text style={styles.detailLabel}>{label}</Text></View>
-        <Text style={styles.detailValue} numberOfLines={1}>{value}</Text>
+        <View style={styles.detailLeft}><Ionicons name={icon} size={15} color={colors.grey} /><Txt style={styles.detailLabel}>{label}</Txt></View>
+        <Txt style={styles.detailValue} numberOfLines={1}>{value}</Txt>
     </View>
 );
 
@@ -32,7 +33,7 @@ export default function AdminOrderDetail() {
         return (
             <SafeAreaView style={styles.safe} edges={['top']}>
                 <Stack.Screen options={{ headerShown: true, title: 'Order' }} />
-                <View style={styles.missing}><Ionicons name="alert-circle-outline" size={26} color={colors.grey} /><Text style={styles.missingText}>This order is no longer available.</Text></View>
+                <View style={styles.missing}><Ionicons name="alert-circle-outline" size={26} color={colors.grey} /><Txt style={styles.missingText}>This order is no longer available.</Txt></View>
             </SafeAreaView>
         );
     }
@@ -43,8 +44,8 @@ export default function AdminOrderDetail() {
             <Stack.Screen options={{ headerShown: true, title: 'Order' }} />
             <ScrollView contentContainerStyle={styles.body}>
                 <View style={styles.row}>
-                    <Text style={styles.title}>{order.serviceId ? serviceName(order.serviceId, locale) : 'Cleaning order'}</Text>
-                    <Text style={styles.status}>{STATUS_LABEL[order.status]}</Text>
+                    <Txt style={styles.title}>{order.serviceId ? serviceName(order.serviceId, locale) : 'Cleaning order'}</Txt>
+                    <Txt style={styles.status}>{STATUS_LABEL[order.status]}</Txt>
                 </View>
 
                 <Card variant="fill" style={{ marginTop: spacing.md }}>
@@ -55,7 +56,7 @@ export default function AdminOrderDetail() {
                     {order.payment ? <DetailRow icon="card-outline" label="Payment" value={order.payment.status} /> : null}
                 </Card>
 
-                <Text style={styles.actionsH}>Actions</Text>
+                <Txt style={styles.actionsH}>Actions</Txt>
                 <View style={styles.actions}>
                     {order.status === 'confirmed' ? (
                         <>
@@ -68,10 +69,10 @@ export default function AdminOrderDetail() {
                             <Button label="Mark paid (manual)" variant="ghost" style={{ marginTop: spacing.sm }} onPress={() => { void orderGateway.markPaid(order.id); }} />
                         </>
                     ) : order.status === 'canceled' ? (
-                        <View style={styles.info}><Ionicons name="refresh-outline" size={18} color={colors.blue} /><Text style={styles.infoText}>Canceled. Re-confirm to reopen.</Text>
+                        <View style={styles.info}><Ionicons name="refresh-outline" size={18} color={colors.blue} /><Txt style={styles.infoText}>Canceled. Re-confirm to reopen.</Txt>
                             <Button label="Re-confirm" variant="ghost" style={{ marginTop: spacing.sm, alignSelf: 'stretch' }} onPress={() => { void orderGateway.confirmOrder(order.id); }} /></View>
                     ) : (
-                        <View style={styles.info}><Ionicons name="checkmark-circle" size={18} color={colors.success} /><Text style={[styles.infoText, { color: colors.success }]}>Paid and settled — nothing to do.</Text></View>
+                        <View style={styles.info}><Ionicons name="checkmark-circle" size={18} color={colors.success} /><Txt style={[styles.infoText, { color: colors.success }]}>Paid and settled — nothing to do.</Txt></View>
                     )}
                 </View>
             </ScrollView>

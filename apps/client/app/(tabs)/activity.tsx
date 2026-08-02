@@ -1,5 +1,6 @@
 import React, { useState, useSyncExternalStore } from 'react';
-import { ScrollView, Text, View, Pressable, StyleSheet } from 'react-native';
+import { ScrollView, View, Pressable, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -26,7 +27,7 @@ export default function Activity() {
     return (
         <SafeAreaView style={styles.safe} edges={['top']}>
             <ScrollView contentContainerStyle={styles.body}>
-                <Text style={styles.h1}>Activity</Text>
+                <Txt style={styles.h1}>Activity</Txt>
                 <Segmented
                     value={tab}
                     onChange={k => setTab(k as 'orders' | 'services')}
@@ -42,7 +43,7 @@ export default function Activity() {
                             <>
                                 <View style={styles.sectionRow}>
                                     <Ionicons name="sparkles-outline" size={14} color={colors.grey} />
-                                    <Text style={styles.sectionText}>Just booked</Text>
+                                    <Txt style={styles.sectionText}>Just booked</Txt>
                                 </View>
                                 {orders.slice().reverse().map(o => {
                                     const pay = o.payment;
@@ -52,27 +53,27 @@ export default function Activity() {
                                     return (
                                         <Card key={o.id} style={styles.justBooked}>
                                             <View style={styles.jbRow}>
-                                                <Text style={styles.jbTitle}>{o.serviceId ? serviceName(o.serviceId, locale) : 'Booking'}</Text>
+                                                <Txt style={styles.jbTitle}>{o.serviceId ? serviceName(o.serviceId, locale) : 'Booking'}</Txt>
                                                 <View style={styles.jbBadge}>
                                                     <Ionicons name="checkmark" size={10} color={colors.success} />
-                                                    <Text style={styles.jbBadgeText}>Confirmed</Text>
+                                                    <Txt style={styles.jbBadgeText}>Confirmed</Txt>
                                                 </View>
                                             </View>
                                             <View style={styles.metaRow}>
                                                 <Ionicons name="hourglass-outline" size={12} color={colors.grey} />
-                                                <Text style={styles.meta}>Confirmation sent · awaiting a homie</Text>
+                                                <Txt style={styles.meta}>Confirmation sent · awaiting a homie</Txt>
                                             </View>
                                             {pay ? (
                                                 <View style={styles.payLine}>
                                                     <View style={styles.payStatus}>
                                                         <Ionicons name={pay.method === 'card' ? 'card-outline' : 'time-outline'} size={13} color={tone} />
-                                                        <Text style={[styles.payStatusText, { color: tone }]}>
+                                                        <Txt style={[styles.payStatusText, { color: tone }]}>
                                                             {pay.method === 'pay_later' ? 'Pay later' : 'Card'} · {tr(PAYMENT_STATUS_LABEL[pay.status], locale)}
-                                                        </Text>
+                                                        </Txt>
                                                     </View>
                                                     {canPay ? (
                                                         <Pressable style={styles.payNowBtn} onPress={() => void orderGateway.settleOrder(o.id)}>
-                                                            <Text style={styles.payNowText}>Pay now</Text>
+                                                            <Txt style={styles.payNowText}>Pay now</Txt>
                                                         </Pressable>
                                                     ) : null}
                                                 </View>
@@ -84,14 +85,14 @@ export default function Activity() {
                         ) : null}
                         <View style={styles.sectionRow}>
                             <Ionicons name="calendar-outline" size={14} color={colors.grey} />
-                            <Text style={styles.sectionText}>Upcoming</Text>
+                            <Txt style={styles.sectionText}>Upcoming</Txt>
                         </View>
                         {upcoming.map(m => (
                             <MissionCard key={m.id} mission={m} locale={locale} onPress={() => router.push(`/mission/${m.id}`)} />
                         ))}
                         <View style={styles.sectionRow}>
                             <Ionicons name="checkmark-done-outline" size={14} color={colors.grey} />
-                            <Text style={styles.sectionText}>Past</Text>
+                            <Txt style={styles.sectionText}>Past</Txt>
                         </View>
                         {past.map(m => (
                             <MissionCard key={m.id} mission={m} locale={locale} onPress={() => router.push(`/mission/${m.id}`)} />
@@ -101,23 +102,23 @@ export default function Activity() {
                     <>
                         <View style={styles.sectionRow}>
                             <Ionicons name="repeat-outline" size={14} color={colors.grey} />
-                            <Text style={styles.sectionText}>Recurring services</Text>
+                            <Txt style={styles.sectionText}>Recurring services</Txt>
                         </View>
                         {demoServices.map(s => (
                             <Card key={s.id} variant="fill" style={{ marginBottom: spacing.md }}>
-                                <Text style={styles.title}>Weekly cleaning</Text>
+                                <Txt style={styles.title}>Weekly cleaning</Txt>
                                 <View style={styles.metaRow}>
                                     <Ionicons name="person-outline" size={12} color={colors.grey} />
-                                    <Text style={styles.meta}>
+                                    <Txt style={styles.meta}>
                                         {tr(frequencyLabel[s.frequency], locale)} · {formatDuration(180)} · {s.assignedHomie?.firstName}
-                                    </Text>
+                                    </Txt>
                                 </View>
                                 {s.upcomingMissions.map(m => (
                                     <View key={m.id} style={styles.miniRow}>
                                         <Ionicons name="calendar-outline" size={12} color={colors.primary} />
-                                        <Text style={styles.miniRowText}>
+                                        <Txt style={styles.miniRowText}>
                                             {new Date(m.scheduledAt).toLocaleDateString(undefined, { weekday: 'short', day: '2-digit', month: 'short' })} · {new Date(m.scheduledAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
-                                        </Text>
+                                        </Txt>
                                     </View>
                                 ))}
                             </Card>

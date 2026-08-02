@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ScrollView, Text, Pressable, StyleSheet } from 'react-native';
+import { ScrollView, Pressable, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { colors, spacing, typography } from '@heyhomie/design';
@@ -28,13 +29,13 @@ export default function Legal() {
                 {DOCS.map(d => (
                     <Pressable key={d.key} onPress={() => setOpen(open === d.key ? null : d.key)}>
                         <Card style={styles.card}>
-                            <Text style={styles.title}>{d.title}</Text>
-                            <Text style={styles.summary}>{d.summary}</Text>
-                            {open === d.key ? <Text style={styles.full}>The full, current version is available in the app store listing and at heyhomie.io/{d.key}.</Text> : null}
+                            <Txt style={styles.title}>{d.title}</Txt>
+                            <Txt style={styles.summary}>{d.summary}</Txt>
+                            {open === d.key ? <Txt style={styles.full}>The full, current version is available in the app store listing and at heyhomie.io/{d.key}.</Txt> : null}
                         </Card>
                     </Pressable>
                 ))}
-                <Text style={styles.note}>Available in Polish, English and Ukrainian.</Text>
+                <Txt style={styles.note}>Available in Polish, English and Ukrainian.</Txt>
             </ScrollView>
         </SafeAreaView>
     );

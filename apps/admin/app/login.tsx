@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet } from 'react-native';
+import { View, TextInput, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import { auth } from '@heyhomie/api';
@@ -34,11 +35,11 @@ export default function Login() {
         <SafeAreaView style={styles.safe}>
             <Stack.Screen options={{ headerShown: false }} />
             <View style={styles.body}>
-                <Text style={styles.h1}>HeyHomie Admin</Text>
-                <Text style={styles.sub}>Sign in to manage operations.</Text>
+                <Txt style={styles.h1}>HeyHomie Admin</Txt>
+                <Txt style={styles.sub}>Sign in to manage operations.</Txt>
                 <TextInput style={styles.input} placeholder="Email" placeholderTextColor={colors.grey} autoCapitalize="none" autoCorrect={false} keyboardType="email-address" value={email} onChangeText={setEmail} />
                 <TextInput style={styles.input} placeholder="Password" placeholderTextColor={colors.grey} secureTextEntry value={password} onChangeText={setPassword} />
-                {error ? <Text style={styles.error}>{error}</Text> : null}
+                {error ? <Txt style={styles.error}>{error}</Txt> : null}
                 <Button label={busy ? 'Signing in...' : 'Sign in'} variant="teal" disabled={busy || !email || !password} style={{ marginTop: spacing.lg }} onPress={submit} />
             </View>
         </SafeAreaView>

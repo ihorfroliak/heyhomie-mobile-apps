@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ScrollView, Text, View, Pressable, StyleSheet } from 'react-native';
+import { ScrollView, View, Pressable, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -54,89 +55,89 @@ export default function Analytics() {
                 </View>
 
                 {/* Charts */}
-                <Text style={styles.section}>Revenue by day</Text>
+                <Txt style={styles.section}>Revenue by day</Txt>
                 <Card>
                     <BarChart data={s.charts.revenueByDay} width={300} height={150} color={colors.blue} formatKey={d => d.slice(8)} />
                 </Card>
 
-                <Text style={styles.section}>Revenue by weekday</Text>
+                <Txt style={styles.section}>Revenue by weekday</Txt>
                 <Card>
                     <BarChart data={s.charts.revenueByWeekday} width={300} height={130} color={colors.blue} />
                 </Card>
 
                 <View style={styles.twoCol}>
                     <View style={styles.half}>
-                        <Text style={styles.section}>Completion</Text>
+                        <Txt style={styles.section}>Completion</Txt>
                         <Card style={{ alignItems: 'center' }}>
                             <View style={styles.donutWrap}>
                                 <Donut value={s.primary.completionRate} />
                                 <View style={styles.donutCenter}>
-                                    <Text style={styles.donutValue}>{pct(s.primary.completionRate)}</Text>
+                                    <Txt style={styles.donutValue}>{pct(s.primary.completionRate)}</Txt>
                                 </View>
                             </View>
                         </Card>
                     </View>
                     <View style={styles.half}>
-                        <Text style={styles.section}>By plan</Text>
+                        <Txt style={styles.section}>By plan</Txt>
                         <Card>
                             <BarChart data={s.charts.countByPlan} width={130} height={110} color={colors.salad} />
                         </Card>
                     </View>
                 </View>
 
-                <Text style={styles.section}>Avg rating by city</Text>
+                <Txt style={styles.section}>Avg rating by city</Txt>
                 <Card>
                     {s.charts.avgRatingByCity.map(c => (
                         <View key={c.key} style={styles.ratingRow}>
-                            <Text style={styles.ratingCity}>{c.key}</Text>
+                            <Txt style={styles.ratingCity}>{c.key}</Txt>
                             <View style={styles.ratingTrack}>
                                 <View style={[styles.ratingFill, { width: `${(c.value / 5) * 100}%` }]} />
                             </View>
                             <View style={styles.ratingValRow}>
-                                <Text style={styles.ratingVal}>{c.value.toFixed(1)}</Text>
+                                <Txt style={styles.ratingVal}>{c.value.toFixed(1)}</Txt>
                                 <Ionicons name="star" size={11} color={colors.warning} />
                             </View>
                         </View>
                     ))}
                 </Card>
 
-                <Text style={styles.section}>Top homies</Text>
+                <Txt style={styles.section}>Top homies</Txt>
                 {s.charts.leaderboard.map((w, i) => (
                     <View key={w.homieId} style={styles.lbRow}>
-                        <Text style={styles.rank}>{i + 1}.</Text>
-                        <Text style={styles.name}>{w.firstName}</Text>
-                        <Text style={styles.meta}>{w.missions} missions</Text>
-                        <Text style={styles.payout}>{formatMoney(w.payout, 'PLN', locale)}</Text>
+                        <Txt style={styles.rank}>{i + 1}.</Txt>
+                        <Txt style={styles.name}>{w.firstName}</Txt>
+                        <Txt style={styles.meta}>{w.missions} missions</Txt>
+                        <Txt style={styles.payout}>{formatMoney(w.payout, 'PLN', locale)}</Txt>
                     </View>
                 ))}
 
                 {/* Cohort retention — first-order month vs repeat activity */}
-                <Text style={styles.section}>Retention by cohort</Text>
+                <Txt style={styles.section}>Retention by cohort</Txt>
                 <Card>
                     <View style={styles.cohortHead}>
-                        <Text style={[styles.cohortMonth, styles.cohortHeadText]}>Cohort</Text>
-                        <Text style={[styles.cohortSize, styles.cohortHeadText]}>Size</Text>
+                        <Txt style={[styles.cohortMonth, styles.cohortHeadText]}>Cohort</Txt>
+                        <Txt style={[styles.cohortSize, styles.cohortHeadText]}>Size</Txt>
                         {['M0', 'M1', 'M2', 'M3'].map(h => (
-                            <Text key={h} style={[styles.cohortCell, styles.cohortHeadText]}>{h}</Text>
+                            <Txt key={h} style={[styles.cohortCell, styles.cohortHeadText]}>{h}</Txt>
                         ))}
                     </View>
                     {cohorts.map(c => (
                         <View key={c.month} style={styles.cohortRow}>
-                            <Text style={styles.cohortMonth}>{c.month}</Text>
-                            <Text style={styles.cohortSize}>{c.size}</Text>
+                            <Txt style={styles.cohortMonth}>{c.month}</Txt>
+                            <Txt style={styles.cohortSize}>{c.size}</Txt>
                             {c.retention.map((v, k) => (
                                 <View key={k} style={[styles.cohortChip, { backgroundColor: `${retColor(v)}22` }]}>
-                                    <Text style={[styles.cohortChipText, { color: retColor(v) }]}>{pct(v)}</Text>
+                                    <Txt style={[styles.cohortChipText, { color: retColor(v) }]}>{pct(v)}</Txt>
                                 </View>
                             ))}
                         </View>
                     ))}
-                    <Text style={styles.cohortNote}>M0 = first-order month · each cell = share ordering again that month later.</Text>
+                    <Txt style={styles.cohortNote}>M0 = first-order month · each cell = share ordering again that month later.</Txt>
                 </Card>
 
                 {/* SECONDARY — collapsed by default so it doesn't crowd the view */}
                 <Pressable style={styles.moreToggle} onPress={() => setShowMore(v => !v)}>
-                    <Text style={styles.moreText}>Additional metrics</Text>
+                    <Txt style={styles.moreText}>Additional metrics</Txt>
                     <Ionicons name={showMore ? 'chevron-up' : 'chevron-down'} size={16} color={colors.grey} />
                 </Pressable>
                 {showMore ? (
@@ -156,15 +157,15 @@ export default function Analytics() {
 
 const Hero = ({ label, value }: { label: string; value: string }) => (
     <Card variant="fill" style={styles.hero}>
-        <Text style={styles.heroLabel}>{label}</Text>
-        <Text style={styles.heroValue}>{value}</Text>
+        <Txt style={styles.heroLabel}>{label}</Txt>
+        <Txt style={styles.heroValue}>{value}</Txt>
     </Card>
 );
 
 const Mini = ({ label, value }: { label: string; value: string }) => (
     <View style={styles.mini}>
-        <Text style={styles.miniValue}>{value}</Text>
-        <Text style={styles.miniLabel}>{label}</Text>
+        <Txt style={styles.miniValue}>{value}</Txt>
+        <Txt style={styles.miniLabel}>{label}</Txt>
     </View>
 );
 

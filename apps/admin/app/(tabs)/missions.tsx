@@ -1,5 +1,6 @@
 import React, { useState, useSyncExternalStore } from 'react';
-import { ScrollView, Text, View, Pressable, StyleSheet } from 'react-native';
+import { ScrollView, View, Pressable, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -36,11 +37,11 @@ export default function Orders() {
     return (
         <SafeAreaView style={styles.safe} edges={['top']}>
             <ScrollView contentContainerStyle={styles.body}>
-                <Text style={styles.h1}>Orders</Text>
+                <Txt style={styles.h1}>Orders</Txt>
                 <View style={styles.filters}>
                     {FILTERS.map(f => (
                         <Pressable key={f.key} onPress={() => setFilter(f.key)} style={[styles.chip, filter === f.key && styles.chipOn]}>
-                            <Text style={[styles.chipText, filter === f.key && styles.chipTextOn]}>{f.label}</Text>
+                            <Txt style={[styles.chipText, filter === f.key && styles.chipTextOn]}>{f.label}</Txt>
                         </Pressable>
                     ))}
                 </View>
@@ -52,18 +53,18 @@ export default function Orders() {
                             <Card style={{ marginBottom: spacing.md }}>
                                 <View style={styles.row}>
                                     <View style={[styles.badge, { backgroundColor: `${s.tone}1A` }]}>
-                                        <Text style={[styles.badgeText, { color: s.tone }]}>{s.label}</Text>
+                                        <Txt style={[styles.badgeText, { color: s.tone }]}>{s.label}</Txt>
                                     </View>
-                                    <Text style={styles.id}>#{o.id.slice(0, 8)}</Text>
+                                    <Txt style={styles.id}>#{o.id.slice(0, 8)}</Txt>
                                 </View>
-                                <Text style={styles.title}>{o.serviceId ? serviceName(o.serviceId, locale) : 'Cleaning order'}</Text>
+                                <Txt style={styles.title}>{o.serviceId ? serviceName(o.serviceId, locale) : 'Cleaning order'}</Txt>
                                 <View style={styles.metaRow}>
                                     <Ionicons name="location-outline" size={13} color={colors.grey} />
-                                    <Text style={styles.meta}>{o.cityId ?? '—'}</Text>
+                                    <Txt style={styles.meta}>{o.cityId ?? '—'}</Txt>
                                     {o.contact?.phone ? (
                                         <>
                                             <Ionicons name="call-outline" size={13} color={colors.grey} style={{ marginLeft: 8 }} />
-                                            <Text style={styles.meta}>{o.contact.phone}</Text>
+                                            <Txt style={styles.meta}>{o.contact.phone}</Txt>
                                         </>
                                     ) : null}
                                     <Ionicons name="chevron-forward" size={16} color={colors.grey} style={{ marginLeft: 'auto' }} />

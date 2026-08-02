@@ -1,5 +1,6 @@
 import React from 'react';
-import { ScrollView, Text, View, StyleSheet } from 'react-native';
+import { ScrollView, View, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -29,9 +30,9 @@ export default function Contracts() {
                         .filter(s => counts[s] > 0)
                         .map(s => (
                             <View key={s} style={[styles.chip, { backgroundColor: `${STATUS[s].color}1A` }]}>
-                                <Text style={[styles.chipText, { color: STATUS[s].color }]}>
+                                <Txt style={[styles.chipText, { color: STATUS[s].color }]}>
                                     {STATUS[s].label} · {counts[s]}
-                                </Text>
+                                </Txt>
                             </View>
                         ))}
                 </View>
@@ -41,8 +42,8 @@ export default function Contracts() {
                         <View style={styles.alertRow}>
                             <Ionicons name="alert-circle" size={20} color={colors.warning} />
                             <View style={{ flex: 1 }}>
-                                <Text style={styles.alertTitle}>{expiring.length} contract(s) expiring within 30 days</Text>
-                                <Text style={styles.alertSub}>{expiring.map(c => c.homieName).join(', ')}</Text>
+                                <Txt style={styles.alertTitle}>{expiring.length} contract(s) expiring within 30 days</Txt>
+                                <Txt style={styles.alertSub}>{expiring.map(c => c.homieName).join(', ')}</Txt>
                             </View>
                         </View>
                     </Card>
@@ -56,24 +57,24 @@ export default function Contracts() {
                             <View style={styles.row}>
                                 <View style={styles.nameRow}>
                                     <View style={styles.avatar}>
-                                        <Text style={styles.avatarText}>{initials}</Text>
+                                        <Txt style={styles.avatarText}>{initials}</Txt>
                                     </View>
-                                    <Text style={styles.name}>{c.homieName}</Text>
+                                    <Txt style={styles.name}>{c.homieName}</Txt>
                                 </View>
                                 <View style={[styles.badge, { backgroundColor: `${STATUS[st].color}1A` }]}>
-                                    <Text style={[styles.badgeText, { color: STATUS[st].color }]}>{STATUS[st].label}</Text>
+                                    <Txt style={[styles.badgeText, { color: STATUS[st].color }]}>{STATUS[st].label}</Txt>
                                 </View>
                             </View>
-                            <Text style={[styles.meta, { marginTop: 6 }]}>
+                            <Txt style={[styles.meta, { marginTop: 6 }]}>
                                 {c.type === 'b2b' ? 'B2B (subcontractor)' : 'Umowa zlecenia'} · {c.startDate}
                                 {c.endDate ? ` → ${c.endDate}` : ' → indefinite'}
-                            </Text>
+                            </Txt>
                             <View style={styles.docRow}>
                                 <Ionicons name="document-outline" size={12} color={colors.grey} />
-                                <Text style={styles.meta}>
+                                <Txt style={styles.meta}>
                                     {c.documents.length} document(s) · payout {Math.round((c.ratePct ?? 0) * 100)}%
                                     {hasPayrollObligations(c.type) ? ' · ZUS/tax on us' : ' · contractor invoices'}
-                                </Text>
+                                </Txt>
                             </View>
                         </Card>
                     );

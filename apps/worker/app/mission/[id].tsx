@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ScrollView, Text, View, StyleSheet } from 'react-native';
+import { ScrollView, View, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -27,9 +28,9 @@ const DetailRow = ({ icon, label, value }: { icon: keyof typeof Ionicons.glyphMa
     <View style={styles.detailRow}>
         <View style={styles.detailLeft}>
             <Ionicons name={icon} size={15} color={colors.grey} />
-            <Text style={styles.detailLabel}>{label}</Text>
+            <Txt style={styles.detailLabel}>{label}</Txt>
         </View>
-        <Text style={styles.detailValue} numberOfLines={1}>{value}</Text>
+        <Txt style={styles.detailValue} numberOfLines={1}>{value}</Txt>
     </View>
 );
 
@@ -54,9 +55,9 @@ export default function WorkerMissionDetail() {
             <Stack.Screen options={{ headerShown: true, title: 'Mission' }} />
             <ScrollView contentContainerStyle={styles.body}>
                 <View style={styles.row}>
-                    <Text style={styles.title}>
+                    <Txt style={styles.title}>
                         {mission.plan === 'general' ? 'General' : 'Standard'} cleaning · {formatDuration(mission.durationMinutes)}
-                    </Text>
+                    </Txt>
                     <StatusBadge status={mission.status} locale={locale} />
                 </View>
 
@@ -72,7 +73,7 @@ export default function WorkerMissionDetail() {
                                         <View style={[styles.dot, reached && styles.dotOn]}>
                                             {reached ? <Ionicons name="checkmark" size={10} color={colors.white} /> : null}
                                         </View>
-                                        <Text style={[styles.stepLabel, reached && styles.stepLabelOn]}>{s.label}</Text>
+                                        <Txt style={[styles.stepLabel, reached && styles.stepLabelOn]}>{s.label}</Txt>
                                     </View>
                                     {!isLast ? <View style={styles.stepLine} /> : null}
                                 </View>
@@ -100,7 +101,7 @@ export default function WorkerMissionDetail() {
                 ) : (
                     <View style={styles.doneRow}>
                         <Ionicons name="checkmark-circle" size={18} color={colors.success} />
-                        <Text style={styles.doneNote}>Mission {mission.status}. Nothing more to do.</Text>
+                        <Txt style={styles.doneNote}>Mission {mission.status}. Nothing more to do.</Txt>
                     </View>
                 )}
             </ScrollView>

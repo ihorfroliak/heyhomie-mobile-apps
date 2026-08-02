@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ScrollView, Text, View, Pressable, TextInput, Linking, PanResponder, Platform, StyleSheet } from 'react-native';
+import { ScrollView, View, Pressable, TextInput, Linking, PanResponder, Platform, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -59,16 +60,16 @@ function Stepper({ label, hint, value, min = 0, onChange }: { label: string; hin
     return (
         <View style={styles.stepper}>
             <View>
-                <Text style={styles.stepLabel}>{label}</Text>
-                {hint ? <Text style={styles.stepHint}>{hint}</Text> : null}
+                <Txt style={styles.stepLabel}>{label}</Txt>
+                {hint ? <Txt style={styles.stepHint}>{hint}</Txt> : null}
             </View>
             <View style={styles.stepCtrl}>
                 <Pressable style={styles.stepBtn} onPress={() => onChange(Math.max(min, value - 1))}>
-                    <Text style={styles.stepBtnText}>−</Text>
+                    <Txt style={styles.stepBtnText}>−</Txt>
                 </Pressable>
-                <Text style={styles.stepValue}>{value}</Text>
+                <Txt style={styles.stepValue}>{value}</Txt>
                 <Pressable style={styles.stepBtn} onPress={() => onChange(value + 1)}>
-                    <Text style={styles.stepBtnText}>+</Text>
+                    <Txt style={styles.stepBtnText}>+</Txt>
                 </Pressable>
             </View>
         </View>
@@ -78,7 +79,7 @@ function Stepper({ label, hint, value, min = 0, onChange }: { label: string; hin
 const Toggle = ({ label, on, onPress }: { label: string; on: boolean; onPress: () => void }) => (
     <Pressable onPress={onPress}>
         <Card style={styles.addon}>
-            <Text style={[styles.addonName, { flex: 1 }]}>{label}</Text>
+            <Txt style={[styles.addonName, { flex: 1 }]}>{label}</Txt>
             <View style={[styles.check, on && styles.checkOn]}>{on ? <Ionicons name="checkmark" size={14} color={colors.primary} /> : null}</View>
         </Card>
     </Pressable>
@@ -89,9 +90,9 @@ const DetailRow = ({ icon, label, value }: { icon: keyof typeof Ionicons.glyphMa
     <View style={styles.detailRow}>
         <View style={styles.detailLeft}>
             <Ionicons name={icon} size={16} color={colors.grey} />
-            <Text style={styles.detailLabel}>{label}</Text>
+            <Txt style={styles.detailLabel}>{label}</Txt>
         </View>
-        <Text style={styles.detailValue}>{value}</Text>
+        <Txt style={styles.detailValue}>{value}</Txt>
     </View>
 );
 
@@ -102,17 +103,17 @@ function ServiceDetails({ detail, locale, open, onToggle }: { detail: ServiceDet
             <Pressable style={styles.detailsHead} onPress={onToggle}>
                 <View style={styles.detailsHeadLeft}>
                     <Ionicons name="information-circle-outline" size={16} color={colors.blue} />
-                    <Text style={styles.detailsHeadText}>About this service</Text>
+                    <Txt style={styles.detailsHeadText}>About this service</Txt>
                 </View>
                 <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={16} color={colors.grey} />
             </Pressable>
             {open ? (
                 <Card variant="fill" style={{ marginTop: spacing.sm }}>
-                    <Text style={styles.detailsDesc}>{detail.description[locale]}</Text>
+                    <Txt style={styles.detailsDesc}>{detail.description[locale]}</Txt>
                     {detail.highlights[locale].map(h => (
                         <View key={h} style={styles.detailsRow}>
                             <Ionicons name="checkmark-circle" size={15} color={colors.salad} />
-                            <Text style={styles.detailsItem}>{h}</Text>
+                            <Txt style={styles.detailsItem}>{h}</Txt>
                         </View>
                     ))}
                 </Card>
@@ -169,8 +170,8 @@ function SqmSlider({ value, onChange }: { value: number; onChange: (v: number) =
                 <View style={[styles.sqmThumb, { left: `${pct}%` }]} />
             </View>
             <View style={styles.sqmScaleRow}>
-                <Text style={styles.sqmScaleText}>{SQM_MIN} m²</Text>
-                <Text style={styles.sqmScaleText}>{SQM_MAX} m²</Text>
+                <Txt style={styles.sqmScaleText}>{SQM_MIN} m²</Txt>
+                <Txt style={styles.sqmScaleText}>{SQM_MAX} m²</Txt>
             </View>
         </View>
     );
@@ -196,7 +197,7 @@ function TrustStrip() {
                 <View style={styles.starsRow}>
                     {[0, 1, 2, 3, 4].map(i => <Ionicons key={i} name="star" size={13} color={colors.warning} />)}
                 </View>
-                <Text style={styles.trustHeaderText}>4.9 · Kraków's #1 rated cleaning service</Text>
+                <Txt style={styles.trustHeaderText}>4.9 · Kraków's #1 rated cleaning service</Txt>
             </View>
             <View style={styles.trustGrid}>
                 {TRUST_BADGES.map(b => (
@@ -204,7 +205,7 @@ function TrustStrip() {
                         <View style={styles.trustIconWrap}>
                             <Ionicons name={b.icon} size={16} color={colors.blue} />
                         </View>
-                        <Text style={styles.trustLabel}>{b.label}</Text>
+                        <Txt style={styles.trustLabel}>{b.label}</Txt>
                     </View>
                 ))}
             </View>
@@ -460,24 +461,24 @@ export default function Book() {
                                 <Ionicons name="checkmark" size={30} color={colors.primary} />
                             </View>
                         </View>
-                        <Text style={styles.successTitle}>You're booked!</Text>
-                        <Text style={styles.successText}>
+                        <Txt style={styles.successTitle}>You're booked!</Txt>
+                        <Txt style={styles.successText}>
                             {submitted.isNewAccount ? `Welcome, ${submitted.account.firstName}! ` : `Welcome back, ${submitted.account.firstName}! `}
                             We sent a confirmation to {submitted.account.phone ?? submitted.account.email}.
-                        </Text>
+                        </Txt>
                         {submitted.isNewAccount ? (
                             <View style={styles.successNoteRow}>
                                 <Ionicons name="shield-checkmark" size={16} color={colors.success} />
-                                <Text style={styles.successNote}>Account created — confirm with the one-time code. No password needed.</Text>
+                                <Txt style={styles.successNote}>Account created — confirm with the one-time code. No password needed.</Txt>
                             </View>
                         ) : null}
                         <View style={styles.successNoteRow}>
                             <Ionicons name={submitted.payment.method === 'card' ? 'card-outline' : 'mail-outline'} size={16} color={colors.blue} />
-                            <Text style={styles.successNote}>
+                            <Txt style={styles.successNote}>
                                 {submitted.payment.method === 'pay_later'
                                     ? 'You pay after the cleaning — we email a payment link the next morning. Track its status in Activity.'
                                     : 'You pay after the cleaning — we auto-charge your card the next morning. No charge until the visit is done.'}
-                            </Text>
+                            </Txt>
                         </View>
                         <Button label="Book another" variant="ghost" style={{ marginTop: spacing.lg }} onPress={() => setSubmitted(null)} />
                     </Card>
@@ -485,20 +486,20 @@ export default function Book() {
                 <>
                 <TrustStrip />
 
-                <Text style={styles.section}>City</Text>
+                <Txt style={styles.section}>City</Txt>
                 <View style={styles.cityChips}>
                     {cityIds.map(id => {
                         const on = id === cityId;
                         return (
                             <Pressable key={id} onPress={() => pickCity(id)} style={[styles.cityChip, on && styles.cityChipOn]}>
-                                <Text style={[styles.cityChipText, on && styles.cityChipTextOn]}>{cityName(id, locale)}</Text>
+                                <Txt style={[styles.cityChipText, on && styles.cityChipTextOn]}>{cityName(id, locale)}</Txt>
                             </Pressable>
                         );
                     })}
                 </View>
                 <View style={styles.locationHintRow}>
                     <Ionicons name="location" size={12} color={colors.grey} />
-                    <Text style={styles.waitlist}>{locationHint}</Text>
+                    <Txt style={styles.waitlist}>{locationHint}</Txt>
                 </View>
 
                 {viewMode === 'cleaning' && hasCleaning ? (
@@ -516,8 +517,8 @@ export default function Book() {
                         {otherServices.length > 0 ? (
                             <Pressable style={styles.exploreRow} onPress={() => setViewMode('browsing')}>
                                 <View style={styles.exploreLeft}>
-                                    <Text style={styles.exploreIcons}>{otherServices.slice(0, 3).map(s => serviceIcon(s.id)).join(' ')}</Text>
-                                    <Text style={styles.exploreText}>Need something else? Windows, flowers & more</Text>
+                                    <Txt style={styles.exploreIcons}>{otherServices.slice(0, 3).map(s => serviceIcon(s.id)).join(' ')}</Txt>
+                                    <Txt style={styles.exploreText}>Need something else? Windows, flowers & more</Txt>
                                 </View>
                                 <Ionicons name="chevron-forward" size={16} color={colors.grey} />
                             </Pressable>
@@ -527,13 +528,13 @@ export default function Book() {
 
                         {freqs.length > 1 ? (
                             <>
-                                <Text style={styles.section}>How often?</Text>
+                                <Txt style={styles.section}>How often?</Txt>
                                 <View style={styles.freqWrap}>
                                     {freqs.map(f => {
                                         const on = f === frequency;
                                         return (
                                             <Pressable key={f} onPress={() => setFrequency(f)} style={[styles.freqChip, on && styles.freqChipOn]}>
-                                                <Text style={[styles.freqChipText, on && styles.freqChipTextOn]}>{tr(frequencyLabel[f], locale)}</Text>
+                                                <Txt style={[styles.freqChipText, on && styles.freqChipTextOn]}>{tr(frequencyLabel[f], locale)}</Txt>
                                             </Pressable>
                                         );
                                     })}
@@ -541,7 +542,7 @@ export default function Book() {
                             </>
                         ) : null}
 
-                        <Text style={styles.section}>Quick start</Text>
+                        <Txt style={styles.section}>Quick start</Txt>
                         <View style={styles.presets}>
                             {PRESETS.map(p => {
                                 const active = rooms === p.rooms && kitchens === p.kitchens && bathrooms === p.bathrooms;
@@ -555,14 +556,14 @@ export default function Book() {
                                         }}
                                         style={[styles.preset, active && styles.presetOn]}
                                     >
-                                        <Text style={[styles.presetText, active && styles.presetTextOn]}>{p.label}</Text>
-                                        {p.popular ? <Text style={styles.popular}>popular</Text> : null}
+                                        <Txt style={[styles.presetText, active && styles.presetTextOn]}>{p.label}</Txt>
+                                        {p.popular ? <Txt style={styles.popular}>popular</Txt> : null}
                                     </Pressable>
                                 );
                             })}
                         </View>
 
-                        <Text style={styles.section}>Your home</Text>
+                        <Txt style={styles.section}>Your home</Txt>
                         <Card variant="fill">
                             <Stepper label="Rooms" hint="30 min each" value={rooms} onChange={setRooms} />
                             <Stepper label="Kitchens" hint="60 min each" value={kitchens} min={1} onChange={setKitchens} />
@@ -570,15 +571,15 @@ export default function Book() {
                         </Card>
 
                         <View style={styles.sqmHeader}>
-                            <Text style={styles.section}>Apartment size</Text>
-                            <Text style={styles.sqmValue}>{areaSqm} m²</Text>
+                            <Txt style={styles.section}>Apartment size</Txt>
+                            <Txt style={styles.sqmValue}>{areaSqm} m²</Txt>
                         </View>
                         <Card>
                             <SqmSlider value={areaSqm} onChange={setAreaSqm} />
-                            <Text style={styles.sqmNote}>Helps us plan the right team size — your price stays the same.</Text>
+                            <Txt style={styles.sqmNote}>Helps us plan the right team size — your price stays the same.</Txt>
                         </Card>
 
-                        <Text style={styles.section}>Add-ons</Text>
+                        <Txt style={styles.section}>Add-ons</Txt>
                         {available.map(a => {
                             const on = !!selected[a.id];
                             const quantifiable = a.pricing !== 'flat';
@@ -586,19 +587,19 @@ export default function Book() {
                                 <Pressable key={a.id} onPress={() => toggle(a.id)}>
                                     <Card style={[styles.addon, on && styles.addonOn]}>
                                         <View style={{ flex: 1 }}>
-                                            <Text style={styles.addonName}>{tr(a.label, locale)}</Text>
-                                            <Text style={styles.addonMeta}>
+                                            <Txt style={styles.addonName}>{tr(a.label, locale)}</Txt>
+                                            <Txt style={styles.addonMeta}>
                                                 +{a.addedMinutesPerUnit} min{quantifiable ? ` · per ${tr(a.unitLabel ?? a.label, locale)}` : ''}
-                                            </Text>
+                                            </Txt>
                                         </View>
                                         {on && quantifiable ? (
                                             <View style={styles.stepCtrl}>
                                                 <Pressable style={styles.stepBtn} onPress={() => setQty(a.id, (selected[a.id] ?? 1) - 1)}>
-                                                    <Text style={styles.stepBtnText}>−</Text>
+                                                    <Txt style={styles.stepBtnText}>−</Txt>
                                                 </Pressable>
-                                                <Text style={styles.stepValue}>{selected[a.id]}</Text>
+                                                <Txt style={styles.stepValue}>{selected[a.id]}</Txt>
                                                 <Pressable style={styles.stepBtn} onPress={() => setQty(a.id, (selected[a.id] ?? 1) + 1)}>
-                                                    <Text style={styles.stepBtnText}>+</Text>
+                                                    <Txt style={styles.stepBtnText}>+</Txt>
                                                 </Pressable>
                                             </View>
                                         ) : (
@@ -609,11 +610,11 @@ export default function Book() {
                             );
                         })}
 
-                        <Text style={styles.section}>At the apartment</Text>
+                        <Txt style={styles.section}>At the apartment</Txt>
                         <Toggle label="Mop & bucket available" on={mopPresent} onPress={() => setMopPresent(v => !v)} />
                         <Toggle label="Vacuum cleaner available" on={vacuumPresent} onPress={() => setVacuumPresent(v => !v)} />
                         {!mopPresent || !vacuumPresent ? (
-                            <Text style={styles.sumNote}>No problem — your homie brings the equipment that's missing.</Text>
+                            <Txt style={styles.sumNote}>No problem — your homie brings the equipment that's missing.</Txt>
                         ) : null}
                         <Toggle label="Pets at home (info only)" on={pets} onPress={() => setPets(v => !v)} />
 
@@ -621,7 +622,7 @@ export default function Book() {
                             <DetailRow icon="time-outline" label="Estimated time" value={formatDuration(minutes)} />
                             <DetailRow icon="people-outline" label="Homies assigned" value={String(workers)} />
                             <DetailRow icon="resize-outline" label="Apartment size" value={`${areaSqm} m²`} />
-                            <Text style={styles.sumNote}>+{TRAVEL_BUFFER_MINUTES} min travel buffer · price calculated at checkout</Text>
+                            <Txt style={styles.sumNote}>+{TRAVEL_BUFFER_MINUTES} min travel buffer · price calculated at checkout</Txt>
                         </Card>
                     </>
                 ) : null}
@@ -630,15 +631,15 @@ export default function Book() {
                     <>
                         <Pressable style={styles.backRow} onPress={backToCleaning}>
                             <Ionicons name="chevron-back" size={16} color={colors.primary} />
-                            <Text style={styles.backText}>Back to cleaning</Text>
+                            <Txt style={styles.backText}>Back to cleaning</Txt>
                         </Pressable>
-                        <Text style={styles.section}>Other services in {cityName(cityId, locale)}</Text>
+                        <Txt style={styles.section}>Other services in {cityName(cityId, locale)}</Txt>
                         <View style={styles.otherGrid}>
                             {otherServices.map(s => (
                                 <Pressable key={s.id} onPress={() => pickOtherService(s.id)} style={styles.otherTile}>
-                                    <Text style={styles.otherIcon}>{serviceIcon(s.id)}</Text>
-                                    <Text style={styles.otherName}>{s.names[locale]}</Text>
-                                    <Text style={styles.otherTagline} numberOfLines={2}>{s.tagline[locale]}</Text>
+                                    <Txt style={styles.otherIcon}>{serviceIcon(s.id)}</Txt>
+                                    <Txt style={styles.otherName}>{s.names[locale]}</Txt>
+                                    <Txt style={styles.otherTagline} numberOfLines={2}>{s.tagline[locale]}</Txt>
                                 </Pressable>
                             ))}
                         </View>
@@ -650,7 +651,7 @@ export default function Book() {
                         {hasCleaning ? (
                             <Pressable style={styles.backRow} onPress={backToCleaning}>
                                 <Ionicons name="chevron-back" size={16} color={colors.primary} />
-                                <Text style={styles.backText}>Back to cleaning</Text>
+                                <Txt style={styles.backText}>Back to cleaning</Txt>
                             </Pressable>
                         ) : null}
 
@@ -659,9 +660,9 @@ export default function Book() {
                         {isLead ? (
                             // Office / post-renovation — not booked in-app; route to a manager.
                             <Card variant="fill" style={styles.leadCard}>
-                                <Text style={styles.infoTitle}>{activeService.names[locale]}</Text>
-                                <Text style={styles.infoText}>{activeService.tagline[locale]}</Text>
-                                <Text style={styles.leadNote}>Quoted individually. Call us, or leave your number and a manager will reach out to agree the scope and price.</Text>
+                                <Txt style={styles.infoTitle}>{activeService.names[locale]}</Txt>
+                                <Txt style={styles.infoText}>{activeService.tagline[locale]}</Txt>
+                                <Txt style={styles.leadNote}>Quoted individually. Call us, or leave your number and a manager will reach out to agree the scope and price.</Txt>
                                 <Button
                                     label={`Call ${CONTACT_PHONE}`}
                                     variant="teal"
@@ -671,11 +672,11 @@ export default function Book() {
                                 {leadSent ? (
                                     <View style={styles.leadSentRow}>
                                         <Ionicons name="checkmark-circle" size={18} color={colors.success} />
-                                        <Text style={styles.leadSentText}>Got it — a manager will call you back within one business day. We've texted a confirmation.</Text>
+                                        <Txt style={styles.leadSentText}>Got it — a manager will call you back within one business day. We've texted a confirmation.</Txt>
                                     </View>
                                 ) : (
                                     <>
-                                        <Text style={styles.section}>…or leave your number</Text>
+                                        <Txt style={styles.section}>…or leave your number</Txt>
                                         <TextInput
                                             style={styles.tInput}
                                             placeholder="Phone (+48…)"
@@ -698,13 +699,13 @@ export default function Book() {
                             <>
                                 {freqs.length > 1 ? (
                                     <>
-                                        <Text style={styles.section}>How often?</Text>
+                                        <Txt style={styles.section}>How often?</Txt>
                                         <View style={styles.freqWrap}>
                                             {freqs.map(f => {
                                                 const on = f === frequency;
                                                 return (
                                                     <Pressable key={f} onPress={() => setFrequency(f)} style={[styles.freqChip, on && styles.freqChipOn]}>
-                                                        <Text style={[styles.freqChipText, on && styles.freqChipTextOn]}>{tr(frequencyLabel[f], locale)}</Text>
+                                                        <Txt style={[styles.freqChipText, on && styles.freqChipTextOn]}>{tr(frequencyLabel[f], locale)}</Txt>
                                                     </Pressable>
                                                 );
                                             })}
@@ -713,15 +714,15 @@ export default function Book() {
                                 ) : null}
                                 {isFlower ? (
                                     <>
-                                        <Text style={styles.section}>Who receives the flowers?</Text>
+                                        <Txt style={styles.section}>Who receives the flowers?</Txt>
                                         <Card>
                                             <TextInput style={styles.tInput} placeholder="Recipient name" placeholderTextColor={colors.grey} value={dName} onChangeText={setDName} />
                                             <TextInput style={styles.tInput} placeholder="Recipient phone (optional, +48…)" placeholderTextColor={colors.grey} keyboardType="phone-pad" value={dPhone} onChangeText={setDPhone} />
                                             <TextInput style={[styles.tInput, { marginBottom: 0 }]} placeholder={`Street and number in ${cityName(cityId, locale)}`} placeholderTextColor={colors.grey} value={dLine1} onChangeText={setDLine1} />
-                                            {dPhone.length > 0 && !deliveryCheck.phoneValid ? <Text style={styles.err}>Invalid Polish phone number</Text> : null}
+                                            {dPhone.length > 0 && !deliveryCheck.phoneValid ? <Txt style={styles.err}>Invalid Polish phone number</Txt> : null}
                                         </Card>
 
-                                        <Text style={styles.section}>When?</Text>
+                                        <Txt style={styles.section}>When?</Txt>
                                         <Card>
                                             {Platform.OS === 'web' ? (
                                                 // datetimepicker has no web implementation — plain input there.
@@ -731,7 +732,7 @@ export default function Book() {
                                                     <Pressable style={styles.dateRow} onPress={() => setShowDatePicker(v => !v)}>
                                                         <View style={styles.dateLeft}>
                                                             <Ionicons name="calendar-outline" size={16} color={colors.blue} />
-                                                            <Text style={styles.dateValue}>{prettyDate(dDate)}</Text>
+                                                            <Txt style={styles.dateValue}>{prettyDate(dDate)}</Txt>
                                                         </View>
                                                         <Ionicons name={showDatePicker ? 'chevron-up' : 'chevron-down'} size={16} color={colors.grey} />
                                                     </Pressable>
@@ -755,15 +756,15 @@ export default function Book() {
                                                     const on = s.id === dSlot;
                                                     return (
                                                         <Pressable key={s.id} onPress={() => setDSlot(s.id)} style={[styles.slotChip, on && styles.slotChipOn]}>
-                                                            <Text style={[styles.slotLabel, on && styles.slotLabelOn]}>{tr(s.label, locale)}</Text>
-                                                            <Text style={[styles.slotWindow, on && styles.slotLabelOn]}>{s.window}</Text>
+                                                            <Txt style={[styles.slotLabel, on && styles.slotLabelOn]}>{tr(s.label, locale)}</Txt>
+                                                            <Txt style={[styles.slotWindow, on && styles.slotLabelOn]}>{s.window}</Txt>
                                                         </Pressable>
                                                     );
                                                 })}
                                             </View>
                                         </Card>
 
-                                        <Text style={styles.section}>Gift note (printed on the card)</Text>
+                                        <Txt style={styles.section}>Gift note (printed on the card)</Txt>
                                         <Card>
                                             <TextInput
                                                 style={[styles.tInput, styles.noteInput]}
@@ -773,15 +774,15 @@ export default function Book() {
                                                 onChangeText={t => setDNote(t.slice(0, DELIVERY_NOTE_MAX))}
                                                 multiline
                                             />
-                                            <Text style={styles.noteCount}>{dNote.length}/{DELIVERY_NOTE_MAX}</Text>
+                                            <Txt style={styles.noteCount}>{dNote.length}/{DELIVERY_NOTE_MAX}</Txt>
                                         </Card>
-                                        <Text style={styles.sumNote}>Price confirmed at checkout — depends on the bouquet you pick with our florist.</Text>
+                                        <Txt style={styles.sumNote}>Price confirmed at checkout — depends on the bouquet you pick with our florist.</Txt>
                                     </>
                                 ) : (
                                     <Card variant="fill" style={{ marginTop: spacing.md }}>
-                                        <Text style={styles.infoTitle}>{activeService.names[locale]}</Text>
-                                        <Text style={styles.infoText}>{activeService.tagline[locale]}</Text>
-                                        <Text style={styles.sumNote}>{UNIT_HINT[activeService.unit]} · we'll confirm the scope and price at checkout.</Text>
+                                        <Txt style={styles.infoTitle}>{activeService.names[locale]}</Txt>
+                                        <Txt style={styles.infoText}>{activeService.tagline[locale]}</Txt>
+                                        <Txt style={styles.sumNote}>{UNIT_HINT[activeService.unit]} · we'll confirm the scope and price at checkout.</Txt>
                                     </Card>
                                 )}
                             </>
@@ -792,7 +793,7 @@ export default function Book() {
                 {activeService && (viewMode === 'cleaning' || viewMode === 'selected') ? (
                     <>
                         {/* Company invoice — one yes/no toggle, fields only if the client wants a faktura. */}
-                        <Text style={styles.section}>Invoice</Text>
+                        <Txt style={styles.section}>Invoice</Txt>
                         <Toggle label="I need an invoice for a company" on={wantInvoice} onPress={() => setWantInvoice(v => !v)} />
                         {wantInvoice ? (
                             <Card style={{ marginTop: spacing.sm }}>
@@ -804,14 +805,14 @@ export default function Book() {
                                     <TextInput style={[styles.tInput, { flex: 1, marginLeft: spacing.sm }]} placeholder="City" placeholderTextColor={colors.grey} value={billing.city ?? ''} onChangeText={t => setBill('city', t)} />
                                 </View>
                                 <TextInput style={styles.tInput} placeholder="Email for the invoice (optional)" placeholderTextColor={colors.grey} keyboardType="email-address" value={billing.email ?? ''} onChangeText={t => setBill('email', t)} />
-                                {(billing.nip ?? '').length > 0 && !billingCheck.nipValid ? <Text style={styles.err}>Invalid NIP checksum</Text> : null}
+                                {(billing.nip ?? '').length > 0 && !billingCheck.nipValid ? <Txt style={styles.err}>Invalid NIP checksum</Txt> : null}
                             </Card>
                         ) : null}
 
                         {/* Contact — only for signed-out visitors; minimal fields, name optional. */}
                         {!loggedIn ? (
                             <>
-                                <Text style={styles.section}>Your contact</Text>
+                                <Txt style={styles.section}>Your contact</Txt>
                                 <Card>
                                     <TextInput
                                         style={styles.tInput}
@@ -838,14 +839,14 @@ export default function Book() {
                                     />
                                     <View style={styles.contactHintRow}>
                                         <Ionicons name="shield-checkmark-outline" size={13} color={colors.grey} />
-                                        <Text style={styles.contactHint}>We'll send a one-time code to confirm — no password needed.</Text>
+                                        <Txt style={styles.contactHint}>We'll send a one-time code to confirm — no password needed.</Txt>
                                     </View>
                                 </Card>
                             </>
                         ) : null}
 
                         {/* Payment — card now, or an emailed pay-later link. */}
-                        <Text style={styles.section}>Payment</Text>
+                        <Txt style={styles.section}>Payment</Txt>
                         {PAYMENT_METHODS.map(pm => {
                             const on = pm.id === paymentMethod;
                             return (
@@ -857,8 +858,8 @@ export default function Book() {
                                             color={on ? colors.primary : colors.grey}
                                         />
                                         <View style={{ flex: 1 }}>
-                                            <Text style={styles.payLabel}>{tr(pm.label, locale)}</Text>
-                                            <Text style={styles.payBlurb}>{tr(pm.blurb, locale)}</Text>
+                                            <Txt style={styles.payLabel}>{tr(pm.label, locale)}</Txt>
+                                            <Txt style={styles.payBlurb}>{tr(pm.blurb, locale)}</Txt>
                                         </View>
                                         <View style={[styles.radio, on && styles.radioOn]}>{on ? <View style={styles.radioDot} /> : null}</View>
                                     </Card>
@@ -867,7 +868,7 @@ export default function Book() {
                         })}
                         <View style={styles.reassureRow}>
                             <Ionicons name="lock-closed-outline" size={13} color={colors.grey} />
-                            <Text style={styles.reassureText}>You're only charged after the cleaning is done · secured by Stripe</Text>
+                            <Txt style={styles.reassureText}>You're only charged after the cleaning is done · secured by Stripe</Txt>
                         </View>
 
                         <Button
@@ -879,7 +880,7 @@ export default function Book() {
                         />
                         <View style={styles.reassureRow}>
                             <Ionicons name="calendar-outline" size={13} color={colors.grey} />
-                            <Text style={styles.reassureText}>Free rescheduling · a fee only applies if canceled under {CANCELLATION_WINDOW_HOURS}h before</Text>
+                            <Txt style={styles.reassureText}>Free rescheduling · a fee only applies if canceled under {CANCELLATION_WINDOW_HOURS}h before</Txt>
                         </View>
                     </>
                 ) : null}

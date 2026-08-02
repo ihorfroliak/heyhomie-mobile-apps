@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ScrollView, Text, View, Pressable, TextInput, StyleSheet } from 'react-native';
+import { ScrollView, View, Pressable, TextInput, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -40,12 +41,12 @@ export default function Rate() {
             <ScrollView contentContainerStyle={styles.body}>
                 <Card variant="fill" style={{ alignItems: 'center', marginBottom: spacing.lg }}>
                     <View style={styles.avatar}>
-                        <Text style={styles.avatarText}>{(mission.homie?.firstName ?? 'H').slice(0, 2).toUpperCase()}</Text>
+                        <Txt style={styles.avatarText}>{(mission.homie?.firstName ?? 'H').slice(0, 2).toUpperCase()}</Txt>
                     </View>
-                    <Text style={styles.name}>{mission.homie?.firstName ?? 'Your homie'}</Text>
-                    <Text style={styles.meta}>
+                    <Txt style={styles.name}>{mission.homie?.firstName ?? 'Your homie'}</Txt>
+                    <Txt style={styles.meta}>
                         {mission.plan === 'general' ? 'General' : 'Standard'} cleaning · {mission.scheduledAt.slice(0, 10)}
-                    </Text>
+                    </Txt>
                 </Card>
 
                 <View style={styles.stars}>
@@ -56,7 +57,7 @@ export default function Rate() {
                     ))}
                 </View>
 
-                <Text style={styles.section}>Something done wrong? Add photos</Text>
+                <Txt style={styles.section}>Something done wrong? Add photos</Txt>
                 <View style={styles.tiles}>
                     {[0, 1, 2].map(i => (
                         <Pressable key={i} style={styles.tile} onPress={() => setPhotos(p => Math.min(3, p + 1))}>
@@ -74,25 +75,25 @@ export default function Rate() {
                     multiline
                 />
 
-                <Text style={styles.section}>Leave a tip? 100% goes to {mission.homie?.firstName ?? 'your homie'}</Text>
+                <Txt style={styles.section}>Leave a tip? 100% goes to {mission.homie?.firstName ?? 'your homie'}</Txt>
                 <View style={styles.tipRow}>
                     <Pressable
                         style={[styles.tipChip, !customOpen && tip === 0 && styles.tipChipOn]}
                         onPress={() => choosePreset(0)}
                     >
-                        <Text style={[styles.tipChipText, !customOpen && tip === 0 && styles.tipChipTextOn]}>No tip</Text>
+                        <Txt style={[styles.tipChipText, !customOpen && tip === 0 && styles.tipChipTextOn]}>No tip</Txt>
                     </Pressable>
                     {presets.map(p => {
                         const on = !customOpen && tip === p.amount && p.amount > 0;
                         return (
                             <Pressable key={p.percent} style={[styles.tipChip, on && styles.tipChipOn]} onPress={() => choosePreset(p.amount)}>
-                                <Text style={[styles.tipChipText, on && styles.tipChipTextOn]}>{p.percent}%</Text>
-                                <Text style={[styles.tipChipSub, on && styles.tipChipTextOn]}>{money(p.amount)}</Text>
+                                <Txt style={[styles.tipChipText, on && styles.tipChipTextOn]}>{p.percent}%</Txt>
+                                <Txt style={[styles.tipChipSub, on && styles.tipChipTextOn]}>{money(p.amount)}</Txt>
                             </Pressable>
                         );
                     })}
                     <Pressable style={[styles.tipChip, customOpen && styles.tipChipOn]} onPress={() => setCustomOpen(true)}>
-                        <Text style={[styles.tipChipText, customOpen && styles.tipChipTextOn]}>Custom</Text>
+                        <Txt style={[styles.tipChipText, customOpen && styles.tipChipTextOn]}>Custom</Txt>
                     </Pressable>
                 </View>
                 {customOpen ? (
@@ -108,7 +109,7 @@ export default function Rate() {
                 {effectiveTip > 0 ? (
                     <View style={styles.tipConfirmRow}>
                         <Ionicons name="heart" size={13} color={colors.success} />
-                        <Text style={styles.tipConfirm}>Tip: {money(effectiveTip)}</Text>
+                        <Txt style={styles.tipConfirm}>Tip: {money(effectiveTip)}</Txt>
                     </View>
                 ) : null}
 

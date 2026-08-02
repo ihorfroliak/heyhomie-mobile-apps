@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ScrollView, Text, View, Pressable, StyleSheet } from 'react-native';
+import { ScrollView, View, Pressable, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,10 +15,10 @@ function Check({ label, value, onToggle, required }: { label: string; value: boo
     return (
         <Pressable style={styles.row} onPress={onToggle}>
             <View style={[styles.box, value && styles.boxOn]}>{value ? <Ionicons name="checkmark" size={14} color={colors.primary} /> : null}</View>
-            <Text style={styles.label}>
+            <Txt style={styles.label}>
                 {label}
-                {required ? <Text style={{ color: colors.pink }}> *</Text> : null}
-            </Text>
+                {required ? <Txt style={{ color: colors.pink }}> *</Txt> : null}
+            </Txt>
         </Pressable>
     );
 }
@@ -35,7 +36,7 @@ export default function Consent() {
         <SafeAreaView style={styles.safe} edges={['top']}>
             <Stack.Screen options={{ headerShown: true, title: 'Before you start' }} />
             <ScrollView contentContainerStyle={styles.body}>
-                <Text style={styles.intro}>Please review and accept to continue. Required items are marked with *.</Text>
+                <Txt style={styles.intro}>Please review and accept to continue. Required items are marked with *.</Txt>
 
                 <Check label="I accept the Terms of Service" value={terms} onToggle={() => setTerms(v => !v)} required />
                 <Check label="I have read the Privacy Policy" value={privacy} onToggle={() => setPrivacy(v => !v)} required />
@@ -51,7 +52,7 @@ export default function Consent() {
                         router.replace('/');
                     }}
                 />
-                <Text style={styles.note}>You can change marketing preferences anytime in Profile → Privacy &amp; data.</Text>
+                <Txt style={styles.note}>You can change marketing preferences anytime in Profile → Privacy &amp; data.</Txt>
             </ScrollView>
         </SafeAreaView>
     );

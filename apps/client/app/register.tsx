@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
+import { View, TextInput, Pressable, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import { auth } from '@heyhomie/api';
@@ -34,14 +35,14 @@ export default function Register() {
         <SafeAreaView style={styles.safe}>
             <Stack.Screen options={{ headerShown: true, title: 'Create account' }} />
             <View style={styles.body}>
-                <Text style={styles.h1}>Create your account</Text>
-                <Text style={styles.sub}>Use at least 8 characters for your password.</Text>
+                <Txt style={styles.h1}>Create your account</Txt>
+                <Txt style={styles.sub}>Use at least 8 characters for your password.</Txt>
                 <TextInput style={styles.input} placeholder="Email" placeholderTextColor={colors.grey} autoCapitalize="none" autoCorrect={false} keyboardType="email-address" value={email} onChangeText={setEmail} />
                 <TextInput style={styles.input} placeholder="Password" placeholderTextColor={colors.grey} secureTextEntry value={password} onChangeText={setPassword} />
-                {error ? <Text style={styles.error}>{error}</Text> : null}
+                {error ? <Txt style={styles.error}>{error}</Txt> : null}
                 <Button label={busy ? 'Creating...' : 'Create account'} variant="teal" disabled={busy || !email || password.length < 8} style={{ marginTop: spacing.lg }} onPress={submit} />
                 <Pressable onPress={() => router.replace('/login')} style={styles.linkWrap}>
-                    <Text style={styles.link}>Already have an account? Sign in</Text>
+                    <Txt style={styles.link}>Already have an account? Sign in</Txt>
                 </Pressable>
             </View>
         </SafeAreaView>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ScrollView, Text, View, Pressable, StyleSheet } from 'react-native';
+import { ScrollView, View, Pressable, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -38,38 +39,38 @@ export default function Tickets() {
                 </View>
 
                 <View style={styles.filterRow}>
-                    <Text style={styles.section}>{showResolved ? 'All tickets' : 'Needs response'}</Text>
+                    <Txt style={styles.section}>{showResolved ? 'All tickets' : 'Needs response'}</Txt>
                     <Pressable onPress={() => setShowResolved(v => !v)}>
-                        <Text style={styles.toggle}>{showResolved ? 'Hide resolved' : 'Show resolved'}</Text>
+                        <Txt style={styles.toggle}>{showResolved ? 'Hide resolved' : 'Show resolved'}</Txt>
                     </Pressable>
                 </View>
 
                 {visible.map(t => (
                     <Card key={t.id} style={styles.card}>
                         <View style={styles.row}>
-                            <Text style={styles.subject}>{t.subject}</Text>
+                            <Txt style={styles.subject}>{t.subject}</Txt>
                             <View style={[styles.pri, { backgroundColor: `${PRIORITY[t.priority]}1A` }]}>
-                                <Text style={[styles.priText, { color: PRIORITY[t.priority] }]}>{t.priority}</Text>
+                                <Txt style={[styles.priText, { color: PRIORITY[t.priority] }]}>{t.priority}</Txt>
                             </View>
                         </View>
                         <View style={styles.metaRow}>
                             <Ionicons name={t.author === 'client' ? 'person-outline' : 'briefcase-outline'} size={12} color={colors.grey} />
-                            <Text style={styles.meta}>
+                            <Txt style={styles.meta}>
                                 {t.author === 'client' ? 'Client' : 'Homie'}: {t.authorName} · {new Date(t.createdAt).toLocaleDateString()}
-                            </Text>
+                            </Txt>
                         </View>
                         <Pressable style={styles.statusBtn} onPress={() => advance(t)}>
                             <View style={[styles.dot, { backgroundColor: STATUS[t.status] }]} />
-                            <Text style={[styles.statusText, { color: STATUS[t.status] }]}>{t.status}</Text>
+                            <Txt style={[styles.statusText, { color: STATUS[t.status] }]}>{t.status}</Txt>
                             <Ionicons name="arrow-forward" size={11} color={colors.grey} />
-                            <Text style={styles.statusHint}>mark {nextTicketStatus(t.status)}</Text>
+                            <Txt style={styles.statusHint}>mark {nextTicketStatus(t.status)}</Txt>
                         </Pressable>
                     </Card>
                 ))}
                 {visible.length === 0 ? (
                     <View style={styles.doneRow}>
                         <Ionicons name="checkmark-circle" size={16} color={colors.success} />
-                        <Text style={styles.meta}>All caught up.</Text>
+                        <Txt style={styles.meta}>All caught up.</Txt>
                     </View>
                 ) : null}
             </ScrollView>
@@ -79,9 +80,9 @@ export default function Tickets() {
 
 const Chip = ({ label, value, color }: { label: string; value: number; color: string }) => (
     <View style={[styles.chip, { backgroundColor: `${color}1A` }]}>
-        <Text style={[styles.chipText, { color }]}>
+        <Txt style={[styles.chipText, { color }]}>
             {label} · {value}
-        </Text>
+        </Txt>
     </View>
 );
 

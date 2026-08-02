@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ScrollView, Text, View, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
+import { ScrollView, View, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -47,28 +48,28 @@ export default function Invitations() {
         <SafeAreaView style={styles.safe} edges={['top']}>
             <Stack.Screen options={{ headerShown: true, title: 'Invitations' }} />
             <ScrollView contentContainerStyle={styles.body}>
-                {error ? <Text style={styles.error}>{error}</Text> : null}
+                {error ? <Txt style={styles.error}>{error}</Txt> : null}
                 {items === null ? (
                     <ActivityIndicator style={{ marginTop: spacing.xl }} color={colors.primary} />
                 ) : items.length === 0 ? (
                     <View style={styles.empty}>
                         <Ionicons name="mail-outline" size={26} color={colors.grey} />
-                        <Text style={styles.emptyText}>No invitations yet.</Text>
+                        <Txt style={styles.emptyText}>No invitations yet.</Txt>
                     </View>
                 ) : (
                     items.map(inv => (
                         <Card key={inv.id} style={{ marginBottom: spacing.md }}>
                             <View style={styles.row}>
                                 <View style={{ flex: 1 }}>
-                                    <Text style={styles.email}>{inv.email}</Text>
-                                    <Text style={styles.meta}>{inv.role === 'admin' ? 'Admin' : 'Worker'}</Text>
+                                    <Txt style={styles.email}>{inv.email}</Txt>
+                                    <Txt style={styles.meta}>{inv.role === 'admin' ? 'Admin' : 'Worker'}</Txt>
                                 </View>
-                                <Text style={[styles.status, { color: TONE[inv.status] }]}>{inv.status}</Text>
+                                <Txt style={[styles.status, { color: TONE[inv.status] }]}>{inv.status}</Txt>
                             </View>
                             {inv.status === 'pending' ? (
                                 <Pressable style={styles.revoke} onPress={() => revoke(inv.id)}>
                                     <Ionicons name="close-circle-outline" size={16} color={colors.danger} />
-                                    <Text style={styles.revokeText}>Revoke</Text>
+                                    <Txt style={styles.revokeText}>Revoke</Txt>
                                 </Pressable>
                             ) : null}
                         </Card>

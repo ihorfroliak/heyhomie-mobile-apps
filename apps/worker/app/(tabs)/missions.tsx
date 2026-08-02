@@ -1,5 +1,6 @@
 import React, { useSyncExternalStore } from 'react';
-import { ScrollView, Text, View, Pressable, StyleSheet } from 'react-native';
+import { ScrollView, View, Pressable, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -24,14 +25,14 @@ function JobCard({ order, onPress }: { order: Order; onPress: () => void }) {
         <Pressable onPress={onPress}>
             <Card style={{ marginBottom: spacing.md }}>
                 <View style={styles.row}>
-                    <Text style={styles.title}>{order.serviceId ? serviceName(order.serviceId, locale) : 'Cleaning job'}</Text>
+                    <Txt style={styles.title}>{order.serviceId ? serviceName(order.serviceId, locale) : 'Cleaning job'}</Txt>
                     <View style={[styles.badge, { backgroundColor: `${s.tone}1A` }]}>
-                        <Text style={[styles.badgeText, { color: s.tone }]}>{s.label}</Text>
+                        <Txt style={[styles.badgeText, { color: s.tone }]}>{s.label}</Txt>
                     </View>
                 </View>
                 <View style={styles.metaRow}>
                     <Ionicons name="location-outline" size={13} color={colors.grey} />
-                    <Text style={styles.meta}>{order.cityId ?? 'Location on the job'}</Text>
+                    <Txt style={styles.meta}>{order.cityId ?? 'Location on the job'}</Txt>
                     <Ionicons name="chevron-forward" size={16} color={colors.grey} style={{ marginLeft: 'auto' }} />
                 </View>
             </Card>
@@ -49,18 +50,18 @@ export default function Jobs() {
     return (
         <SafeAreaView style={styles.safe} edges={['top']}>
             <ScrollView contentContainerStyle={styles.body}>
-                <Text style={styles.h1}>Your jobs</Text>
+                <Txt style={styles.h1}>Your jobs</Txt>
 
                 <View style={styles.sectionRow}>
                     <Ionicons name="briefcase-outline" size={14} color={colors.grey} />
-                    <Text style={styles.sectionText}>Active</Text>
+                    <Txt style={styles.sectionText}>Active</Txt>
                 </View>
                 {active.length > 0 ? (
                     active.slice().reverse().map(o => <JobCard key={o.id} order={o} onPress={() => router.push(`/job/${o.id}`)} />)
                 ) : (
                     <View style={styles.empty}>
                         <Ionicons name="checkmark-circle-outline" size={26} color={colors.grey} />
-                        <Text style={styles.emptyText}>No active jobs right now.</Text>
+                        <Txt style={styles.emptyText}>No active jobs right now.</Txt>
                     </View>
                 )}
 
@@ -68,7 +69,7 @@ export default function Jobs() {
                     <>
                         <View style={styles.sectionRow}>
                             <Ionicons name="checkmark-done-outline" size={14} color={colors.grey} />
-                            <Text style={styles.sectionText}>Completed</Text>
+                            <Txt style={styles.sectionText}>Completed</Txt>
                         </View>
                         {done.slice().reverse().map(o => <JobCard key={o.id} order={o} onPress={() => router.push(`/job/${o.id}`)} />)}
                     </>

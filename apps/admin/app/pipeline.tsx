@@ -1,5 +1,6 @@
 import React, { useSyncExternalStore } from 'react';
-import { ScrollView, Text, View, Pressable, StyleSheet } from 'react-native';
+import { ScrollView, View, Pressable, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -56,25 +57,25 @@ const DeliveryBlock = ({ d }: { d: NonNullable<BookingDraft['delivery']> }) => {
         <View style={styles.deliveryBlock}>
             <View style={styles.dRow}>
                 <Ionicons name="person-outline" size={13} color={colors.grey} />
-                <Text style={styles.dText}>
+                <Txt style={styles.dText}>
                     {d.recipientName}
                     {d.recipientPhone ? ` · ${formatPhone(d.recipientPhone)}` : ''}
-                </Text>
+                </Txt>
             </View>
             <View style={styles.dRow}>
                 <Ionicons name="location-outline" size={13} color={colors.grey} />
-                <Text style={styles.dText}>{d.line1}, {cityName(d.city, locale)}</Text>
+                <Txt style={styles.dText}>{d.line1}, {cityName(d.city, locale)}</Txt>
             </View>
             <View style={styles.dRow}>
                 <Ionicons name="calendar-outline" size={13} color={colors.grey} />
-                <Text style={styles.dText}>
+                <Txt style={styles.dText}>
                     {d.date}{slot ? ` · ${tr(slot.label, locale)} (${slot.window})` : ''}
-                </Text>
+                </Txt>
             </View>
             {d.note ? (
                 <View style={styles.dRow}>
                     <Ionicons name="chatbox-ellipses-outline" size={13} color={colors.grey} />
-                    <Text style={[styles.dText, styles.dNote]} numberOfLines={3}>"{d.note}"</Text>
+                    <Txt style={[styles.dText, styles.dNote]} numberOfLines={3}>"{d.note}"</Txt>
                 </View>
             ) : null}
         </View>
@@ -110,7 +111,7 @@ export default function Pipeline() {
 
                 <View style={styles.sectionRow}>
                     <Ionicons name="funnel-outline" size={14} color={colors.grey} />
-                    <Text style={styles.sectionText}>Booking funnel</Text>
+                    <Txt style={styles.sectionText}>Booking funnel</Txt>
                 </View>
                 <Card>
                     {steps.map(s => {
@@ -118,28 +119,28 @@ export default function Pipeline() {
                         const isDrop = s.stage === drop;
                         return (
                             <View key={s.stage} style={styles.funnelRow}>
-                                <Text style={styles.funnelLabel}>{STAGE_LABEL[s.stage]}</Text>
+                                <Txt style={styles.funnelLabel}>{STAGE_LABEL[s.stage]}</Txt>
                                 <View style={styles.track}>
                                     <View style={[styles.fill, { width: `${pct}%`, backgroundColor: isDrop ? colors.danger : colors.blue }]} />
                                 </View>
-                                <Text style={styles.funnelVal}>{s.reached}</Text>
+                                <Txt style={styles.funnelVal}>{s.reached}</Txt>
                             </View>
                         );
                     })}
                     {drop ? (
                         <View style={styles.noteRow}>
                             <Ionicons name="bulb-outline" size={13} color={colors.grey} />
-                            <Text style={styles.note}>Biggest drop-off after "{STAGE_LABEL[drop]}" — focus re-engagement here.</Text>
+                            <Txt style={styles.note}>Biggest drop-off after "{STAGE_LABEL[drop]}" — focus re-engagement here.</Txt>
                         </View>
                     ) : null}
                 </Card>
 
                 <View style={styles.sectionRow}>
                     <Ionicons name="flash-outline" size={14} color={colors.grey} />
-                    <Text style={styles.sectionText}>Live bookings · {liveBookings.length}</Text>
+                    <Txt style={styles.sectionText}>Live bookings · {liveBookings.length}</Txt>
                 </View>
                 {liveBookings.length === 0 ? (
-                    <Text style={styles.note}>Client submissions appear here instantly.</Text>
+                    <Txt style={styles.note}>Client submissions appear here instantly.</Txt>
                 ) : null}
                 {liveBookings.map(o => {
                     const pay = o.payment;
@@ -147,31 +148,31 @@ export default function Pipeline() {
                     return (
                         <Card key={o.id} style={styles.card}>
                             <View style={styles.rowBetween}>
-                                <Text style={styles.itemTitle}>{o.serviceId ? serviceName(o.serviceId, locale) : 'Booking'}</Text>
+                                <Txt style={styles.itemTitle}>{o.serviceId ? serviceName(o.serviceId, locale) : 'Booking'}</Txt>
                                 <View style={styles.livePill}>
                                     <Ionicons name="checkmark" size={10} color={colors.success} />
-                                    <Text style={styles.livePillText}>Confirmed</Text>
+                                    <Txt style={styles.livePillText}>Confirmed</Txt>
                                 </View>
                             </View>
                             <View style={styles.metaRow}>
                                 <Ionicons name="location-outline" size={12} color={colors.grey} />
-                                <Text style={styles.meta}>
+                                <Txt style={styles.meta}>
                                     {o.cityId ? cityName(o.cityId, locale) : '—'} · {contactLine(o.contact)} · {new Date(o.updatedAt).toLocaleString()}
-                                </Text>
+                                </Txt>
                             </View>
                             {o.delivery ? <DeliveryBlock d={o.delivery} /> : null}
                             {pay ? (
                                 <View style={styles.payLine}>
                                     <View style={styles.payStatus}>
                                         <Ionicons name={pay.method === 'pay_later' ? 'mail-outline' : 'card-outline'} size={13} color={tone} />
-                                        <Text style={[styles.payStatusText, { color: tone }]}>
+                                        <Txt style={[styles.payStatusText, { color: tone }]}>
                                             {pay.method === 'pay_later' ? 'Pay later' : 'Card'} · {tr(PAYMENT_STATUS_LABEL[pay.status], locale)}
-                                        </Text>
+                                        </Txt>
                                     </View>
                                     {pay.status !== 'paid' && pay.status !== 'refunded' ? (
                                         <Pressable style={styles.markPaidBtn} onPress={() => orderGateway.markPaid(o.id)}>
                                             <Ionicons name="checkmark" size={12} color={colors.white} />
-                                            <Text style={styles.markPaidText}>Mark paid</Text>
+                                            <Txt style={styles.markPaidText}>Mark paid</Txt>
                                         </Pressable>
                                     ) : null}
                                 </View>
@@ -182,31 +183,31 @@ export default function Pipeline() {
 
                 <View style={styles.sectionRow}>
                     <Ionicons name="time-outline" size={14} color={colors.grey} />
-                    <Text style={styles.sectionText}>Abandoned orders</Text>
+                    <Txt style={styles.sectionText}>Abandoned orders</Txt>
                 </View>
-                {abandoned.length === 0 ? <Text style={styles.note}>None right now.</Text> : null}
+                {abandoned.length === 0 ? <Txt style={styles.note}>None right now.</Txt> : null}
                 {abandoned.map(d => (
                     <Card key={d.id} style={styles.card}>
                         <View style={styles.rowBetween}>
-                            <Text style={styles.itemTitle}>{d.serviceId ? serviceName(d.serviceId, locale) : 'Booking'}</Text>
+                            <Txt style={styles.itemTitle}>{d.serviceId ? serviceName(d.serviceId, locale) : 'Booking'}</Txt>
                             <View style={styles.stagePill}>
-                                <Text style={styles.stagePillText}>{STAGE_LABEL[d.stage]}</Text>
+                                <Txt style={styles.stagePillText}>{STAGE_LABEL[d.stage]}</Txt>
                             </View>
                         </View>
                         <View style={styles.metaRow}>
                             <Ionicons name="location-outline" size={12} color={colors.grey} />
-                            <Text style={styles.meta}>{d.cityId ? cityName(d.cityId, locale) : '—'} · {contactLine(d.contact)}</Text>
+                            <Txt style={styles.meta}>{d.cityId ? cityName(d.cityId, locale) : '—'} · {contactLine(d.contact)}</Txt>
                         </View>
                         <Pressable style={styles.followBtn} onPress={() => {}}>
                             <Ionicons name={d.contact?.phone || d.contact?.email ? 'send-outline' : 'ban-outline'} size={13} color={colors.primary} />
-                            <Text style={styles.followText}>{d.contact?.phone || d.contact?.email ? 'Send follow-up' : 'No contact to reach'}</Text>
+                            <Txt style={styles.followText}>{d.contact?.phone || d.contact?.email ? 'Send follow-up' : 'No contact to reach'}</Txt>
                         </Pressable>
                     </Card>
                 ))}
 
                 <View style={styles.sectionRow}>
                     <Ionicons name="person-outline" size={14} color={colors.grey} />
-                    <Text style={styles.sectionText}>Leads · {leads.length}</Text>
+                    <Txt style={styles.sectionText}>Leads · {leads.length}</Txt>
                 </View>
                 {leads.map(l => (
                     <Card key={l.id} style={styles.card}>
@@ -215,17 +216,17 @@ export default function Pipeline() {
                                 <View style={styles.leadAvatar}>
                                     <Ionicons name="person" size={13} color={colors.blue} />
                                 </View>
-                                <Text style={styles.itemTitle}>{contactLine(l.contact)}</Text>
+                                <Txt style={styles.itemTitle}>{contactLine(l.contact)}</Txt>
                             </View>
                             <View style={[styles.statusPill, { backgroundColor: `${statusColor(l.status)}1A` }]}>
-                                <Text style={[styles.statusText, { color: statusColor(l.status) }]}>{l.status}</Text>
+                                <Txt style={[styles.statusText, { color: statusColor(l.status) }]}>{l.status}</Txt>
                             </View>
                         </View>
-                        <Text style={styles.meta}>
+                        <Txt style={styles.meta}>
                             {l.source.replace('_', ' ')}
                             {l.serviceInterest ? ` · ${serviceName(l.serviceInterest, locale)}` : ''}
                             {l.cityId ? ` · ${cityName(l.cityId, locale)}` : ''}
-                        </Text>
+                        </Txt>
                     </Card>
                 ))}
             </ScrollView>
@@ -239,8 +240,8 @@ const statusColor = (s: string) =>
 const Kpi = ({ icon, label, value, color }: { icon: keyof typeof Ionicons.glyphMap; label: string; value: string; color?: string }) => (
     <Card variant="fill" style={styles.kpi}>
         <Ionicons name={icon} size={16} color={color ?? colors.grey} />
-        <Text style={styles.kLabel}>{label}</Text>
-        <Text style={[styles.kValue, color ? { color } : null]}>{value}</Text>
+        <Txt style={styles.kLabel}>{label}</Txt>
+        <Txt style={[styles.kValue, color ? { color } : null]}>{value}</Txt>
     </Card>
 );
 

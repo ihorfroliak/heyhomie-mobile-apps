@@ -1,5 +1,6 @@
 import React from 'react';
-import { ScrollView, Text, StyleSheet } from 'react-native';
+import { ScrollView, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { demoMissions, demoServices } from '@heyhomie/api';
@@ -17,12 +18,12 @@ export default function Home() {
     return (
         <SafeAreaView style={styles.safe} edges={['top']}>
             <ScrollView contentContainerStyle={styles.body}>
-                <Text style={styles.sub}>Good morning</Text>
-                <Text style={styles.hello}>Hi, {next?.client.firstName ?? 'there'}</Text>
+                <Txt style={styles.sub}>Good morning</Txt>
+                <Txt style={styles.hello}>Hi, {next?.client.firstName ?? 'there'}</Txt>
 
                 {next ? (
                     <>
-                        <Text style={styles.section}>Your next cleaning</Text>
+                        <Txt style={styles.section}>Your next cleaning</Txt>
                         <MissionCard mission={next} locale={locale} onPress={() => router.push(`/mission/${next.id}`)} />
                     </>
                 ) : null}
@@ -31,12 +32,12 @@ export default function Home() {
 
                 {service ? (
                     <>
-                        <Text style={styles.section}>Active service</Text>
+                        <Txt style={styles.section}>Active service</Txt>
                         <Card variant="fill">
-                            <Text style={styles.title}>Weekly cleaning</Text>
-                            <Text style={styles.meta}>
+                            <Txt style={styles.title}>Weekly cleaning</Txt>
+                            <Txt style={styles.meta}>
                                 {tr(frequencyLabel[service.frequency], locale)} · {service.assignedHomie?.firstName}
-                            </Text>
+                            </Txt>
                         </Card>
                     </>
                 ) : null}

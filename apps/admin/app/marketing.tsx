@@ -1,5 +1,6 @@
 import React from 'react';
-import { ScrollView, Text, View, StyleSheet } from 'react-native';
+import { ScrollView, View, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,7 +23,7 @@ import { Card } from '@heyhomie/ui';
 const SectionLabel = ({ icon, text }: { icon: keyof typeof Ionicons.glyphMap; text: string }) => (
     <View style={styles.sectionRow}>
         <Ionicons name={icon} size={14} color={colors.grey} />
-        <Text style={styles.sectionText}>{text}</Text>
+        <Txt style={styles.sectionText}>{text}</Txt>
     </View>
 );
 
@@ -55,7 +56,7 @@ export default function Marketing() {
             <ScrollView contentContainerStyle={styles.body}>
                 <View style={styles.chip}>
                     <Ionicons name="information-circle-outline" size={12} color={colors.grey} />
-                    <Text style={styles.chipText}>Mock data — live via Google Ads API + GA4</Text>
+                    <Txt style={styles.chipText}>Mock data — live via Google Ads API + GA4</Txt>
                 </View>
 
                 {/* Headline */}
@@ -71,13 +72,13 @@ export default function Marketing() {
                 <Card>
                     {shares.map(s => (
                         <View key={s.source} style={styles.srcRow}>
-                            <Text style={styles.srcLabel}>{SOURCE_META[s.source].label}</Text>
+                            <Txt style={styles.srcLabel}>{SOURCE_META[s.source].label}</Txt>
                             <View style={styles.track}>
                                 <View style={[styles.fill, { width: `${(s.revenue / maxShare) * 100}%`, backgroundColor: SOURCE_META[s.source].color }]} />
                             </View>
-                            <Text style={styles.srcVal}>
+                            <Txt style={styles.srcVal}>
                                 {money(s.revenue)} · {s.pct}%
-                            </Text>
+                            </Txt>
                         </View>
                     ))}
                 </Card>
@@ -90,9 +91,9 @@ export default function Marketing() {
                     return (
                         <Card key={c.id} style={styles.card}>
                             <View style={styles.campHead}>
-                                <Text style={styles.campName}>{c.name}</Text>
+                                <Txt style={styles.campName}>{c.name}</Txt>
                                 <View style={[styles.roasBadge, { backgroundColor: `${rColor}1A` }]}>
-                                    <Text style={[styles.roasText, { color: rColor }]}>{rep.roas}x ROAS</Text>
+                                    <Txt style={[styles.roasText, { color: rColor }]}>{rep.roas}x ROAS</Txt>
                                 </View>
                             </View>
                             <View style={styles.campStats}>
@@ -125,15 +126,15 @@ export default function Marketing() {
 
 const Hero = ({ label, value, color }: { label: string; value: string; color?: string }) => (
     <Card variant="fill" style={styles.hero}>
-        <Text style={styles.heroLabel}>{label}</Text>
-        <Text style={[styles.heroValue, color ? { color } : null]}>{value}</Text>
+        <Txt style={styles.heroLabel}>{label}</Txt>
+        <Txt style={[styles.heroValue, color ? { color } : null]}>{value}</Txt>
     </Card>
 );
 
 const Stat = ({ label, value }: { label: string; value: string }) => (
     <View style={styles.stat}>
-        <Text style={styles.statValue}>{value}</Text>
-        <Text style={styles.statLabel}>{label}</Text>
+        <Txt style={styles.statValue}>{value}</Txt>
+        <Txt style={styles.statLabel}>{label}</Txt>
     </View>
 );
 

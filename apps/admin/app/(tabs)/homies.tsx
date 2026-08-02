@@ -1,5 +1,6 @@
 import React from 'react';
-import { ScrollView, Text, View, Pressable, StyleSheet } from 'react-native';
+import { ScrollView, View, Pressable, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,20 +15,20 @@ export default function Homies() {
         <SafeAreaView style={styles.safe} edges={['top']}>
             <ScrollView contentContainerStyle={styles.body}>
                 <View style={styles.headRow}>
-                    <Text style={styles.h1}>Homies</Text>
+                    <Txt style={styles.h1}>Homies</Txt>
                     {API_URL ? (
                         <View style={styles.headActions}>
                             <Pressable style={styles.headBtn} onPress={() => router.push('/members')}>
                                 <Ionicons name="people-outline" size={15} color={colors.primary} />
-                                <Text style={styles.inviteText}>Members</Text>
+                                <Txt style={styles.inviteText}>Members</Txt>
                             </Pressable>
                             <Pressable style={styles.headBtn} onPress={() => router.push('/invitations')}>
                                 <Ionicons name="mail-outline" size={15} color={colors.primary} />
-                                <Text style={styles.inviteText}>Invites</Text>
+                                <Txt style={styles.inviteText}>Invites</Txt>
                             </Pressable>
                             <Pressable style={styles.invite} onPress={() => router.push('/invite')}>
                                 <Ionicons name="person-add-outline" size={15} color={colors.primary} />
-                                <Text style={styles.inviteText}>Invite</Text>
+                                <Txt style={styles.inviteText}>Invite</Txt>
                             </Pressable>
                         </View>
                     ) : null}
@@ -35,37 +36,37 @@ export default function Homies() {
                 {homies.map(h => (
                     <View key={h.id} style={styles.row}>
                         <View style={styles.avatar}>
-                            <Text style={styles.avatarText}>{h.firstName.slice(0, 1)}{h.lastInitial ?? ''}</Text>
+                            <Txt style={styles.avatarText}>{h.firstName.slice(0, 1)}{h.lastInitial ?? ''}</Txt>
                         </View>
                         <View style={{ flex: 1 }}>
-                            <Text style={styles.name}>
+                            <Txt style={styles.name}>
                                 {h.firstName} {h.lastInitial ? `${h.lastInitial}.` : ''}
-                            </Text>
-                            <Text style={styles.meta}>
+                            </Txt>
+                            <Txt style={styles.meta}>
                                 {h.city} · {h.services.join(', ')} · {h.workerType === 'b2b' ? 'B2B (contractor)' : 'Employee'}
-                            </Text>
+                            </Txt>
                         </View>
                         <View style={{ alignItems: 'flex-end' }}>
                             <View style={styles.verifiedRow}>
                                 <Ionicons name="checkmark-circle" size={12} color={colors.success} />
-                                <Text style={styles.verified}>Verified</Text>
+                                <Txt style={styles.verified}>Verified</Txt>
                             </View>
                             <View style={styles.ratingRow}>
                                 <Ionicons name="star" size={11} color={colors.warning} />
-                                <Text style={styles.rating}>{h.rating?.toFixed(1)}</Text>
+                                <Txt style={styles.rating}>{h.rating?.toFixed(1)}</Txt>
                             </View>
                         </View>
                     </View>
                 ))}
                 <View style={styles.row}>
                     <View style={[styles.avatar, { backgroundColor: colors.warning }]}>
-                        <Text style={styles.avatarText}>SP</Text>
+                        <Txt style={styles.avatarText}>SP</Txt>
                     </View>
                     <View style={{ flex: 1 }}>
-                        <Text style={styles.name}>Sofia P.</Text>
-                        <Text style={styles.meta}>krakow · new</Text>
+                        <Txt style={styles.name}>Sofia P.</Txt>
+                        <Txt style={styles.meta}>krakow · new</Txt>
                     </View>
-                    <Text style={[styles.verified, { color: colors.warning }]}>Pending</Text>
+                    <Txt style={[styles.verified, { color: colors.warning }]}>Pending</Txt>
                 </View>
             </ScrollView>
         </SafeAreaView>

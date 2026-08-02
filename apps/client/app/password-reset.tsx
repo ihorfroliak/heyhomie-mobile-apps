@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet } from 'react-native';
+import { View, TextInput, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import { auth } from '@heyhomie/api';
@@ -52,19 +53,19 @@ export default function PasswordReset() {
             <View style={styles.body}>
                 {step === 'request' ? (
                     <>
-                        <Text style={styles.h1}>Forgot your password?</Text>
-                        <Text style={styles.sub}>Enter your email and we will send a reset code.</Text>
+                        <Txt style={styles.h1}>Forgot your password?</Txt>
+                        <Txt style={styles.sub}>Enter your email and we will send a reset code.</Txt>
                         <TextInput style={styles.input} placeholder="Email" placeholderTextColor={colors.grey} autoCapitalize="none" autoCorrect={false} keyboardType="email-address" value={email} onChangeText={setEmail} />
-                        {error ? <Text style={styles.error}>{error}</Text> : null}
+                        {error ? <Txt style={styles.error}>{error}</Txt> : null}
                         <Button label={busy ? 'Sending...' : 'Send reset code'} variant="teal" disabled={busy || !email} style={{ marginTop: spacing.lg }} onPress={request} />
                     </>
                 ) : (
                     <>
-                        <Text style={styles.h1}>Enter your code</Text>
-                        <Text style={styles.sub}>If an account exists for {email}, a reset code was sent. Enter it with a new password.</Text>
+                        <Txt style={styles.h1}>Enter your code</Txt>
+                        <Txt style={styles.sub}>If an account exists for {email}, a reset code was sent. Enter it with a new password.</Txt>
                         <TextInput style={styles.input} placeholder="Reset code" placeholderTextColor={colors.grey} autoCapitalize="none" autoCorrect={false} value={code} onChangeText={setCode} />
                         <TextInput style={styles.input} placeholder="New password (min 8)" placeholderTextColor={colors.grey} secureTextEntry value={password} onChangeText={setPassword} />
-                        {error ? <Text style={styles.error}>{error}</Text> : null}
+                        {error ? <Txt style={styles.error}>{error}</Txt> : null}
                         <Button label={busy ? 'Resetting...' : 'Reset password'} variant="teal" disabled={busy || !code || password.length < 8} style={{ marginTop: spacing.lg }} onPress={confirm} />
                     </>
                 )}

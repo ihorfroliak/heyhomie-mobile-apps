@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ScrollView, Text, View, StyleSheet } from 'react-native';
+import { ScrollView, View, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { makeDataRequest, type DataRequestType } from '@heyhomie/domain';
@@ -24,22 +25,22 @@ export default function PrivacyData() {
         <SafeAreaView style={styles.safe} edges={['top']}>
             <Stack.Screen options={{ headerShown: true, title: 'Privacy & data' }} />
             <ScrollView contentContainerStyle={styles.body}>
-                <Text style={styles.intro}>Under the GDPR / RODO you can access, export or delete your personal data at any time.</Text>
+                <Txt style={styles.intro}>Under the GDPR / RODO you can access, export or delete your personal data at any time.</Txt>
 
                 <Card style={styles.card}>
-                    <Text style={styles.title}>Export my data</Text>
-                    <Text style={styles.meta}>Get a copy of your account, orders and missions.</Text>
+                    <Txt style={styles.title}>Export my data</Txt>
+                    <Txt style={styles.meta}>Get a copy of your account, orders and missions.</Txt>
                     <Button label="Request data export" variant="ghost" style={{ marginTop: spacing.md }} onPress={() => submit('export')} />
                 </Card>
 
                 <Card style={styles.card}>
-                    <Text style={[styles.title, { color: colors.danger }]}>Delete my account</Text>
-                    <Text style={styles.meta}>Permanently erase your account and personal data (right to erasure). This cannot be undone.</Text>
+                    <Txt style={[styles.title, { color: colors.danger }]}>Delete my account</Txt>
+                    <Txt style={styles.meta}>Permanently erase your account and personal data (right to erasure). This cannot be undone.</Txt>
                     {!confirmErase ? (
                         <Button label="Delete account" variant="ghost" style={[styles.danger, { marginTop: spacing.md }]} onPress={() => setConfirmErase(true)} />
                     ) : (
                         <View style={{ marginTop: spacing.md, gap: spacing.sm }}>
-                            <Text style={styles.confirm}>Are you sure? This is permanent.</Text>
+                            <Txt style={styles.confirm}>Are you sure? This is permanent.</Txt>
                             <Button label="Yes, delete my account" variant="ghost" style={styles.danger} onPress={() => submit('erasure')} />
                             <Button label="Cancel" variant="ghost" onPress={() => setConfirmErase(false)} />
                         </View>
@@ -48,7 +49,7 @@ export default function PrivacyData() {
 
                 {message ? (
                     <Card variant="fill" style={{ marginTop: spacing.md }}>
-                        <Text style={styles.ok}>{message}</Text>
+                        <Txt style={styles.ok}>{message}</Txt>
                     </Card>
                 ) : null}
             </ScrollView>

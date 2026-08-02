@@ -1,5 +1,6 @@
 import React from 'react';
-import { ScrollView, Text, View, StyleSheet } from 'react-native';
+import { ScrollView, View, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -24,15 +25,15 @@ export default function Quality() {
             <ScrollView contentContainerStyle={styles.body}>
                 <View style={styles.sectionRow}>
                     <Ionicons name="flag-outline" size={14} color={colors.grey} />
-                    <Text style={styles.sectionText}>Flagged — photo reports</Text>
+                    <Txt style={styles.sectionText}>Flagged — photo reports</Txt>
                 </View>
                 {flagged.map(f => (
                     <Card key={f.id} style={[styles.card, { borderColor: colors.danger, borderWidth: 1 }]}>
                         <View style={styles.row}>
                             <Stars n={f.stars} />
-                            <Text style={styles.id}>{f.id}</Text>
+                            <Txt style={styles.id}>{f.id}</Txt>
                         </View>
-                        <Text style={styles.text}>"{f.text}" · {f.homie}</Text>
+                        <Txt style={styles.text}>"{f.text}" · {f.homie}</Txt>
                         <View style={styles.tiles}>
                             {Array.from({ length: f.photos }).map((_, i) => (
                                 <View key={i} style={styles.tile}>
@@ -49,17 +50,17 @@ export default function Quality() {
 
                 <View style={styles.sectionRow}>
                     <Ionicons name="star-half-outline" size={14} color={colors.grey} />
-                    <Text style={styles.sectionText}>Low ratings</Text>
+                    <Txt style={styles.sectionText}>Low ratings</Txt>
                 </View>
                 {lowRatings.map(r => (
                     <Card key={r.id} style={styles.card}>
                         <View style={styles.row}>
                             <Stars n={r.stars} />
-                            <Text style={styles.id}>{r.id}</Text>
+                            <Txt style={styles.id}>{r.id}</Txt>
                         </View>
-                        <Text style={styles.text}>
+                        <Txt style={styles.text}>
                             "{r.text}" — {r.client} · {r.city}
-                        </Text>
+                        </Txt>
                     </Card>
                 ))}
             </ScrollView>

@@ -1,5 +1,6 @@
 import React from 'react';
-import { ScrollView, Text, View, StyleSheet } from 'react-native';
+import { ScrollView, View, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -32,9 +33,9 @@ export default function MissionDetail() {
             <Stack.Screen options={{ headerShown: true, title: 'Mission' }} />
             <ScrollView contentContainerStyle={styles.body}>
                 <View style={styles.headerRow}>
-                    <Text style={styles.title}>
+                    <Txt style={styles.title}>
                         {mission.plan === 'general' ? 'General' : 'Standard'} cleaning · {formatDuration(mission.durationMinutes)}
-                    </Text>
+                    </Txt>
                     <StatusBadge status={mission.status} locale={locale} />
                 </View>
 
@@ -50,11 +51,11 @@ export default function MissionDetail() {
                             >
                                 {s.state === 'done' ? <Ionicons name="checkmark" size={9} color={colors.primary} /> : null}
                             </View>
-                            <Text style={[styles.stepLabel, s.state === 'upcoming' && { color: colors.grey }]}>
+                            <Txt style={[styles.stepLabel, s.state === 'upcoming' && { color: colors.grey }]}>
                                 {tr(missionStatusLabel[s.key as MissionStatus], locale)}
                                 {s.key === 'homie_found' && mission.homie ? ` · ${mission.homie.firstName}` : ''}
                                 {s.key === 'in_progress' && mission.homieEtaAt ? ` · ETA ${hhmm(mission.homieEtaAt)}` : ''}
-                            </Text>
+                            </Txt>
                         </View>
                     ))}
                 </Card>
@@ -77,7 +78,7 @@ export default function MissionDetail() {
                 ) : (
                     <View style={styles.lockedRow}>
                         <Ionicons name="lock-closed-outline" size={13} color={colors.grey} />
-                        <Text style={styles.locked}>This mission can no longer be edited.</Text>
+                        <Txt style={styles.locked}>This mission can no longer be edited.</Txt>
                     </View>
                 )}
             </ScrollView>
@@ -90,9 +91,9 @@ function Row({ icon, label, value }: { icon: keyof typeof Ionicons.glyphMap; lab
         <View style={styles.kv}>
             <View style={styles.kLeft}>
                 <Ionicons name={icon} size={15} color={colors.grey} />
-                <Text style={styles.k}>{label}</Text>
+                <Txt style={styles.k}>{label}</Txt>
             </View>
-            <Text style={styles.v}>{value}</Text>
+            <Txt style={styles.v}>{value}</Txt>
         </View>
     );
 }

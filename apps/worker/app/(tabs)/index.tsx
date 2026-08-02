@@ -1,5 +1,6 @@
 import React from 'react';
-import { ScrollView, Text, View, StyleSheet } from 'react-native';
+import { ScrollView, View, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,38 +21,38 @@ export default function Today() {
     return (
         <SafeAreaView style={styles.safe} edges={['top']}>
             <View style={styles.hero}>
-                <Text style={styles.heroSub}>{today}</Text>
-                <Text style={styles.heroTitle}>Today · {upcoming.length} mission{upcoming.length === 1 ? '' : 's'}</Text>
+                <Txt style={styles.heroSub}>{today}</Txt>
+                <Txt style={styles.heroTitle}>Today · {upcoming.length} mission{upcoming.length === 1 ? '' : 's'}</Txt>
             </View>
             <ScrollView contentContainerStyle={styles.body}>
                 <View style={styles.kpis}>
                     <Card variant="fill" style={styles.kpi}>
                         <Ionicons name="checkmark-done-circle-outline" size={18} color={colors.success} />
-                        <Text style={styles.kValue}>{doneToday}</Text>
-                        <Text style={styles.kLabel}>missions done</Text>
+                        <Txt style={styles.kValue}>{doneToday}</Txt>
+                        <Txt style={styles.kLabel}>missions done</Txt>
                     </Card>
                     <Card variant="fill" style={styles.kpi}>
                         <Ionicons name="time-outline" size={18} color={colors.blue} />
-                        <Text style={styles.kValue}>{formatDuration(workedMinutes)}</Text>
-                        <Text style={styles.kLabel}>time worked</Text>
+                        <Txt style={styles.kValue}>{formatDuration(workedMinutes)}</Txt>
+                        <Txt style={styles.kLabel}>time worked</Txt>
                     </Card>
                 </View>
 
                 {next ? (
                     <>
-                        <Text style={styles.section}>Next mission</Text>
+                        <Txt style={styles.section}>Next mission</Txt>
                         <MissionCard mission={next} locale={locale} showHomie={false} showPrice={false} onPress={() => router.push(`/mission/${next.id}`)} />
                     </>
                 ) : (
                     <View style={styles.emptyCard}>
                         <Ionicons name="checkmark-circle-outline" size={28} color={colors.grey} />
-                        <Text style={styles.empty}>No missions yet. Check the Missions tab to accept one.</Text>
+                        <Txt style={styles.empty}>No missions yet. Check the Missions tab to accept one.</Txt>
                     </View>
                 )}
 
                 <View style={styles.noteRow}>
                     <Ionicons name="eye-off-outline" size={13} color={colors.grey} />
-                    <Text style={styles.note}>You see your schedule and hours — never client prices or payouts.</Text>
+                    <Txt style={styles.note}>You see your schedule and hours — never client prices or payouts.</Txt>
                 </View>
             </ScrollView>
         </SafeAreaView>

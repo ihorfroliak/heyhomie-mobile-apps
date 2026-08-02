@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { ScrollView, Text, View, TextInput, Pressable, StyleSheet } from 'react-native';
+import { ScrollView, View, TextInput, Pressable, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -28,7 +29,7 @@ import { exportFinancialReportPdf } from '../lib/exportPdf';
 const SectionLabel = ({ icon, text }: { icon: keyof typeof Ionicons.glyphMap; text: string }) => (
     <View style={styles.sectionRow}>
         <Ionicons name={icon} size={14} color={colors.grey} />
-        <Text style={styles.sectionText}>{text}</Text>
+        <Txt style={styles.sectionText}>{text}</Txt>
     </View>
 );
 
@@ -99,20 +100,20 @@ export default function Finance() {
                 {period === 'custom' ? (
                     <View style={styles.customRow}>
                         <TextInput style={styles.dateInput} value={customStart} onChangeText={setCustomStart} placeholder="YYYY-MM-DD" placeholderTextColor={colors.grey} />
-                        <Text style={styles.dash}>→</Text>
+                        <Txt style={styles.dash}>→</Txt>
                         <TextInput style={styles.dateInput} value={customEnd} onChangeText={setCustomEnd} placeholder="YYYY-MM-DD" placeholderTextColor={colors.grey} />
                     </View>
                 ) : (
-                    <Text style={styles.rangeNote}>
+                    <Txt style={styles.rangeNote}>
                         {range.start} → {range.end}
-                    </Text>
+                    </Txt>
                 )}
 
                 <View style={styles.vatRow}>
                     {([0, 8, 23] as VatRate[]).map(r => (
-                        <Text key={r} onPress={() => setVat(r)} style={[styles.vat, vat === r && styles.vatOn]}>
+                        <Txt key={r} onPress={() => setVat(r)} style={[styles.vat, vat === r && styles.vatOn]}>
                             VAT {r}%
-                        </Text>
+                        </Txt>
                     ))}
                 </View>
 
@@ -125,7 +126,7 @@ export default function Finance() {
                     }
                 >
                     <Ionicons name="download-outline" size={15} color={colors.primary} />
-                    <Text style={styles.exportText}>Export PDF · {periodLabel(period, REF, range)}</Text>
+                    <Txt style={styles.exportText}>Export PDF · {periodLabel(period, REF, range)}</Txt>
                 </Pressable>
 
                 {/* Headline */}
@@ -171,13 +172,13 @@ export default function Finance() {
                 <Card>
                     {EXPENSE_FIELDS.map(f => (
                         <View key={f.key} style={styles.expRow}>
-                            <Text style={styles.expLabel}>{f.label}</Text>
+                            <Txt style={styles.expLabel}>{f.label}</Txt>
                             <TextInput style={styles.input} keyboardType="numeric" value={String(current[f.key] || '')} onChangeText={t => setField(f.key, t)} placeholder="0" placeholderTextColor={colors.grey} />
                         </View>
                     ))}
                     <Pressable style={styles.saveBtn} onPress={save}>
                         {saved ? <Ionicons name="checkmark" size={15} color={colors.primary} /> : null}
-                        <Text style={styles.saveText}>{saved ? 'Saved' : 'Save month'}</Text>
+                        <Txt style={styles.saveText}>{saved ? 'Saved' : 'Save month'}</Txt>
                     </Pressable>
                 </Card>
 
@@ -191,12 +192,12 @@ export default function Finance() {
                             const mg = orderMargin(m.price, vat, missionPayout(m));
                             return (
                                 <View key={m.id} style={styles.expRow}>
-                                    <Text style={styles.expLabel}>
+                                    <Txt style={styles.expLabel}>
                                         {m.address.city} · {money(m.price)}
-                                    </Text>
-                                    <Text style={[styles.marginVal, { color: mg.marginPln >= 0 ? colors.success : colors.danger }]}>
+                                    </Txt>
+                                    <Txt style={[styles.marginVal, { color: mg.marginPln >= 0 ? colors.success : colors.danger }]}>
                                         {money(mg.marginPln)} · {mg.marginPct}%
-                                    </Text>
+                                    </Txt>
                                 </View>
                             );
                         })}
@@ -208,15 +209,15 @@ export default function Finance() {
 
 const Hero = ({ label, value, color }: { label: string; value: string; color?: string }) => (
     <Card variant="fill" style={styles.hero}>
-        <Text style={styles.heroLabel}>{label}</Text>
-        <Text style={[styles.heroValue, color ? { color } : null]}>{value}</Text>
+        <Txt style={styles.heroLabel}>{label}</Txt>
+        <Txt style={[styles.heroValue, color ? { color } : null]}>{value}</Txt>
     </Card>
 );
 
 const Row = ({ label, value, strong, color }: { label: string; value: string; strong?: boolean; color?: string }) => (
     <View style={styles.row}>
-        <Text style={styles.rowLabel}>{label}</Text>
-        <Text style={[styles.rowValue, strong && { fontWeight: '700' }, color ? { color } : null]}>{value}</Text>
+        <Txt style={styles.rowLabel}>{label}</Txt>
+        <Txt style={[styles.rowValue, strong && { fontWeight: '700' }, color ? { color } : null]}>{value}</Txt>
     </View>
 );
 

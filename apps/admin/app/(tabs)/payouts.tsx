@@ -1,5 +1,6 @@
 import React from 'react';
-import { ScrollView, Text, View, StyleSheet } from 'react-native';
+import { ScrollView, View, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { formatMoney, type Locale } from '@heyhomie/domain';
 import { colors, spacing, typography } from '@heyhomie/design';
@@ -17,19 +18,19 @@ export default function Payouts() {
     return (
         <SafeAreaView style={styles.safe} edges={['top']}>
             <ScrollView contentContainerStyle={styles.body}>
-                <Text style={styles.h1}>Payouts</Text>
+                <Txt style={styles.h1}>Payouts</Txt>
                 <Card variant="fill" style={{ marginBottom: spacing.lg }}>
-                    <Text style={styles.kLabel}>Pending this run</Text>
-                    <Text style={styles.kValue}>{formatMoney(total, 'PLN', locale)}</Text>
-                    <Text style={styles.note}>{queue.length} homies · paid on the 1st & 15th</Text>
+                    <Txt style={styles.kLabel}>Pending this run</Txt>
+                    <Txt style={styles.kValue}>{formatMoney(total, 'PLN', locale)}</Txt>
+                    <Txt style={styles.note}>{queue.length} homies · paid on the 1st & 15th</Txt>
                 </Card>
                 {queue.map(q => (
                     <View key={q.id} style={styles.row}>
                         <View style={{ flex: 1 }}>
-                            <Text style={styles.name}>{q.name}</Text>
-                            <Text style={styles.meta}>IBAN {q.iban}</Text>
+                            <Txt style={styles.name}>{q.name}</Txt>
+                            <Txt style={styles.meta}>IBAN {q.iban}</Txt>
                         </View>
-                        <Text style={styles.amount}>{formatMoney(q.amount, 'PLN', locale)}</Text>
+                        <Txt style={styles.amount}>{formatMoney(q.amount, 'PLN', locale)}</Txt>
                         <Button label="Process" variant="ghost" style={styles.btn} onPress={() => {}} />
                     </View>
                 ))}

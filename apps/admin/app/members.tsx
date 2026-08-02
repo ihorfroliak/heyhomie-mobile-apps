@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ScrollView, Text, View, Pressable, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { ScrollView, View, Pressable, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -43,7 +44,7 @@ export default function Members() {
         <SafeAreaView style={styles.safe} edges={['top']}>
             <Stack.Screen options={{ headerShown: true, title: 'Members' }} />
             <ScrollView contentContainerStyle={styles.body}>
-                {error ? <Text style={styles.error}>{error}</Text> : null}
+                {error ? <Txt style={styles.error}>{error}</Txt> : null}
                 {items === null ? (
                     <ActivityIndicator style={{ marginTop: spacing.xl }} color={colors.primary} />
                 ) : (
@@ -51,8 +52,8 @@ export default function Members() {
                         <Card key={m.id} style={{ marginBottom: spacing.md }}>
                             <View style={styles.row}>
                                 <View style={{ flex: 1 }}>
-                                    <Text style={styles.email}>{m.email}</Text>
-                                    <Text style={styles.meta}>{m.role}{m.status === 'disabled' ? ' · disabled' : ''}</Text>
+                                    <Txt style={styles.email}>{m.email}</Txt>
+                                    <Txt style={styles.meta}>{m.role}{m.status === 'disabled' ? ' · disabled' : ''}</Txt>
                                 </View>
                                 {m.role !== 'owner' ? (
                                     <View style={styles.actions}>
@@ -70,7 +71,7 @@ export default function Members() {
                                         </Pressable>
                                     </View>
                                 ) : (
-                                    <Text style={styles.ownerTag}>owner</Text>
+                                    <Txt style={styles.ownerTag}>owner</Txt>
                                 )}
                             </View>
                         </Card>

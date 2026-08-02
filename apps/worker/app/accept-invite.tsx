@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet } from 'react-native';
+import { View, TextInput, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import { auth } from '@heyhomie/api';
@@ -35,11 +36,11 @@ export default function AcceptInvite() {
         <SafeAreaView style={styles.safe}>
             <Stack.Screen options={{ headerShown: true, title: 'Accept invitation' }} />
             <View style={styles.body}>
-                <Text style={styles.h1}>Join your team</Text>
-                <Text style={styles.sub}>Paste the invite code you were given and choose a password.</Text>
+                <Txt style={styles.h1}>Join your team</Txt>
+                <Txt style={styles.sub}>Paste the invite code you were given and choose a password.</Txt>
                 <TextInput style={styles.input} placeholder="Invitation code" placeholderTextColor={colors.grey} autoCapitalize="none" autoCorrect={false} value={code} onChangeText={setCode} />
                 <TextInput style={styles.input} placeholder="Choose a password (min 8)" placeholderTextColor={colors.grey} secureTextEntry value={password} onChangeText={setPassword} />
-                {error ? <Text style={styles.error}>{error}</Text> : null}
+                {error ? <Txt style={styles.error}>{error}</Txt> : null}
                 <Button label={busy ? 'Joining...' : 'Accept & sign in'} variant="teal" disabled={busy || !code || password.length < 8} style={{ marginTop: spacing.lg }} onPress={submit} />
             </View>
         </SafeAreaView>

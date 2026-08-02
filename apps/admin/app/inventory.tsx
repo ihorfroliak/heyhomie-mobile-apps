@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ScrollView, Text, View, Pressable, StyleSheet } from 'react-native';
+import { ScrollView, View, Pressable, StyleSheet } from 'react-native';
+import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -36,18 +37,18 @@ export default function Inventory() {
                         <View style={styles.reorderHead}>
                             <View style={styles.sectionRow}>
                                 <Ionicons name="repeat-outline" size={14} color={colors.grey} />
-                                <Text style={styles.sectionText}>Reorder suggestions · {money(reorderCost)}</Text>
+                                <Txt style={styles.sectionText}>Reorder suggestions · {money(reorderCost)}</Txt>
                             </View>
                             <Pressable style={styles.restockAll} onPress={restockAll}>
                                 <Ionicons name="refresh-outline" size={12} color={colors.white} />
-                                <Text style={styles.restockAllText}>Restock all</Text>
+                                <Txt style={styles.restockAllText}>Restock all</Txt>
                             </Pressable>
                         </View>
                         <Card style={{ marginBottom: spacing.md }}>
                             {reorders.map(r => (
                                 <View key={r.id} style={styles.rrow}>
-                                    <Text style={styles.name}>{r.name}</Text>
-                                    <Text style={styles.qty}>+{r.suggestQty} · {money(r.cost)}</Text>
+                                    <Txt style={styles.name}>{r.name}</Txt>
+                                    <Txt style={styles.qty}>+{r.suggestQty} · {money(r.cost)}</Txt>
                                 </View>
                             ))}
                         </Card>
@@ -56,30 +57,30 @@ export default function Inventory() {
 
                 <View style={styles.sectionRow}>
                     <Ionicons name="cube-outline" size={14} color={colors.grey} />
-                    <Text style={styles.sectionText}>All supplies</Text>
+                    <Txt style={styles.sectionText}>All supplies</Txt>
                 </View>
                 {items.map(i => (
                     <Card key={i.id} style={styles.card}>
                         <View style={styles.row}>
-                            <Text style={styles.name}>{i.name}</Text>
-                            {isLowStock(i) ? <Text style={styles.lowBadge}>Low</Text> : null}
+                            <Txt style={styles.name}>{i.name}</Txt>
+                            {isLowStock(i) ? <Txt style={styles.lowBadge}>Low</Txt> : null}
                         </View>
-                        <Text style={styles.meta}>
+                        <Txt style={styles.meta}>
                             reorder at {i.reorderLevel} · {money(i.unitCost)}/{i.unit}
-                        </Text>
+                        </Txt>
                         <View style={styles.controls}>
                             <View style={styles.stepper}>
                                 <Pressable style={styles.stepBtn} onPress={() => change(i, -1)}>
                                     <Ionicons name="remove" size={16} color={colors.primary} />
                                 </Pressable>
-                                <Text style={styles.stockValue}>{i.stock} {i.unit}</Text>
+                                <Txt style={styles.stockValue}>{i.stock} {i.unit}</Txt>
                                 <Pressable style={styles.stepBtn} onPress={() => change(i, 1)}>
                                     <Ionicons name="add" size={16} color={colors.primary} />
                                 </Pressable>
                             </View>
                             {isLowStock(i) ? (
                                 <Pressable style={styles.restockBtn} onPress={() => doRestock(i)}>
-                                    <Text style={styles.restockText}>Restock</Text>
+                                    <Txt style={styles.restockText}>Restock</Txt>
                                 </Pressable>
                             ) : null}
                         </View>
@@ -93,8 +94,8 @@ export default function Inventory() {
 const Kpi = ({ icon, label, value, color }: { icon: keyof typeof Ionicons.glyphMap; label: string; value: string; color?: string }) => (
     <Card variant="fill" style={styles.kpi}>
         <Ionicons name={icon} size={15} color={color ?? colors.grey} />
-        <Text style={styles.kLabel}>{label}</Text>
-        <Text style={[styles.kValue, color ? { color } : null]}>{value}</Text>
+        <Txt style={styles.kLabel}>{label}</Txt>
+        <Txt style={[styles.kValue, color ? { color } : null]}>{value}</Txt>
     </Card>
 );
 
