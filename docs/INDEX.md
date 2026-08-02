@@ -19,6 +19,7 @@ tree. Trust the map; open only the 1–2 files a task needs.
 - Deep dives → [docs/engineering/](engineering/data_integrity.md) · [docs/security/](security/security_model.md) · [docs/observability/](observability/observability.md)
 - Legal (pl/en) → [legal/](../legal/) (privacy, terms, non-circumvention)
 - Backend run + auth → [server/README.md](../server/README.md)
+- **Ship it** → [docs/DEPLOY_RUNBOOK.md](DEPLOY_RUNBOOK.md) (backend deploy · Stripe/email · store builds)
 - Verify everything → `npm run check` (gate) · `npm run verify:full` (gate + server-typecheck + live + e2e + pg + ops; needs Postgres on `PG_URL`)
 - Remote → https://github.com/ihorfroliak/heyhomie-mobile-apps-
 
