@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import { Txt } from './Text';
 import { colors, radii } from '@heyhomie/design';
 import { missionStatusLabel, tr, type MissionStatus, type Locale } from '@heyhomie/domain';
 
@@ -13,7 +14,7 @@ export function StatusBadge({ status, locale = 'en' }: Props) {
     const color = colors.status[status] ?? colors.grey;
     return (
         <View style={[styles.badge, { backgroundColor: `${color}1A` }]}>
-            <Text style={[styles.text, { color }]}>{tr(missionStatusLabel[status], locale)}</Text>
+            <Txt style={[styles.text, { color }]}>{tr(missionStatusLabel[status], locale)}</Txt>
         </View>
     );
 }

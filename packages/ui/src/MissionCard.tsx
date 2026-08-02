@@ -1,5 +1,6 @@
 import React from 'react';
-import { Pressable, Text, View, StyleSheet } from 'react-native';
+import { Pressable, View, StyleSheet } from 'react-native';
+import { Txt } from './Text';
 import { Ionicons } from '@expo/vector-icons';
 import { Card } from './Card';
 import { StatusBadge } from './StatusBadge';
@@ -28,16 +29,16 @@ export function MissionCard({ mission, locale = 'en', onPress, showHomie = true,
             <Card>
                 <View style={styles.headRow}>
                     <View style={{ flex: 1, marginRight: spacing.sm }}>
-                        <Text style={styles.title}>
+                        <Txt style={styles.title}>
                             {mission.plan === 'general' ? 'General' : 'Standard'} cleaning · {formatDuration(mission.durationMinutes)}
-                        </Text>
+                        </Txt>
                         <View style={styles.metaRow}>
                             <Ionicons name="calendar-outline" size={13} color={colors.grey} />
-                            <Text style={styles.meta}>{dmy(mission.scheduledAt)} · {hhmm(mission.scheduledAt)}</Text>
+                            <Txt style={styles.meta}>{dmy(mission.scheduledAt)} · {hhmm(mission.scheduledAt)}</Txt>
                         </View>
                         <View style={styles.metaRow}>
                             <Ionicons name="location-outline" size={13} color={colors.grey} />
-                            <Text style={styles.meta} numberOfLines={1}>{mission.address.line1}</Text>
+                            <Txt style={styles.meta} numberOfLines={1}>{mission.address.line1}</Txt>
                         </View>
                     </View>
                     <StatusBadge status={mission.status} locale={locale} />
@@ -46,19 +47,19 @@ export function MissionCard({ mission, locale = 'en', onPress, showHomie = true,
                 {showHomie && homie ? (
                     <View style={styles.homieRow}>
                         <View style={styles.avatar}>
-                            <Text style={styles.avatarText}>{initials}</Text>
+                            <Txt style={styles.avatarText}>{initials}</Txt>
                         </View>
-                        <Text style={styles.homieName}>{homie.firstName}</Text>
+                        <Txt style={styles.homieName}>{homie.firstName}</Txt>
                         {homie.rating ? (
                             <View style={styles.ratingRow}>
                                 <Ionicons name="star" size={12} color={colors.warning} />
-                                <Text style={styles.ratingText}>{homie.rating.toFixed(1)}</Text>
+                                <Txt style={styles.ratingText}>{homie.rating.toFixed(1)}</Txt>
                             </View>
                         ) : null}
-                        {showPrice ? <Text style={styles.price}>{formatMoney(mission.price, mission.currency, locale)}</Text> : null}
+                        {showPrice ? <Txt style={styles.price}>{formatMoney(mission.price, mission.currency, locale)}</Txt> : null}
                     </View>
                 ) : showPrice ? (
-                    <Text style={[styles.price, { marginTop: spacing.sm }]}>{formatMoney(mission.price, mission.currency, locale)}</Text>
+                    <Txt style={[styles.price, { marginTop: spacing.sm }]}>{formatMoney(mission.price, mission.currency, locale)}</Txt>
                 ) : null}
             </Card>
         </Pressable>

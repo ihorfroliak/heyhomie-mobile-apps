@@ -5,6 +5,11 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { LocaleProvider } from '@heyhomie/ui';
 import { orderGateway, configureAuth, auth } from '@heyhomie/api';
 import { consents, asyncStore, secureStore } from '../lib/store';
+import {
+    useFonts,
+    Manrope_400Regular, Manrope_500Medium, Manrope_600SemiBold, Manrope_700Bold, Manrope_800ExtraBold,
+} from '@expo-google-fonts/manrope';
+import { Montserrat_500Medium } from '@expo-google-fonts/montserrat';
 
 // Backend selection (Build 20): set at build time. Present → the app talks to the
 // real server via httpOrderGateway; absent → the offline Local adapter.
@@ -12,6 +17,9 @@ const API_URL = process.env.EXPO_PUBLIC_ORDERS_API_URL;
 
 export default function RootLayout() {
     const router = useRouter();
+    // Load the Manrope faces (+ Montserrat wordmark) once; the <Txt> primitive maps
+    // fontWeight → the matching face. Not gated — UI shows immediately, text swaps in.
+    useFonts({ Manrope_400Regular, Manrope_500Medium, Manrope_600SemiBold, Manrope_700Bold, Manrope_800ExtraBold, Montserrat_500Medium });
 
     // Startup: configure client auth + refresh a live session from the stored
     // refresh token BEFORE the gateway connects (SSE needs a token). If there's no

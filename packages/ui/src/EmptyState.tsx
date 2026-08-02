@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import { Txt } from './Text';
 import { colors, spacing, typography } from '@heyhomie/design';
 
 interface Props {
@@ -11,8 +12,8 @@ interface Props {
 export function EmptyState({ title, subtitle }: Props) {
     return (
         <View style={styles.wrap}>
-            <Text style={styles.title}>{title}</Text>
-            {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+            <Txt style={styles.title}>{title}</Txt>
+            {subtitle ? <Txt style={styles.subtitle}>{subtitle}</Txt> : null}
         </View>
     );
 }

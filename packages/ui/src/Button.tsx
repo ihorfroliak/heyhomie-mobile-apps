@@ -1,5 +1,6 @@
 import React from 'react';
-import { Pressable, Text, StyleSheet, ActivityIndicator, type ViewStyle } from 'react-native';
+import { Pressable, StyleSheet, ActivityIndicator, type ViewStyle } from 'react-native';
+import { Txt } from './Text';
 import { colors, radii, spacing } from '@heyhomie/design';
 
 type Variant = 'primary' | 'teal' | 'ghost';
@@ -29,7 +30,7 @@ export function Button({ label, onPress, variant = 'primary', loading, disabled,
                 style,
             ]}
         >
-            {loading ? <ActivityIndicator color={fg} /> : <Text style={[styles.label, { color: fg }]}>{label}</Text>}
+            {loading ? <ActivityIndicator color={fg} /> : <Txt style={[styles.label, { color: fg }]}>{label}</Txt>}
         </Pressable>
     );
 }

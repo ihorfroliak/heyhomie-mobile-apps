@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Pressable, Text, StyleSheet } from 'react-native';
+import { View, Pressable, StyleSheet } from 'react-native';
+import { Txt } from './Text';
 import { colors, radii, spacing } from '@heyhomie/design';
 
 interface Option {
@@ -21,7 +22,7 @@ export function Segmented({ options, value, onChange }: Props) {
                 const active = o.key === value;
                 return (
                     <Pressable key={o.key} onPress={() => onChange(o.key)} style={[styles.seg, active && styles.active]}>
-                        <Text style={[styles.text, active && styles.textActive]}>{o.label}</Text>
+                        <Txt style={[styles.text, active && styles.textActive]}>{o.label}</Txt>
                     </Pressable>
                 );
             })}
