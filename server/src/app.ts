@@ -6,11 +6,11 @@
  */
 import Fastify, { type FastifyInstance } from 'fastify';
 import {
-    makeOrderService, makeAuthService, fromUnknown, AppError, RateLimiter, RateLimitedError, IdempotencyStore, RevocationIndex,
-    type AuthContext, type AuthRepo, type AuthCrypto, type NotificationPort, type AuditPort, type Role, type OrderRepo, type ServerConfig, type SubmitOrderResult,
+    makeOrderService, makeAuthService, makePayoutService, memoryPayoutRepo, fromUnknown, AppError, RateLimiter, RateLimitedError, IdempotencyStore, RevocationIndex, ValidationError,
+    type AuthContext, type AuthRepo, type AuthCrypto, type NotificationPort, type AuditPort, type Role, type OrderRepo, type PayoutRepo, type ServerConfig, type SubmitOrderResult,
 } from '@heyhomie/api';
 import { CLEANING_PRICE_TABLE } from '@heyhomie/domain';
-import { registerRoutes, registerStream, registerAuthRoutes } from './routes.js';
+import { registerRoutes, registerStream, registerAuthRoutes, registerPayoutRoutes } from './routes.js';
 import { authenticateRequest, signAuthToken } from './auth.js';
 import { makeServerMetrics, type ServerMetrics } from './metrics.js';
 
@@ -32,7 +32,7 @@ export interface BuiltApp {
  *  (keeps existing buildApp callers working; back-compat). */
 export interface AuthDeps { repo: AuthRepo; crypto: AuthCrypto; notifications?: NotificationPort; audit?: AuditPort; }
 
-export function buildApp(config: ServerConfig, repo: OrderRepo, checkDb: () => Promise<void>, authDeps?: AuthDeps): BuiltApp {
+export function buildApp(config: ServerConfig, repo: OrderRepo, checkDb: () => Promise<void>, authDeps?: AuthDeps, payoutRepo?: PayoutRepo): BuiltApp {
     const metrics = makeServerMetrics();
     const service = makeOrderService(repo, metrics.serviceTelemetry);
 
@@ -58,6 +58,22 @@ export function buildApp(config: ServerConfig, repo: OrderRepo, checkDb: () => P
             const cid = req.headers['x-correlation-id'];
             return typeof cid === 'string' && cid.length > 0 && cid.length <= 128 ? cid : `r-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
         },
+    });
+
+    // An EMPTY body with `content-type: application/json` must parse as `{}`, not 400.
+    // Fastify's default JSON parser rejects it, which broke every bodyless transition
+    // POST (/orders/:id/confirm|cancel|mark-paid, /payouts/:id/approve|pay|cancel):
+    // httpOrderGateway always sets the JSON content-type and sends no body for those,
+    // so they failed with 400 TRANSPORT_CLIENT_ERROR against the real server. Fixing it
+    // here covers every client, not just ours. A non-empty body still parses strictly.
+    app.addContentTypeParser('application/json', { parseAs: 'string' }, (_req, payload, done) => {
+        const raw = (payload as unknown as string).trim();
+        if (!raw) return done(null, {});
+        try {
+            done(null, JSON.parse(raw));
+        } catch {
+            done(new ValidationError('malformed JSON body'), undefined);
+        }
     });
 
     // Rate limit BEFORE auth so unauthenticated floods are shed cheaply. Per-IP,
@@ -202,6 +218,9 @@ export function buildApp(config: ServerConfig, repo: OrderRepo, checkDb: () => P
     // Create-dedup store (Build 17): 10-min TTL, tenant-scoped by the route.
     const idem = new IdempotencyStore<SubmitOrderResult>();
     registerRoutes(app, service, idem);
+    // Worker payout ledger (admin ops) — its own aggregate, injected like the order repo.
+    // Defaults to an in-memory ledger so tests exercise the real routes without Postgres.
+    registerPayoutRoutes(app, makePayoutService(payoutRepo ?? memoryPayoutRepo()));
     registerStream(app, service, metrics, sseSockets, { revocations, heartbeatMs: config.sseHeartbeatSec * 1000 });
 
     return { app, metrics, beginShutdown: () => { shuttingDown = true; }, purgeExpired, revocations };

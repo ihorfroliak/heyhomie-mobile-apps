@@ -26,4 +26,5 @@ export * from './orderContract'; // frozen types (Order, OrderGateway, Submit* .
 export * from './orderGateway'; // Local adapter + active `orderGateway` binding
 export * from './httpOrderGateway'; // Http adapter + real port (drop-in)
 export * from './orderService'; // authoritative service (shared by server + fake)
+export * from './payoutService'; // authoritative worker-payout ledger
 export * from './fakeBackend'; // in-process backend for tests/dev

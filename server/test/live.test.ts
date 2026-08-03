@@ -145,6 +145,32 @@ async function main() {
     const big = await fetch(`${base}/orders`, { method: 'POST', headers: authHdr, body: JSON.stringify({ pad: 'x'.repeat(70 * 1024) }) });
     ok('oversized body rejected 4xx (not 500)', big.status >= 400 && big.status < 500);
 
+    // Regression: a bodyless transition POST still carries `content-type: application/json`
+    // (httpOrderGateway always sets it), which Fastify's default parser rejected with 400.
+    // An empty body must parse as {} — while genuinely malformed JSON still fails.
+    const ordForBody = await fetch(`${base}/orders`, { method: 'POST', headers: authHdr, body: JSON.stringify({ serviceId: 'standard_cleaning', cityId: 'krakow', contact: { email: 'body@t.pl' }, estValue: 219 }) });
+    const ordId = ((await ordForBody.json()) as { draft: { id: string } }).draft.id;
+    eq('bodyless confirm with JSON content-type → 200 (not 400)', (await fetch(`${base}/orders/${ordId}/confirm`, { method: 'POST', headers: authHdr })).status, 200);
+    const malformed = await fetch(`${base}/orders/${ordId}/cancel`, { method: 'POST', headers: authHdr, body: '{not json' });
+    eq('malformed JSON is still rejected 4xx', [malformed.status < 500, malformed.status >= 400], [true, true]);
+
+    // ── worker payout ledger (admin ops, tenant-enforced) ──
+    const poJson = async (r: Response) => (await r.json()) as { id: string; amount: number; status: string; code?: string };
+    eq('payouts require auth', (await fetch(`${base}/payouts`)).status, 401);
+    const poRes = await fetch(`${base}/payouts/job`, { method: 'POST', headers: authHdr, body: JSON.stringify({ workerId: 'w1', workerType: 'employee', orderId: 'ord-live-1', orderAmount: 219 }) });
+    const po = await poJson(poRes);
+    eq('job payout created 201 at the employee share', [poRes.status, po.amount, po.status], [201, 153, 'pending']);
+    const dupPayout = await fetch(`${base}/payouts/job`, { method: 'POST', headers: authHdr, body: JSON.stringify({ workerId: 'w2', workerType: 'b2b', orderId: 'ord-live-1', orderAmount: 219 }) });
+    eq('the same order cannot be paid twice → 409', dupPayout.status, 409);
+    eq('paying before approval is refused (stays pending)', (await poJson(await fetch(`${base}/payouts/${po.id}/pay`, { method: 'POST', headers: authHdr }))).status, 'pending');
+    eq('approve → approved', (await poJson(await fetch(`${base}/payouts/${po.id}/approve`, { method: 'POST', headers: authHdr }))).status, 'approved');
+    eq('pay → paid', (await poJson(await fetch(`${base}/payouts/${po.id}/pay`, { method: 'POST', headers: authHdr }))).status, 'paid');
+    const badPo = await fetch(`${base}/payouts/adjustment`, { method: 'POST', headers: authHdr, body: JSON.stringify({ workerId: 'w1', workerType: 'employee', kind: 'bonus', amount: -5 }) });
+    eq('a negative bonus → 400 canonical', [badPo.status, (await poJson(badPo)).code], [400, 'VALIDATION_FAILED']);
+    const otherTenant = { authorization: `Bearer ${signAuthToken({ userId: 'u9', tenantId: 't9', role: 'admin' }, AUTH_SECRET)}`, 'content-type': 'application/json' };
+    eq('another tenant sees an empty ledger', ((await (await fetch(`${base}/payouts`, { headers: otherTenant })).json()) as unknown[]).length, 0);
+    eq('cross-tenant approve → 403', (await fetch(`${base}/payouts/${po.id}/approve`, { method: 'POST', headers: otherTenant })).status, 403);
+
     // ── PHASE 3+4: real gateways, multi-client, SSE ──
     const esFactory = (url: string) => (typeof globalThis.EventSource === 'function' ? new EventSource(url) : sseShim(url));
     const mkGw = (tenant: string, role: 'admin' | 'member') => {

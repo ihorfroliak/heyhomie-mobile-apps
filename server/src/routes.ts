@@ -1,6 +1,6 @@
 /** REST + SSE routes. 1:1 with the OrderGateway HTTP port. Tenant-enforced. */
 import type { FastifyInstance, FastifyRequest } from 'fastify';
-import { toContractOrder, validateSubmitOrderInput, NotFoundError, IdempotencyStore, ValidationError, nullNotificationPort, type AuthService, type InviteRole, type NotificationPort, type OrderService, type RevocationIndex, type ServerOrder, type SubmitOrderResult } from '@heyhomie/api';
+import { toContractOrder, validateSubmitOrderInput, NotFoundError, IdempotencyStore, ValidationError, nullNotificationPort, type AuthService, type InviteRole, type NotificationPort, type OrderService, type PayoutService, type RevocationIndex, type ServerOrder, type SubmitOrderResult } from '@heyhomie/api';
 import type { FastifyBaseLogger } from 'fastify';
 import { reqAuth, reqAuthToken } from './auth.js';
 
@@ -160,6 +160,76 @@ export function registerRoutes(app: FastifyInstance, service: OrderService, idem
     app.post<{ Params: { id: string }; Body: { completedAt?: string } }>('/orders/:id/complete', mutate((id, req, at) => service.complete(id, reqAuth(req), at)));
     app.post<{ Params: { id: string }; Body: { now?: string } }>('/orders/:id/settle', mutate((id, req, now) => service.settle(id, reqAuth(req), now)));
     app.post<{ Params: { id: string } }>('/orders/:id/mark-paid', mutate((id, req) => service.markPaid(id, reqAuth(req))));
+}
+
+/**
+ * Worker payout ledger (admin ops). AUTHENTICATED and tenant-enforced by the service —
+ * cross-tenant ids surface as 403 via the canonical error hook, exactly like orders.
+ * Orthogonal to the frozen OrderGateway contract: a payout only references an order id.
+ */
+export function registerPayoutRoutes(app: FastifyInstance, service: PayoutService): void {
+    const body = (b: unknown): Record<string, unknown> => {
+        if (!b || typeof b !== 'object') throw new ValidationError('invalid request body');
+        return b as Record<string, unknown>;
+    };
+    const num = (v: unknown, field: string): number => {
+        const n = Number(v);
+        if (!Number.isFinite(n)) throw new ValidationError(`${field} must be a number`);
+        return n;
+    };
+    const workerType = (v: unknown): 'employee' | 'b2b' => {
+        if (v !== 'employee' && v !== 'b2b') throw new ValidationError('workerType must be employee or b2b');
+        return v;
+    };
+
+    app.get('/payouts', async req => service.list(reqAuth(req)));
+
+    app.get<{ Params: { id: string } }>('/payouts/:id', async req => {
+        const p = await service.get(req.params.id, reqAuth(req));
+        if (!p) throw new NotFoundError();
+        return p;
+    });
+
+    // Pay for a completed job. The amount is derived server-side from the order amount
+    // and the worker's rate (or an explicit override) — the client never sets it freely.
+    app.post('/payouts/job', async (req, reply) => {
+        const b = body(req.body);
+        const created = await service.createForJob(
+            {
+                workerId: b.workerId as string,
+                workerType: workerType(b.workerType),
+                orderId: b.orderId as string,
+                orderAmount: num(b.orderAmount, 'orderAmount'),
+                override: b.override == null ? undefined : num(b.override, 'override'),
+                note: b.note as string | undefined,
+            },
+            reqAuth(req),
+        );
+        return reply.code(201).send(created);
+    });
+
+    // A standalone bonus or adjustment (a deduction), not tied to an order.
+    app.post('/payouts/adjustment', async (req, reply) => {
+        const b = body(req.body);
+        if (b.kind !== 'bonus' && b.kind !== 'adjustment') throw new ValidationError('kind must be bonus or adjustment');
+        const created = await service.createAdjustment(
+            {
+                workerId: b.workerId as string,
+                workerType: workerType(b.workerType),
+                kind: b.kind,
+                amount: num(b.amount, 'amount'),
+                period: b.period as string | undefined,
+                note: b.note as string | undefined,
+            },
+            reqAuth(req),
+        );
+        return reply.code(201).send(created);
+    });
+
+    // Lifecycle — idempotent, same as the order transitions.
+    app.post<{ Params: { id: string } }>('/payouts/:id/approve', async req => service.approve(req.params.id, reqAuth(req)));
+    app.post<{ Params: { id: string } }>('/payouts/:id/pay', async req => service.pay(req.params.id, reqAuth(req)));
+    app.post<{ Params: { id: string } }>('/payouts/:id/cancel', async req => service.cancel(req.params.id, reqAuth(req)));
 }
 
 /**

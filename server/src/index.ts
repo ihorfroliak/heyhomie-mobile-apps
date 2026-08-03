@@ -10,6 +10,7 @@ import { pgOrderRepo } from './pgRepo.js';
 import { consoleNotificationPort } from '@heyhomie/api';
 import { pgAuthRepo } from './pgAuthRepo.js';
 import { pgAuditPort } from './pgAuditPort.js';
+import { pgPayoutRepo } from './pgPayoutRepo.js';
 import { makeAuthCrypto } from './authCrypto.js';
 import { buildApp } from './app.js';
 
@@ -28,7 +29,7 @@ async function main() {
     // NotificationPort delivers invite/reset tokens. Console until a real provider
     // (SMTP/SES/SendGrid) implements the same port — the ONLY delivery abstraction.
     const authDeps = { repo: pgAuthRepo(pool), crypto: makeAuthCrypto(config.authSecret, config.accessTtlSec), notifications: consoleNotificationPort(), audit: pgAuditPort(pool) };
-    const { app, beginShutdown, purgeExpired, revocations } = buildApp(config, pgOrderRepo(pool), async () => { await pool.query('SELECT 1'); }, authDeps);
+    const { app, beginShutdown, purgeExpired, revocations } = buildApp(config, pgOrderRepo(pool), async () => { await pool.query('SELECT 1'); }, authDeps, pgPayoutRepo(pool));
     const DRAIN_MS = config.shutdownDrainMs; // validated at boot (fail-fast, C2)
 
     // Seed the RevocationIndex from durable state BEFORE serving (Build 29): a

@@ -152,6 +152,38 @@ const MIGRATIONS: Migration[] = [
             );
             CREATE INDEX IF NOT EXISTS audit_log_tenant_idx ON audit_log (tenant_id, created_at DESC);`,
     },
+    {
+        // Worker payout ledger — what each homie earned and whether it has been settled.
+        // Orthogonal to `orders`: a payout only REFERENCES an order id (no FK, because an
+        // adjustment/bonus has no order and orders are a separate aggregate). The partial
+        // UNIQUE index is the double-pay guard: at most one LIVE payout per order, while
+        // any number of canceled ones may exist. Additive; touches nothing else.
+        version: 10,
+        name: 'worker_payouts',
+        sql: `
+            CREATE TABLE IF NOT EXISTS payouts (
+                id          text PRIMARY KEY,
+                tenant_id   text        NOT NULL,
+                version     integer     NOT NULL DEFAULT 1,
+                worker_id   text        NOT NULL,
+                worker_type text        NOT NULL,
+                order_id    text,
+                kind        text        NOT NULL,
+                amount      integer     NOT NULL,
+                period      text        NOT NULL,
+                status      text        NOT NULL,
+                note        text,
+                created_at  timestamptz NOT NULL DEFAULT now(),
+                approved_at timestamptz,
+                paid_at     timestamptz,
+                CONSTRAINT payouts_job_has_order CHECK (kind <> 'job' OR order_id IS NOT NULL),
+                CONSTRAINT payouts_bonus_positive CHECK (kind <> 'bonus' OR amount > 0)
+            );
+            CREATE INDEX IF NOT EXISTS payouts_tenant_idx ON payouts (tenant_id, period);
+            CREATE INDEX IF NOT EXISTS payouts_worker_idx ON payouts (tenant_id, worker_id);
+            CREATE UNIQUE INDEX IF NOT EXISTS payouts_one_live_per_order
+                ON payouts (tenant_id, order_id) WHERE order_id IS NOT NULL AND status <> 'canceled';`,
+    },
 ];
 
 export async function runMigrations(pool: Pool): Promise<number[]> {
