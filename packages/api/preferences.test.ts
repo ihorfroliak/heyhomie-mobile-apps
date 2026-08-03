@@ -1,5 +1,5 @@
 /** Run with: npx -y tsx packages/api/preferences.test.ts */
-import { memoryKeyValueStore, consentStore, expensesStore, CONSENT_KEY } from './preferences';
+import { memoryKeyValueStore, consentStore, expensesStore, coverageStore, CONSENT_KEY, COVERAGE_KEY } from './preferences';
 import { recordConsent, emptyExpenses } from '../domain';
 
 let passed = 0;
@@ -36,6 +36,24 @@ const ok = (n: string, c: boolean) => (c ? passed++ : fail.push(n));
     ok('expenses: loadMonth returns saved', (await exp.loadMonth('2025-05'))?.accountant === 500);
     ok('expenses: loadAll has both months', Object.keys(await exp.loadAll()).length === 2);
     ok('expenses: missing month is null', (await exp.loadMonth('2025-01')) === null);
+
+    // ---- coverage map (admin city/service config; survives a reload) ----
+    const covKv = memoryKeyValueStore();
+    const cov = coverageStore(covKv);
+    ok('coverage: nothing saved → null, caller keeps its default', (await cov.load()) === null);
+    const map = [
+        { cityId: 'krakow', enabled: true, services: { standard_cleaning: true } },
+        { cityId: 'wroclaw', enabled: false, services: {} },
+    ];
+    await cov.save(map);
+    const loaded = await cov.load();
+    ok('coverage: round-trips the map', JSON.stringify(loaded) === JSON.stringify(map));
+    ok('coverage: a city toggle persists', loaded?.[0].enabled === true && loaded?.[1].enabled === false);
+    ok('coverage: a service toggle persists', loaded?.[0].services.standard_cleaning === true);
+    await covKv.setItem(COVERAGE_KEY, '{not json');
+    ok('coverage: corrupted entry → null, never throws', (await cov.load()) === null);
+    await covKv.setItem(COVERAGE_KEY, '{"not":"an array"}');
+    ok('coverage: wrong shape → null', (await cov.load()) === null);
 
     console.log(`\n${passed} passed, ${fail.length} failed`);
     if (fail.length) {

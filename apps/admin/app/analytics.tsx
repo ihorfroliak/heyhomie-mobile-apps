@@ -1,11 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useSyncExternalStore } from 'react';
 import { ScrollView, View, Pressable, StyleSheet } from 'react-native';
 import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { demoAnalyticsMissions, demoCohortMissions } from '@heyhomie/api';
-import { dashboardSummary, withinLastDays, cohortRetention, formatMoney, formatDuration, type Locale } from '@heyhomie/domain';
+import { demoAnalyticsMissions, demoCohortMissions, orderGateway } from '@heyhomie/api';
+import {
+    dashboardSummary,
+    withinLastDays,
+    cohortRetention,
+    formatMoney,
+    formatDuration,
+    orderKpis,
+    ordersByMonth,
+    ordersWithinLastDays,
+    orderClientProfiles,
+    type Locale,
+} from '@heyhomie/domain';
 import { colors, spacing, typography } from '@heyhomie/design';
 import { Card, Segmented } from '@heyhomie/ui';
 import { BarChart, Donut } from '../components/Charts';
@@ -17,6 +28,17 @@ export default function Analytics() {
     const [showMore, setShowMore] = useState(false);
     const [period, setPeriod] = useState<'7' | '30' | 'all'>('all');
 
+    // REAL orders through the gateway, filtered by the same period selector.
+    const allOrders = useSyncExternalStore(orderGateway.subscribe, orderGateway.ordersSnapshot);
+    const now = new Date().toISOString();
+    const orders = period === 'all' ? allOrders : ordersWithinLastDays(allOrders, Number(period), now);
+    const live = orderKpis(orders);
+    const liveTrend = ordersByMonth(orders).map(m => ({ key: m.month.slice(5), value: m.revenue }));
+    const liveClients = orderClientProfiles(orders);
+    const repeatClients = liveClients.filter(c => c.orders > 1).length;
+
+    // The mission analytics below need durations, assignment times and cohorts, which the
+    // contract Order does not carry — so they stay on the sample missions.
     const missions = period === 'all' ? demoAnalyticsMissions : withinLastDays(demoAnalyticsMissions, Number(period));
     // Illustrative capacity, scaled to the selected window.
     const capacityDays = period === 'all' ? 30 : Number(period);
@@ -46,7 +68,28 @@ export default function Analytics() {
                     />
                 </View>
 
-                {/* PRIMARY — headline numbers, prominent */}
+                {/* PRIMARY — real numbers off the live orders, for the chosen period. */}
+                <View style={styles.grid}>
+                    <Hero label="Collected" value={formatMoney(live.revenue, live.currency, locale)} />
+                    <Hero label="Orders" value={String(live.total)} />
+                    <Hero label="Paid" value={String(live.paid)} />
+                    <Hero label="Avg order" value={formatMoney(live.avgOrder, live.currency, locale)} />
+                </View>
+                <Txt style={styles.liveNote}>
+                    {formatMoney(live.outstanding, live.currency, locale)} outstanding · {live.cancelRate}% canceled · {liveClients.length} clients
+                    {repeatClients > 0 ? ` (${repeatClients} returning)` : ''}
+                </Txt>
+
+                {liveTrend.length > 0 ? (
+                    <>
+                        <Txt style={styles.section}>Collected by month · live</Txt>
+                        <Card>
+                            <BarChart data={liveTrend} width={300} height={130} color={colors.success} />
+                        </Card>
+                    </>
+                ) : null}
+
+                <Txt style={styles.section}>Mission analytics · sample data</Txt>
                 <View style={styles.grid}>
                     <Hero label="Revenue" value={formatMoney(s.primary.revenue, 'PLN', locale)} />
                     <Hero label="Completed" value={String(s.primary.completed)} />
@@ -177,6 +220,7 @@ const styles = StyleSheet.create({
     heroLabel: { color: colors.grey, fontSize: typography.sizes.caption },
     heroValue: { fontSize: typography.sizes.h2, fontWeight: '700', color: colors.primary, marginTop: 4 },
     section: { fontSize: typography.sizes.small, color: colors.grey, marginTop: spacing.xl, marginBottom: spacing.sm },
+    liveNote: { color: colors.grey, fontSize: typography.sizes.caption, marginTop: spacing.sm },
     twoCol: { flexDirection: 'row', gap: spacing.md },
     half: { flex: 1 },
     donutWrap: { width: 110, height: 110, alignItems: 'center', justifyContent: 'center' },

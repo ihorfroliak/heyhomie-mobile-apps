@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ScrollView, View, Pressable, Switch, StyleSheet } from 'react-native';
 import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { demoAvailability } from '@heyhomie/api';
+import { coverage as coverageStore } from '../lib/store';
 import {
     SERVICES,
     SERVICE_IDS,
@@ -23,14 +24,30 @@ import { Card } from '@heyhomie/ui';
 const locale: Locale = 'en';
 
 export default function Coverage() {
-    // Local mock state — swap to API mutations (PUT /admin/coverage) when the backend is wired.
+    // Admin-local configuration, PERSISTED (no coverage backend yet) — before this the
+    // toggles were plain state and every edit was lost on reload. Swap to API mutations
+    // (PUT /admin/coverage) when the backend is wired.
     const [map, setMap] = useState<AvailabilityMap>(demoAvailability);
     const [expanded, setExpanded] = useState<string | null>('krakow');
     const stats = coverageStats(map, SERVICE_IDS.length);
 
-    const toggleCity = (cityId: string, next: boolean) => setMap(prev => setCityEnabled(prev, cityId, next));
-    const toggleService = (cityId: string, serviceId: string, next: boolean) =>
-        setMap(prev => setServiceEnabled(prev, cityId, serviceId, next));
+    useEffect(() => {
+        let alive = true;
+        void coverageStore.load().then(saved => {
+            if (alive && saved) setMap(saved);
+        });
+        return () => {
+            alive = false;
+        };
+    }, []);
+
+    /** Apply an edit and persist it (fire-and-forget; the UI already shows the new state). */
+    const update = (next: AvailabilityMap) => {
+        setMap(next);
+        void coverageStore.save(next);
+    };
+    const toggleCity = (cityId: string, next: boolean) => update(setCityEnabled(map, cityId, next));
+    const toggleService = (cityId: string, serviceId: string, next: boolean) => update(setServiceEnabled(map, cityId, serviceId, next));
 
     return (
         <SafeAreaView style={styles.safe} edges={['top']}>

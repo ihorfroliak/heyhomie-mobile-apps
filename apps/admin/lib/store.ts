@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ExpoSecureStore from 'expo-secure-store';
-import { expensesStore, type KeyValueStore, type SecureStore } from '@heyhomie/api';
+import { expensesStore, coverageStore, type KeyValueStore, type SecureStore } from '@heyhomie/api';
 
 export const kv: KeyValueStore = {
     getItem: key => AsyncStorage.getItem(key),
@@ -20,3 +20,6 @@ export const secureStore: SecureStore = {
 
 /** Persisted monthly expenses history for the finance screen. */
 export const expenses = expensesStore(kv);
+
+/** Persisted city/service coverage map for the coverage screen. */
+export const coverage = coverageStore(kv);

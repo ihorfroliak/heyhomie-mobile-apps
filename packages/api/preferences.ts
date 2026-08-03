@@ -3,7 +3,7 @@
  * native apps back this with AsyncStorage; web with localStorage). Used to decide
  * whether to show the consent screen on first launch and to persist consents.
  */
-import { hasRequiredConsents, type ConsentRecord, type MonthlyExpenses } from '../domain';
+import { hasRequiredConsents, type AvailabilityMap, type ConsentRecord, type MonthlyExpenses } from '../domain';
 
 export interface KeyValueStore {
     getItem(key: string): Promise<string | null>;
@@ -79,3 +79,28 @@ export function expensesStore(store: KeyValueStore) {
 }
 
 export type ExpensesStore = ReturnType<typeof expensesStore>;
+
+export const COVERAGE_KEY = 'heyhomie.coverage';
+
+/**
+ * Persisted city/service coverage map for the admin. Until a coverage backend exists
+ * this is admin-local configuration — without it every toggle is lost on reload.
+ * `load` returns null when nothing was saved yet, so the caller keeps its default.
+ */
+export function coverageStore(store: KeyValueStore) {
+    return {
+        load: async (): Promise<AvailabilityMap | null> => {
+            const raw = await store.getItem(COVERAGE_KEY);
+            if (!raw) return null;
+            try {
+                const parsed = JSON.parse(raw);
+                return Array.isArray(parsed) ? (parsed as AvailabilityMap) : null;
+            } catch {
+                return null; // corrupted entry — fall back to the default map
+            }
+        },
+        save: async (map: AvailabilityMap) => store.setItem(COVERAGE_KEY, JSON.stringify(map)),
+    };
+}
+
+export type CoverageStore = ReturnType<typeof coverageStore>;
