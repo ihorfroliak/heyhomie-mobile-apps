@@ -199,3 +199,33 @@ export function ordersWithinLastDays(orders: OrderLike[], days: number, nowIso: 
     const cutoff = new Date(new Date(nowIso).getTime() - days * 86_400_000).toISOString();
     return orders.filter(o => orderAt(o) >= cutoff);
 }
+
+export interface OrderFunnelStep {
+    /** 'confirmed' | 'completed' | 'paid' */
+    stage: Exclude<OrderLikeStatus, 'canceled'>;
+    /** Orders that reached this stage or beyond (canceled never counts as reached). */
+    reached: number;
+    /** Share of the booked orders that got this far, 0..100 (1 decimal). */
+    pct: number;
+}
+
+/**
+ * The FULFILMENT funnel — booked → done → paid, over real orders.
+ *
+ * This is not the acquisition funnel (the contract carries no browsing/booking stages);
+ * it is what happens to an order after it exists. `completed` and `paid` both imply the
+ * job was done, and `paid` implies completion, so the steps are cumulative. Canceled
+ * orders are excluded from `reached` and reported separately by `orderKpis`.
+ */
+export function orderFunnel(orders: OrderLike[]): OrderFunnelStep[] {
+    const live = orders.filter(o => o.status !== 'canceled');
+    const booked = live.length;
+    const done = live.filter(o => o.status === 'completed' || o.status === 'paid').length;
+    const paid = live.filter(o => isOrderPaid(o)).length;
+    const pct = (n: number) => (booked > 0 ? round1((n / booked) * 100) : 0);
+    return [
+        { stage: 'confirmed', reached: booked, pct: pct(booked) },
+        { stage: 'completed', reached: done, pct: pct(done) },
+        { stage: 'paid', reached: paid, pct: pct(paid) },
+    ];
+}

@@ -12,6 +12,9 @@ import {
     biggestDropStage,
     allLeads,
     leadCounts,
+    orderFunnel,
+    orderKpis,
+    formatMoney,
     serviceName,
     cityName,
     formatPhone,
@@ -28,8 +31,16 @@ import { colors, spacing, typography } from '@heyhomie/design';
 import { Card } from '@heyhomie/ui';
 
 const locale: Locale = 'en';
-// Demo "now" so the funnel/abandoned math has something to show.
-const NOW = '2025-05-16T12:00:00.000Z';
+// The demo funnel seed is dated, so its abandoned/lead math is anchored to that date.
+// Anything computed from LIVE data uses the real clock instead (see `now` below).
+const DEMO_NOW = '2025-05-16T12:00:00.000Z';
+
+/** Fulfilment steps (real orders) — booked → done → paid. */
+const FLOW_LABEL: Record<'confirmed' | 'completed' | 'paid', string> = {
+    confirmed: 'Booked',
+    completed: 'Job done',
+    paid: 'Paid',
+};
 
 const STAGE_LABEL: Record<BookingStage, string> = {
     started: 'Opened booking',
@@ -89,13 +100,18 @@ export default function Pipeline() {
     const orders = useSyncExternalStore(orderGateway.subscribe, orderGateway.ordersSnapshot);
     const storeLeads = useSyncExternalStore(orderGateway.subscribe, orderGateway.leadsSnapshot);
 
+    // ACQUISITION funnel — multi-stage booking data only the demo seed carries (the
+    // contract Order has no browsing/booking stages), so it stays on the dated seed.
     const steps = funnelCounts(demoDrafts);
     const top = steps[0]?.reached || 1;
     const conv = bookingConversion(demoDrafts);
     const drop = biggestDropStage(demoDrafts);
-    const abandoned = abandonedDrafts(demoDrafts, NOW);
-    const leads = allLeads([...demoLeads, ...storeLeads], demoDrafts, NOW);
+    const abandoned = abandonedDrafts(demoDrafts, DEMO_NOW);
+    const leads = allLeads([...demoLeads, ...storeLeads], demoDrafts, DEMO_NOW);
     const lCounts = leadCounts(leads);
+    // FULFILMENT funnel + money — real, from the live orders (see domain/orderAnalytics).
+    const flow = orderFunnel(orders);
+    const k = orderKpis(orders);
     // Live orders, newest first — the admin's order view via the gateway.
     const liveBookings = orders.slice().reverse();
 
@@ -109,9 +125,33 @@ export default function Pipeline() {
                     <Kpi icon="person-add-outline" label="Open leads" value={String(lCounts.new + lCounts.contacted)} />
                 </View>
 
+                {/* REAL: what happens to orders after they exist. */}
+                <View style={styles.sectionRow}>
+                    <Ionicons name="flash-outline" size={14} color={colors.grey} />
+                    <Txt style={styles.sectionText}>Order flow · live</Txt>
+                </View>
+                <Card>
+                    {flow.map(s => (
+                        <View key={s.stage} style={styles.funnelRow}>
+                            <Txt style={styles.funnelLabel}>{FLOW_LABEL[s.stage]}</Txt>
+                            <View style={styles.track}>
+                                <View style={[styles.fill, { width: `${s.pct}%`, backgroundColor: s.stage === 'paid' ? colors.success : colors.blue }]} />
+                            </View>
+                            <Txt style={styles.funnelVal}>{s.reached}</Txt>
+                        </View>
+                    ))}
+                    <View style={styles.noteRow}>
+                        <Ionicons name="wallet-outline" size={13} color={colors.grey} />
+                        <Txt style={styles.note}>
+                            {formatMoney(k.revenue, k.currency, locale)} collected · {formatMoney(k.outstanding, k.currency, locale)} outstanding
+                            {k.canceled > 0 ? ` · ${k.canceled} canceled (${k.cancelRate}%)` : ''}
+                        </Txt>
+                    </View>
+                </Card>
+
                 <View style={styles.sectionRow}>
                     <Ionicons name="funnel-outline" size={14} color={colors.grey} />
-                    <Txt style={styles.sectionText}>Booking funnel</Txt>
+                    <Txt style={styles.sectionText}>Booking funnel · sample data</Txt>
                 </View>
                 <Card>
                     {steps.map(s => {

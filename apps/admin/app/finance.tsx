@@ -1,17 +1,22 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useSyncExternalStore } from 'react';
 import { ScrollView, View, TextInput, Pressable, StyleSheet } from 'react-native';
 import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { demoAnalyticsMissions, missionPayout } from '@heyhomie/api';
+import { demoAnalyticsMissions, orderGateway } from '@heyhomie/api';
 import {
+    // NOTE: missionPayout lives in the DOMAIN (payouts.ts) — importing it from
+    // @heyhomie/api crashed this screen at runtime (the barrel never exported it).
+    missionPayout,
     financeReportForRange,
     dateRange,
     reportsByMonth,
     withinRange,
     totalExpenses,
     orderMargin,
+    orderKpis,
+    ordersByMonth,
     formatMoney,
     financialReportData,
     periodLabel,
@@ -65,6 +70,13 @@ export default function Finance() {
         expensesStore.loadAll().then(stored => setByMonth(prev => ({ ...prev, ...stored })));
     }, []);
 
+    // REAL money from the live orders — collected vs outstanding, and a monthly trend.
+    const orders = useSyncExternalStore(orderGateway.subscribe, orderGateway.ordersSnapshot);
+    const live = orderKpis(orders);
+    const liveTrend = ordersByMonth(orders).map(m => ({ key: m.month.slice(5), value: m.revenue }));
+
+    // The P&L below models margin from worker payouts, which the contract Order does not
+    // carry — so it stays on the sample missions until a payouts backend exists.
     const range = period === 'custom' ? { start: customStart, end: customEnd } : dateRange(period, REF);
     const report = financeReportForRange(demoAnalyticsMissions, byMonth, vat, range);
 
@@ -87,6 +99,30 @@ export default function Finance() {
         <SafeAreaView style={styles.safe} edges={['top']}>
             <Stack.Screen options={{ headerShown: true, title: 'Finance' }} />
             <ScrollView contentContainerStyle={styles.body}>
+                {/* REAL money — straight off the live orders. */}
+                <SectionLabel icon="cash-outline" text="Cash from orders · live" />
+                <Card>
+                    <View style={styles.liveRow}>
+                        <View style={styles.liveCell}>
+                            <Txt style={styles.liveLabel}>Collected</Txt>
+                            <Txt style={[styles.liveValue, { color: colors.success }]}>{money(live.revenue)}</Txt>
+                        </View>
+                        <View style={styles.liveCell}>
+                            <Txt style={styles.liveLabel}>Outstanding</Txt>
+                            <Txt style={[styles.liveValue, { color: colors.warning }]}>{money(live.outstanding)}</Txt>
+                        </View>
+                        <View style={styles.liveCell}>
+                            <Txt style={styles.liveLabel}>Avg order</Txt>
+                            <Txt style={styles.liveValue}>{money(live.avgOrder)}</Txt>
+                        </View>
+                    </View>
+                    <Txt style={styles.liveNote}>
+                        {live.paid} paid · {live.completed + live.confirmed} awaiting payment · {live.canceled} canceled
+                    </Txt>
+                    {liveTrend.length > 0 ? <BarChart data={liveTrend} width={300} height={110} color={colors.success} /> : null}
+                </Card>
+
+                <SectionLabel icon="calculator-outline" text="P&L model · sample data" />
                 <Segmented
                     value={period}
                     onChange={k => setPeriod(k as PeriodType)}
@@ -228,6 +264,11 @@ const styles = StyleSheet.create({
     dateInput: { flex: 1, borderWidth: 1, borderColor: colors.border, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, color: colors.primary },
     dash: { color: colors.grey },
     rangeNote: { color: colors.grey, fontSize: typography.sizes.caption, marginTop: spacing.sm },
+    liveRow: { flexDirection: 'row', gap: spacing.md },
+    liveCell: { flex: 1 },
+    liveLabel: { color: colors.grey, fontSize: typography.sizes.caption },
+    liveValue: { color: colors.primary, fontSize: typography.sizes.h3, fontWeight: '700', marginTop: 2 },
+    liveNote: { color: colors.grey, fontSize: typography.sizes.caption, marginTop: spacing.sm },
     vatRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
     vat: { flex: 1, textAlign: 'center', paddingVertical: 8, borderRadius: 10, borderWidth: 1, borderColor: colors.border, color: colors.grey, fontWeight: '600', fontSize: typography.sizes.caption },
     vatOn: { backgroundColor: colors.salad, borderColor: colors.salad, color: colors.primary },

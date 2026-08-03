@@ -1,7 +1,7 @@
 /** Run with: npx -y tsx packages/domain/orderAnalytics.test.ts
  *  Admin KPIs computed from real contract orders — money, statuses, per-client rollups,
  *  monthly series. Only what an order genuinely carries (no invented mission fields). */
-import { orderKpis, orderClientProfiles, ordersByMonth, ordersWithinLastDays, orderAt, maskContact, isOrderPaid, type OrderLike } from './orderAnalytics';
+import { orderKpis, orderClientProfiles, ordersByMonth, ordersWithinLastDays, orderAt, maskContact, isOrderPaid, orderFunnel, type OrderLike } from './orderAnalytics';
 import type { PaymentIntent } from './payment';
 
 let passed = 0;
@@ -77,6 +77,17 @@ eq('june: 2 orders, nothing collected', [months[1].orders, months[1].revenue], [
 eq('last 30 days from 2026-06-05', ordersWithinLastDays(set, 30, '2026-06-05T00:00:00.000Z').map(x => x.id), ['2', '3', '4', '5']);
 eq('last 7 days keeps only June', ordersWithinLastDays(set, 7, '2026-06-05T00:00:00.000Z').map(x => x.id), ['4', '5']);
 eq('last 365 days keeps everything', ordersWithinLastDays(set, 365, '2026-06-05T00:00:00.000Z').length, 5);
+
+// ---- fulfilment funnel ----
+const fn = orderFunnel(set); // 4 live (1 canceled excluded): 2 paid, 1 completed, 1 confirmed
+eq('funnel stages in order', fn.map(s => s.stage), ['confirmed', 'completed', 'paid']);
+eq('booked excludes canceled', fn[0].reached, 4);
+eq('done = completed + paid (cumulative)', fn[1].reached, 3);
+eq('paid step', fn[2].reached, 2);
+eq('percentages of booked', fn.map(s => s.pct), [100, 75, 50]);
+ok('funnel is monotonically non-increasing', fn[0].reached >= fn[1].reached && fn[1].reached >= fn[2].reached);
+eq('empty orders → zero funnel', orderFunnel([]).map(s => s.reached), [0, 0, 0]);
+eq('all-canceled → zero, no divide-by-zero', orderFunnel([o('c', 'canceled', 100, '2026-05-01T00:00:00.000Z')]).map(s => s.pct), [0, 0, 0]);
 
 console.log(`\n${passed} passed, ${fail.length} failed`);
 if (fail.length) {
