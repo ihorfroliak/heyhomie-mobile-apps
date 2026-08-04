@@ -4,7 +4,7 @@ import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { demoAnalyticsMissions, orderGateway } from '@heyhomie/api';
+import { demoAnalyticsMissions, orderGateway, payoutGateway } from '@heyhomie/api';
 import {
     // NOTE: missionPayout lives in the DOMAIN (payouts.ts) — importing it from
     // @heyhomie/api crashed this screen at runtime (the barrel never exported it).
@@ -17,6 +17,9 @@ import {
     orderMargin,
     orderKpis,
     ordersByMonth,
+    liveFinanceReport,
+    sumExpensesInRange,
+    orderAt,
     formatMoney,
     financialReportData,
     periodLabel,
@@ -70,17 +73,31 @@ export default function Finance() {
         expensesStore.loadAll().then(stored => setByMonth(prev => ({ ...prev, ...stored })));
     }, []);
 
-    // REAL money from the live orders — collected vs outstanding, and a monthly trend.
+    // REAL money: orders (revenue) + the payout ledger (worker cost) + entered expenses.
+    // Every input of the margin below is now live — no sample missions involved.
     const orders = useSyncExternalStore(orderGateway.subscribe, orderGateway.ordersSnapshot);
+    const payouts = useSyncExternalStore(payoutGateway.subscribe, payoutGateway.snapshot, payoutGateway.snapshot);
     const live = orderKpis(orders);
     const liveTrend = ordersByMonth(orders).map(m => ({ key: m.month.slice(5), value: m.revenue }));
 
-    // The P&L below models margin from worker payouts, which the contract Order does not
-    // carry — so it stays on the sample missions until a payouts backend exists.
+    // Live margin for the selected period: revenue from paid orders, worker cost accrued
+    // from the ledger, expenses as entered. Both lists are filtered to the range below.
     const range = period === 'custom' ? { start: customStart, end: customEnd } : dateRange(period, REF);
     const report = financeReportForRange(demoAnalyticsMissions, byMonth, vat, range);
 
+    // Filter BOTH live sources to the selected range, then compute the real margin.
     const inRange = (m: string) => m >= range.start.slice(0, 7) && m <= range.end.slice(0, 7);
+    const ordersInRange = orders.filter(o => {
+        const d = orderAt(o).slice(0, 10);
+        return d >= range.start && d <= range.end;
+    });
+    const payoutsInRange = payouts.filter(p => inRange(p.period));
+    const liveMargin = liveFinanceReport({
+        orders: ordersInRange,
+        payouts: payoutsInRange,
+        expenses: sumExpensesInRange(byMonth, range.start, range.end),
+        vat,
+    });
     const expTrend = Object.keys(byMonth).filter(inRange).sort().map(m => ({ key: m.slice(5), value: totalExpenses(byMonth[m]) }));
     const revTrend = reportsByMonth(withinRange(demoAnalyticsMissions, range.start, range.end), vat).map(t => ({ key: t.month.slice(5), value: t.revenueNet }));
 
@@ -122,7 +139,28 @@ export default function Finance() {
                     {liveTrend.length > 0 ? <BarChart data={liveTrend} width={300} height={110} color={colors.success} /> : null}
                 </Card>
 
-                <SectionLabel icon="calculator-outline" text="P&L model · sample data" />
+                {/* REAL margin — every input is live: revenue from paid orders, worker cost
+                    accrued from the payout ledger, expenses as entered by the admin. */}
+                <SectionLabel icon="trending-up-outline" text="Margin · live" />
+                <Card variant="fill">
+                    <Row label={`Revenue (net · ${liveMargin.paidOrders} paid orders)`} value={money(liveMargin.revenueNet)} />
+                    <Row label="Worker payouts (accrued)" value={`− ${money(liveMargin.workerPayouts)}`} />
+                    <View style={styles.divider} />
+                    <Row label="Gross margin" value={`${money(liveMargin.grossMargin)} · ${liveMargin.grossMarginPct}%`} strong />
+                    <Row label="Expenses" value={`− ${money(liveMargin.expenses)}`} />
+                    <View style={styles.divider} />
+                    <Row
+                        label="Net profit"
+                        value={`${money(liveMargin.netProfit)} · ${liveMargin.netProfitPct}%`}
+                        strong
+                        color={liveMargin.netProfit >= 0 ? colors.success : colors.danger}
+                    />
+                    <Txt style={styles.liveNote}>
+                        {money(liveMargin.payoutsSettled)} of the worker cost is already transferred · {money(liveMargin.outstanding)} of revenue is billed but not collected
+                    </Txt>
+                </Card>
+
+                <SectionLabel icon="calculator-outline" text="P&L model · sample missions" />
                 <Segmented
                     value={period}
                     onChange={k => setPeriod(k as PeriodType)}

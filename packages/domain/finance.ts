@@ -7,6 +7,8 @@
  */
 import type { Mission } from './missions';
 import { missionPayout } from './payouts';
+import { orderKpis, type OrderLike } from './orderAnalytics';
+import { payoutTotals, type PayoutEntry } from './payoutLedger';
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 const round1 = (n: number) => Math.round(n * 10) / 10;
@@ -134,6 +136,80 @@ export function reportsByMonth(missions: Mission[], vat: VatRate = 0): MonthRepo
         map.set(month, row);
     }
     return [...map.values()].sort((a, b) => a.month.localeCompare(b.month));
+}
+
+/* ------------------------------------------------------------------ */
+/* LIVE margin — the same P&L shape, but from real sources             */
+/* ------------------------------------------------------------------ */
+
+export interface LiveFinanceInput {
+    /** Real orders (contract projection) — the revenue side. */
+    orders: OrderLike[];
+    /** Real payout-ledger entries — the worker-cost side. */
+    payouts: PayoutEntry[];
+    /** Admin-entered running costs for the same period. */
+    expenses: MonthlyExpenses;
+    vat?: VatRate;
+}
+
+export interface LiveFinanceReport {
+    /** Orders that actually paid — the count behind `revenueGross`. */
+    paidOrders: number;
+    /** Money collected (paid orders only). */
+    revenueGross: number;
+    revenueNet: number;
+    vat: number;
+    /** Billable but not yet collected — shown so margin isn't mistaken for cash. */
+    outstanding: number;
+    /** Worker cost ACCRUED: every non-canceled ledger entry (paid + still owed). */
+    workerPayouts: number;
+    /** Of that, what has actually been transferred. */
+    payoutsSettled: number;
+    grossMargin: number; // revenueNet − workerPayouts
+    grossMarginPct: number;
+    expenses: number;
+    netProfit: number; // grossMargin − expenses
+    netProfitPct: number;
+}
+
+/**
+ * Margin from REAL data: revenue from orders, worker cost from the payout ledger,
+ * expenses as entered by the admin.
+ *
+ * Two deliberate choices, so the number can't quietly mislead:
+ *  - revenue counts only COLLECTED money (paid orders); what is merely billable is
+ *    reported separately as `outstanding`;
+ *  - worker cost is ACCRUED (paid + still owed), because a job that is done costs us
+ *    whether or not the transfer has gone out yet. Canceled entries count for nothing.
+ * The caller filters both lists to the period it wants (see ordersWithinLastDays /
+ * payoutsInPeriod) — this function does no date maths of its own.
+ */
+export function liveFinanceReport(input: LiveFinanceInput): LiveFinanceReport {
+    const vat = input.vat ?? 0;
+    const k = orderKpis(input.orders);
+    const p = payoutTotals(input.payouts);
+
+    const revenueGross = k.revenue;
+    const revenueNet = netFromGross(revenueGross, vat);
+    const workerPayouts = round2(p.paid + p.owed);
+    const grossMargin = round2(revenueNet - workerPayouts);
+    const exp = totalExpenses(input.expenses);
+    const netProfit = round2(grossMargin - exp);
+
+    return {
+        paidOrders: k.paid,
+        revenueGross,
+        revenueNet,
+        vat: round2(revenueGross - revenueNet),
+        outstanding: k.outstanding,
+        workerPayouts,
+        payoutsSettled: p.paid,
+        grossMargin,
+        grossMarginPct: revenueNet > 0 ? round1((grossMargin / revenueNet) * 100) : 0,
+        expenses: exp,
+        netProfit,
+        netProfitPct: revenueNet > 0 ? round1((netProfit / revenueNet) * 100) : 0,
+    };
 }
 
 export type PeriodType = 'month' | 'quarter' | 'year' | 'custom';

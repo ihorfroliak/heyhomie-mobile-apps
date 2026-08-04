@@ -1,5 +1,5 @@
 /** Run with: npx -y tsx packages/domain/finance.test.ts */
-import { isVatExempt, netFromGross, grossFromNet, vatAmount, orderMargin, totalExpenses, emptyExpenses, monthlyReport, reportsByMonth, dateRange, withinRange, sumExpensesInRange, financeReportForRange, type MonthlyExpenses } from './finance';
+import { liveFinanceReport, isVatExempt, netFromGross, grossFromNet, vatAmount, orderMargin, totalExpenses, emptyExpenses, monthlyReport, reportsByMonth, dateRange, withinRange, sumExpensesInRange, financeReportForRange, type MonthlyExpenses } from './finance';
 import { payoutRateFor } from './payouts';
 import type { Mission } from './missions';
 
@@ -84,6 +84,43 @@ const rangeRep = financeReportForRange(rangeMissions, byMonth, 0, { start: '2025
 eq('range report revenue (Q2)', rangeRep.revenueGross, 200);
 eq('range report expenses (Q2)', rangeRep.expenses, 300);
 
-console.log(`\n${passed} passed, ${fail.length} failed`);
+
+// ---- LIVE margin: real orders + real payout ledger + entered expenses ----
+{
+    const pay = (amount: number, status: 'paid' | 'awaiting_completion') => ({
+        id: 'p', orderId: 'o', method: 'card' as const, status, provider: 'stripe' as const,
+        createdAt: '2026-08-01T00:00:00.000Z', amount, currency: 'PLN',
+    });
+    const ord = (id: string, status: 'paid' | 'completed' | 'canceled', amount: number) => ({
+        id, status, updatedAt: '2026-08-01T00:00:00.000Z', payment: pay(amount, status === 'paid' ? 'paid' : 'awaiting_completion'),
+    });
+    const po = (id: string, amount: number, status: 'pending' | 'approved' | 'paid' | 'canceled') => ({
+        id, workerId: 'w1', workerType: 'employee' as const, orderId: id, kind: 'job' as const,
+        amount, period: '2026-08', status, createdAt: '2026-08-01T00:00:00.000Z',
+    });
+
+    const orders = [ord('o1', 'paid', 219), ord('o2', 'paid', 359), ord('o3', 'completed', 269), ord('o4', 'canceled', 500)];
+    const payouts = [po('a', 153, 'paid'), po('b', 251, 'approved'), po('c', 100, 'pending'), po('d', 999, 'canceled')];
+    const exp = { ...emptyExpenses(), accountant: 200 };
+    const r = liveFinanceReport({ orders, payouts, expenses: exp });
+
+    eq('live: revenue counts only collected money', r.revenueGross, 578); // 219 + 359
+    eq('live: billable-but-unpaid is reported separately', r.outstanding, 269);
+    eq('live: canceled orders contribute nothing', r.revenueGross + r.outstanding, 847);
+    eq('live: paid order count', r.paidOrders, 2);
+    eq('live: worker cost is ACCRUED (paid + owed)', r.workerPayouts, 504); // 153 + 251 + 100
+    eq('live: settled payouts tracked separately', r.payoutsSettled, 153);
+    eq('live: canceled payouts cost nothing', r.workerPayouts, 504);
+    eq('live: gross margin = net revenue − worker cost', r.grossMargin, 74); // 578 - 504
+    eq('live: net profit = margin − expenses', r.netProfit, -126); // 74 - 200
+    eq('live: margin %', r.grossMarginPct, 12.8);
+    const vatted = liveFinanceReport({ orders, payouts, expenses: exp, vat: 23 });
+    ok('live: VAT lowers net revenue and margin', vatted.revenueNet < r.revenueNet && vatted.grossMargin < r.grossMargin);
+    const empty = liveFinanceReport({ orders: [], payouts: [], expenses: emptyExpenses() });
+    eq('live: empty period is zeros, no divide-by-zero', [empty.revenueGross, empty.grossMargin, empty.grossMarginPct, empty.netProfitPct], [0, 0, 0, 0]);
+}
+
+console.log(`
+${passed} passed, ${fail.length} failed`);
 if (fail.length) { fail.forEach(f => console.log('  FAIL: ' + f)); process.exit(1); }
 console.log('All finance tests passed.');
