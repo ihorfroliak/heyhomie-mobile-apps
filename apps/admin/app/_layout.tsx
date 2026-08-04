@@ -3,7 +3,7 @@ import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { LocaleProvider } from '@heyhomie/ui';
-import { orderGateway, configureAuth, auth } from '@heyhomie/api';
+import { orderGateway, payoutGateway, configureAuth, auth } from '@heyhomie/api';
 import { kv, secureStore } from '../lib/store';
 import {
     useFonts,
@@ -27,9 +27,11 @@ export default function RootLayout() {
                 configureAuth({ baseUrl: API_URL, store: secureStore });
                 const authed = await auth.bootstrap();
                 await orderGateway.init(kv);
+                await payoutGateway.init(kv); // worker payout ledger (local persisted | http)
                 if (mounted && !authed) router.replace('/login');
             } else {
                 await orderGateway.init(kv);
+                await payoutGateway.init(kv); // worker payout ledger (local persisted | http)
             }
         })();
         return () => { mounted = false; };

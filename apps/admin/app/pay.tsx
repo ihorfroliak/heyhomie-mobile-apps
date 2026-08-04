@@ -1,11 +1,24 @@
-import React, { useState } from 'react';
-import { ScrollView, View, TextInput, StyleSheet } from 'react-native';
+import React, { useState, useSyncExternalStore } from 'react';
+import { ScrollView, View, TextInput, Pressable, StyleSheet } from 'react-native';
 import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { demoAnalyticsMissions, demoTips, homies } from '@heyhomie/api';
-import { missionPayout, monthlyPayout, tipsForOrder, totalTips, payoutWithTips, formatMoney, PAYOUT_RATES, type WorkerType, type Mission, type Locale } from '@heyhomie/domain';
+import { demoAnalyticsMissions, demoTips, homies, payoutGateway } from '@heyhomie/api';
+import {
+    missionPayout,
+    monthlyPayout,
+    tipsForOrder,
+    totalTips,
+    payoutWithTips,
+    formatMoney,
+    payoutTotals,
+    workerPayoutSummaries,
+    PAYOUT_RATES,
+    type WorkerType,
+    type Mission,
+    type Locale,
+} from '@heyhomie/domain';
 import { colors, spacing, typography } from '@heyhomie/design';
 import { Card, Button } from '@heyhomie/ui';
 
@@ -23,7 +36,28 @@ const num = (s: string): number | undefined => {
     return Number.isFinite(n) ? n : undefined;
 };
 
+const STATUS_COLOR: Record<string, string> = {
+    pending: colors.warning,
+    approved: colors.blue,
+    paid: colors.success,
+    canceled: colors.grey,
+};
+
 export default function Pay() {
+    // LIVE ledger — the real record of what is owed and what has been settled.
+    const ledger = useSyncExternalStore(payoutGateway.subscribe, payoutGateway.snapshot, payoutGateway.snapshot);
+    const ledgerTotals = payoutTotals(ledger);
+    const byWorker = workerPayoutSummaries(ledger);
+    const [busy, setBusy] = useState(false);
+    const [saveNote, setSaveNote] = useState<string | null>(null);
+
+    const act = (fn: () => Promise<unknown>) => () => {
+        setBusy(true);
+        void fn()
+            .catch((e: unknown) => setSaveNote((e as Error).message ?? 'action failed'))
+            .finally(() => setBusy(false));
+    };
+
     const [overridesText, setOverridesText] = useState<Record<string, string>>({});
     const [bonusText, setBonusText] = useState('');
     // Payout % per engagement type — admin-editable, seeded from PAYOUT_RATES.
@@ -51,6 +85,62 @@ export default function Pay() {
         <SafeAreaView style={styles.safe} edges={['top']}>
             <Stack.Screen options={{ headerShown: true, title: 'Worker pay' }} />
             <ScrollView contentContainerStyle={styles.body}>
+                {/* ── LIVE ledger: what we actually owe, and settling it ── */}
+                <View style={styles.sectionRow}>
+                    <Ionicons name="wallet-outline" size={14} color={colors.grey} />
+                    <Txt style={styles.sectionText}>Payout ledger · live</Txt>
+                </View>
+                <Card variant="fill">
+                    <Line label={`Owed (${ledgerTotals.count} entries)`} value={formatMoney(ledgerTotals.owed, 'PLN', locale)} strong />
+                    <Line label="…awaiting approval" value={formatMoney(ledgerTotals.pending, 'PLN', locale)} />
+                    <Line label="…approved, not transferred" value={formatMoney(ledgerTotals.approved, 'PLN', locale)} />
+                    <Line label="Already paid" value={formatMoney(ledgerTotals.paid, 'PLN', locale)} />
+                </Card>
+
+                {byWorker.map(w => (
+                    <Card key={w.workerId} style={styles.ledgerCard}>
+                        <View style={styles.ledgerHead}>
+                            <Txt style={styles.title}>
+                                {w.workerId} · {w.workerType === 'b2b' ? 'B2B' : 'UZ'}
+                            </Txt>
+                            <Txt style={styles.owed}>{formatMoney(w.totals.owed, 'PLN', locale)} owed</Txt>
+                        </View>
+                        <Txt style={styles.meta}>
+                            {w.jobs} {w.jobs === 1 ? 'job' : 'jobs'} · {formatMoney(w.totals.paid, 'PLN', locale)} paid
+                        </Txt>
+                        {ledger
+                            .filter(p => p.workerId === w.workerId && p.status !== 'canceled')
+                            .map(p => (
+                                <View key={p.id} style={styles.entryRow}>
+                                    <View style={{ flex: 1 }}>
+                                        <Txt style={styles.entryMain}>
+                                            {formatMoney(p.amount, 'PLN', locale)} · {p.kind}
+                                            {p.orderId ? ` · ${p.orderId.slice(0, 10)}` : ''}
+                                        </Txt>
+                                        <Txt style={[styles.entryStatus, { color: STATUS_COLOR[p.status] }]}>{p.status}</Txt>
+                                    </View>
+                                    {p.status === 'pending' ? (
+                                        <Pressable disabled={busy} onPress={act(() => payoutGateway.approve(p.id))} style={styles.action}>
+                                            <Txt style={styles.actionText}>Approve</Txt>
+                                        </Pressable>
+                                    ) : null}
+                                    {p.status === 'approved' ? (
+                                        <Pressable disabled={busy} onPress={act(() => payoutGateway.pay(p.id))} style={[styles.action, styles.actionPay]}>
+                                            <Txt style={styles.actionText}>Mark paid</Txt>
+                                        </Pressable>
+                                    ) : null}
+                                </View>
+                            ))}
+                    </Card>
+                ))}
+
+                {ledger.length === 0 ? <Txt style={styles.sub}>No payouts recorded yet — use “Record to ledger” below once you have settled the month.</Txt> : null}
+                {saveNote ? <Txt style={styles.saveNote}>{saveNote}</Txt> : null}
+
+                <View style={styles.sectionRow}>
+                    <Ionicons name="calculator-outline" size={14} color={colors.grey} />
+                    <Txt style={styles.sectionText}>Monthly calculator · sample missions</Txt>
+                </View>
                 <Txt style={styles.sub}>Adjust the final pay per mission. Leave blank to use the rate for the homie's engagement type.</Txt>
 
                 <View style={styles.sectionRow}>
@@ -131,7 +221,47 @@ export default function Pay() {
                     <Line label="Total incl. tips" value={formatMoney(payoutWithTips(result.total, monthTips), 'PLN', locale)} strong />
                 </Card>
 
-                <Button label="Save pay" variant="teal" style={{ marginTop: spacing.lg }} onPress={() => {}} />
+                {/* Writes the computed pay into the LIVE ledger (was a dead button before
+                    the payout backend existed). Each mission becomes one `job` entry; the
+                    monthly bonus becomes a separate entry. Already-recorded missions are
+                    skipped by the service's one-payout-per-order guard. */}
+                <Button
+                    label={busy ? 'Recording…' : 'Record to ledger'}
+                    variant="teal"
+                    style={{ marginTop: spacing.lg }}
+                    onPress={act(async () => {
+                        let added = 0;
+                        let skipped = 0;
+                        for (const m of done) {
+                            if (!m.homie) continue;
+                            const t = typeFor(m);
+                            try {
+                                await payoutGateway.createForJob({
+                                    workerId: m.homie.firstName,
+                                    workerType: t,
+                                    orderId: m.id,
+                                    orderAmount: m.price,
+                                    override: overrides[m.id],
+                                });
+                                added++;
+                            } catch {
+                                skipped++; // already recorded for this order
+                            }
+                        }
+                        const bonus = num(bonusText) ?? 0;
+                        if (bonus !== 0 && done[0]?.homie) {
+                            await payoutGateway.createAdjustment({
+                                workerId: done[0].homie.firstName,
+                                workerType: typeFor(done[0]),
+                                kind: bonus > 0 ? 'bonus' : 'adjustment',
+                                amount: bonus,
+                                note: 'monthly bonus',
+                            });
+                            added++;
+                        }
+                        setSaveNote(`Recorded ${added}${skipped ? ` · ${skipped} already in the ledger` : ''}`);
+                    })}
+                />
             </ScrollView>
         </SafeAreaView>
     );
@@ -148,6 +278,16 @@ const styles = StyleSheet.create({
     safe: { flex: 1, backgroundColor: colors.white },
     body: { padding: spacing.lg },
     sub: { color: colors.grey, fontSize: typography.sizes.small, marginBottom: spacing.md },
+    ledgerCard: { marginTop: spacing.sm },
+    ledgerHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+    owed: { fontWeight: '700', color: colors.primary, fontSize: typography.sizes.small },
+    entryRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.sm, paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.border },
+    entryMain: { color: colors.primary, fontSize: typography.sizes.small, fontWeight: '500' },
+    entryStatus: { fontSize: typography.sizes.caption, marginTop: 1, textTransform: 'capitalize' },
+    action: { backgroundColor: colors.bgLight, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 7 },
+    actionPay: { backgroundColor: colors.salad },
+    actionText: { color: colors.primary, fontSize: typography.sizes.caption, fontWeight: '700' },
+    saveNote: { color: colors.success, fontSize: typography.sizes.caption, marginTop: spacing.sm },
     row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.sm },
     avatar: { width: 30, height: 30, borderRadius: 15, backgroundColor: colors.blue, alignItems: 'center', justifyContent: 'center' },
     avatarText: { color: colors.white, fontSize: 11, fontWeight: '700' },
