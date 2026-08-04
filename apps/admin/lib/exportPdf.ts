@@ -1,6 +1,10 @@
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
-import * as FileSystem from 'expo-file-system';
+// SDK 54 replaced expo-file-system's top-level API; the classic one (cacheDirectory,
+// EncodingType, writeAsStringAsync) now lives behind /legacy. Importing the new entry
+// left `FileSystem.cacheDirectory` undefined at runtime, so every export wrote to the
+// literal path "undefinedJPK_….xml" and threw. Caught by the new app typecheck.
+import * as FileSystem from 'expo-file-system/legacy';
 import { financialReportHtml, invoiceHtml, type FinancialReportData, type Invoice } from '@heyhomie/domain';
 
 /**

@@ -17,10 +17,11 @@ npm-workspaces monorepo. Three Expo/React-Native apps (`apps/{client,worker,admi
 
 ## Commands
 ```bash
-npm run check          # THE gate: tests + typecheck + app/anti-dep guard. Run before every commit.
+npm run check          # THE gate: tests + package typecheck + APP typecheck + anti-dep guard. Run before every commit.
 npm test               # auto-discovers & runs every packages/**/*.test.ts (custom tsx runner)
 npm run typecheck      # tsc --noEmit over packages/{domain,api,analytics} (tsconfig.check.json)
-npm run check:apps     # bracket/glyph sanity + ANTI-STORE-IMPORT guard for apps/ (RN can't typecheck here)
+npm run typecheck:apps # tsc --noEmit over each app (real RN/Expo types) — catches screen-level bugs
+npm run check:apps     # bracket/glyph sanity + ANTI-STORE-IMPORT guard for apps/
 
 # single test — run the file directly (tests are standalone tsx scripts, not a framework):
 npx -y tsx packages/api/orderService.test.ts
@@ -52,7 +53,7 @@ All order state flows through a **frozen contract**, `packages/api/orderContract
 - **Never change the `OrderGateway` contract without a new build/version** — the whole codebase depends on its stability.
 - **Verify with `npm run check`** after any change; it's the single source of truth for "green".
 - Packages are **ESM** (`"type": "module"`); the server imports the barrel — keep it importable (no CJS-only patterns).
-- RN screens can't be typechecked here (no native `node_modules`); `check:apps` is their guard.
+- RN screens ARE typechecked now: `npm run typecheck:apps` (per-app tsconfig over the real RN/Expo types). It is in `npm run check` and CI. `check:apps` stays as the bracket/glyph + anti-store-import guard — the two are complementary.
 - **Bash cwd resets between calls** — prepend `cd /c/Users/ihorf/Projects/heyhomie-mobile`.
 - Distinguish **CODE COMPLETE vs INFRASTRUCTURE PENDING** — much of the server can only be exercised with Docker/Postgres (`test:pg`/`test:ops`/compose), which aren't in the default gate.
 - Dockerfile CMD is `node --import tsx` (node must be PID 1 for SIGTERM to drain, not `npx tsx`).

@@ -1,12 +1,13 @@
 import React from 'react';
-import { View, StyleSheet, type ViewStyle } from 'react-native';
+import { View, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 import { colors, radii, spacing, shadow } from '@heyhomie/design';
 
 interface Props {
     children: React.ReactNode;
     /** `fill` = light surface (no shadow); default = white raised card. */
     variant?: 'raised' | 'fill';
-    style?: ViewStyle;
+    /** Accepts an array/conditional style, the normal RN pattern — not just one object. */
+    style?: StyleProp<ViewStyle>;
 }
 
 export function Card({ children, variant = 'raised', style }: Props) {

@@ -24,6 +24,8 @@ jobs:
         run: npm run typecheck
       - name: Type-check server (fastify / pg)
         run: npm run typecheck:server
+      - name: Type-check the app screens (client / worker / admin)
+        run: npm run typecheck:apps
       - name: App-screen sanity (brackets + design glyphs)
         run: npm run check:apps
       - name: Live HTTP integration (real Fastify + auth, memory repo)

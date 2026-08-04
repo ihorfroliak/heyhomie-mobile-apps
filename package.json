@@ -1,35 +1,36 @@
 {
-  "name": "heyhomie-apps",
-  "private": true,
-  "version": "0.1.0",
-  "description": "HeyHomie cross-platform app ecosystem — client, worker and admin (React Native + Expo monorepo).",
-  "workspaces": [
-    "packages/*",
-    "apps/*",
-    "server"
-  ],
-  "scripts": {
-    "client": "npm --workspace heyhomie-client-app run start",
-    "worker": "npm --workspace heyhomie-worker-app run start",
-    "admin": "npm --workspace heyhomie-admin-app run start",
-    "server": "npm --workspace @heyhomie/server run start",
-    "test": "node tools/run-tests.mjs",
-    "typecheck": "npx -y -p typescript@5.6.3 tsc --noEmit -p tsconfig.check.json",
-    "typecheck:server": "npx -y -p typescript@5.6.3 tsc --noEmit -p server/tsconfig.json",
-    "check:apps": "node tools/check-apps.mjs",
-    "test:live": "npx tsx server/test/live.test.ts",
-    "test:e2e": "npx tsx server/test/e2e.test.ts",
-    "test:pg": "npx tsx server/test/pg.test.ts",
-    "test:ops": "npx tsx server/test/ops.ts",
-    "test:repro": "npx tsx server/test/repro.ts",
-    "seed": "npx tsx server/scripts/seed.ts",
-    "check": "npm test && npm run typecheck && npm run check:apps",
-    "verify:full": "npm run check && npm run typecheck:server && npm run test:live && npm run test:e2e && npm run test:pg && npm run test:ops"
-  },
-  "engines": {
-    "node": ">=20"
-  },
-  "devDependencies": {
-    "@types/react": "~19.1.0"
-  }
+    "name": "heyhomie-apps",
+    "private": true,
+    "version": "0.1.0",
+    "description": "HeyHomie cross-platform app ecosystem — client, worker and admin (React Native + Expo monorepo).",
+    "workspaces": [
+        "packages/*",
+        "apps/*",
+        "server"
+    ],
+    "scripts": {
+        "client": "npm --workspace heyhomie-client-app run start",
+        "worker": "npm --workspace heyhomie-worker-app run start",
+        "admin": "npm --workspace heyhomie-admin-app run start",
+        "server": "npm --workspace @heyhomie/server run start",
+        "test": "node tools/run-tests.mjs",
+        "typecheck": "npx -y -p typescript@5.6.3 tsc --noEmit -p tsconfig.check.json",
+        "typecheck:server": "npx -y -p typescript@5.6.3 tsc --noEmit -p server/tsconfig.json",
+        "check:apps": "node tools/check-apps.mjs",
+        "test:live": "npx tsx server/test/live.test.ts",
+        "test:e2e": "npx tsx server/test/e2e.test.ts",
+        "test:pg": "npx tsx server/test/pg.test.ts",
+        "test:ops": "npx tsx server/test/ops.ts",
+        "test:repro": "npx tsx server/test/repro.ts",
+        "seed": "npx tsx server/scripts/seed.ts",
+        "check": "npm test && npm run typecheck && npm run typecheck:apps && npm run check:apps",
+        "verify:full": "npm run check && npm run typecheck:server && npm run test:live && npm run test:e2e && npm run test:pg && npm run test:ops",
+        "typecheck:apps": "npx -y -p typescript@5.6.3 tsc --noEmit -p apps/client/tsconfig.json && npx -y -p typescript@5.6.3 tsc --noEmit -p apps/worker/tsconfig.json && npx -y -p typescript@5.6.3 tsc --noEmit -p apps/admin/tsconfig.json"
+    },
+    "engines": {
+        "node": ">=20"
+    },
+    "devDependencies": {
+        "@types/react": "~19.1.0"
+    }
 }

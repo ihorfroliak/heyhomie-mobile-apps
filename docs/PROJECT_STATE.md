@@ -259,4 +259,4 @@ INFRASTRUCTURE PENDING → [PRODUCTION_STATUS.md](PRODUCTION_STATUS.md). Deep di
 - Founder Mode: every change moves toward a real customer (order→pay→serve→payout→admin-sees).
   Evidence-only, no assumptions. Verify with `npm run check`. Don't commit/push without ask.
 - The Bash tool's cwd resets between calls — prepend `cd /c/Users/ihorf/Downloads/heyhomie-apps`.
-- RN screens can't be typechecked here (no node_modules) — `check:apps` is the guard.
+- RN screens ARE typechecked (`npm run typecheck:apps`, per-app tsconfig, in the gate + CI); `check:apps` remains the bracket/glyph + anti-store-import guard.

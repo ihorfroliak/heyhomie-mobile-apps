@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, StyleSheet, ActivityIndicator, type ViewStyle } from 'react-native';
+import { Pressable, StyleSheet, ActivityIndicator, type StyleProp, type ViewStyle } from 'react-native';
 import { Txt } from './Text';
 import { colors, radii, spacing } from '@heyhomie/design';
 
@@ -11,7 +11,8 @@ interface Props {
     variant?: Variant;
     loading?: boolean;
     disabled?: boolean;
-    style?: ViewStyle;
+    /** Accepts an array/conditional style, the normal RN pattern — not just one object. */
+    style?: StyleProp<ViewStyle>;
 }
 
 /** Brand button. `teal` is the main CTA, `ghost` is the outlined secondary. */
