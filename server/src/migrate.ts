@@ -186,6 +186,10 @@ const MIGRATIONS: Migration[] = [
     },
 ];
 
+/** The versions this build ships, in order. Exported so tests assert against the real
+ *  list instead of a hardcoded count (adding a migration must not break them). */
+export const MIGRATION_VERSIONS: readonly number[] = MIGRATIONS.map(m => m.version);
+
 export async function runMigrations(pool: Pool): Promise<number[]> {
     const client = await pool.connect();
     const applied: number[] = [];

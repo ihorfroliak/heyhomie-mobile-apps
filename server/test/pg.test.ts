@@ -9,7 +9,7 @@
  */
 import { makeOrderService, ConflictError, loadServerConfig, type AuthContext, type ServerOrder } from '@heyhomie/api';
 import { makePool, initSchema } from '../src/db.js';
-import { runMigrations } from '../src/migrate.js';
+import { runMigrations, MIGRATION_VERSIONS } from '../src/migrate.js';
 import { pgOrderRepo } from '../src/pgRepo.js';
 import { buildApp } from '../src/app.js';
 import { signAuthToken } from '../src/auth.js';
@@ -25,7 +25,8 @@ const authB: AuthContext = { userId: 'b', tenantId: 'T2', role: 'member' };
 
 async function main() {
     const pool = makePool(PG_URL);
-    await pool.query('DROP TABLE IF EXISTS audit_log'); // clean slate (test db only)
+    await pool.query('DROP TABLE IF EXISTS payouts'); // clean slate (test db only)
+    await pool.query('DROP TABLE IF EXISTS audit_log');
     await pool.query('DROP TABLE IF EXISTS password_resets');
     await pool.query('DROP TABLE IF EXISTS invitations');
     await pool.query('DROP TABLE IF EXISTS auth_sessions');
@@ -40,10 +41,13 @@ async function main() {
     const tMig = Date.now();
     const [runX, runY] = await Promise.all([runMigrations(pool), runMigrations(pool)]);
     console.log(`  [perf] concurrent migration on empty db: ${Date.now() - tMig}ms`);
-    eq('exactly 9 migrations applied across both starts', runX.length + runY.length, 9);
-    ok('one instance migrated, the other waited (0)', (runX.length === 9 && runY.length === 0) || (runY.length === 9 && runX.length === 0));
+    // Expectations come from the shipped migration list, so adding a migration can never
+    // break this test — only a REAL concurrency/idempotency defect can.
+    const expectedCount = MIGRATION_VERSIONS.length;
+    eq(`exactly ${expectedCount} migrations applied across both starts`, runX.length + runY.length, expectedCount);
+    ok('one instance migrated, the other waited (0)', (runX.length === expectedCount && runY.length === 0) || (runY.length === expectedCount && runX.length === 0));
     const hist = await pool.query('SELECT version FROM schema_migrations ORDER BY version');
-    eq('migration history records each version once', hist.rows.map((r: { version: number }) => Number(r.version)), [1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    eq('migration history records each version once', hist.rows.map((r: { version: number }) => Number(r.version)), [...MIGRATION_VERSIONS]);
     eq('re-running migrations is a no-op (idempotent)', (await runMigrations(pool)).length, 0);
     await initSchema(pool); // the callers' entrypoint — also idempotent
     const cols = await pool.query(`SELECT column_name FROM information_schema.columns WHERE table_name = 'orders'`);
