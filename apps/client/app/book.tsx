@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, View, Pressable, TextInput, Linking, PanResponder, Platform, StyleSheet } from 'react-native';
 import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Stack } from 'expo-router';
+import { Stack, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { demoAvailability, demoMissions } from '@heyhomie/api';
@@ -242,12 +242,15 @@ type ViewMode = 'cleaning' | 'browsing' | 'selected';
 
 export default function Book() {
     const locale = useLocale();
+    // Prefill from booking step 1 (/booking/service), which hands over the chosen
+    // plan + cadence. Absent (opened directly) → the standard-cleaning defaults.
+    const params = useLocalSearchParams<{ plan?: string; frequency?: string }>();
     const map = demoAvailability;
     const cityIds = useMemo(() => enabledCities(map), [map]);
     const homeCity = demoMissions[0]?.address.city ?? cityIds[0];
 
     const [cityId, setCityId] = useState<string>(initialCity(map, null, cityIds.includes(homeCity) ? homeCity : cityIds[0]));
-    const [serviceId, setServiceId] = useState<string>('standard_cleaning');
+    const [serviceId, setServiceId] = useState<string>(params.plan === 'general' ? 'general_cleaning' : 'standard_cleaning');
     const [citySettled, setCitySettled] = useState(false);
     // Cleaning is the default, primary flow (our core, highest-revenue service).
     // Other services live one tap away, not competing for the same visual weight.
@@ -270,7 +273,9 @@ export default function Book() {
 
     // Cadence — options depend on the service (cleaning=4, flower=delivery set, rest=one-off).
     const freqs = useMemo(() => (activeId ? frequenciesFor(activeId) : []), [activeId]);
-    const [frequency, setFrequency] = useState<Frequency>('once');
+    const [frequency, setFrequency] = useState<Frequency>(
+        (['once', 'weekly', 'biweekly', 'monthly'] as const).find(f => f === params.frequency) ?? 'once',
+    );
     useEffect(() => {
         if (freqs.length && !freqs.includes(frequency)) setFrequency(freqs[0]);
         // eslint-disable-next-line react-hooks/exhaustive-deps

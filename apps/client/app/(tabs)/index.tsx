@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { orderGateway } from '@heyhomie/api';
-import { formatMoney, serviceName, cityName, type Locale } from '@heyhomie/domain';
+import { cleaningPrice, formatMoney, serviceName, cityName, type Locale } from '@heyhomie/domain';
 import { colors, spacing } from '@heyhomie/design';
 import { useLocale } from '@heyhomie/ui';
 
@@ -55,6 +55,14 @@ export default function Home() {
         const past = [...sorted].reverse().find(o => o.updatedAt < nowIso);
         return { next: upcoming, last: past, who: nameFrom((upcoming ?? past)?.contact?.email) };
     }, [orders]);
+
+    // The cheapest real home (1 room + 1 bath) on the canonical price table — never a
+    // hardcoded figure, so the CTA can't drift from heyhomie-shared/DOMAIN_RULES.
+    const fromPrice = formatMoney(
+        cleaningPrice({ plan: 'standard', rooms: 1, bathrooms: 1, frequency: 'once', gearOnSite: true }).total,
+        'PLN',
+        locale,
+    );
 
     const daysAway = next ? Math.max(0, Math.round((new Date(next.updatedAt).getTime() - Date.now()) / 86400000)) : 0;
     const when = next ? new Date(next.updatedAt) : null;
@@ -118,13 +126,13 @@ export default function Home() {
                 {/* ── primary CTA ── */}
                 <Pressable
                     style={styles.bookCard}
-                    onPress={() => router.push('/book')}
+                    onPress={() => router.push('/booking/service')}
                     accessibilityRole="button"
                     accessibilityLabel="Book a cleaning"
                 >
                     <View style={{ flex: 1 }}>
                         <Txt style={styles.bookTitle}>Book a cleaning</Txt>
-                        <Txt style={styles.bookSub}>From 189 zł · takes about a minute</Txt>
+                        <Txt style={styles.bookSub}>From {fromPrice} · takes about a minute</Txt>
                     </View>
                     <View style={styles.bookArrow}>
                         <Ionicons name="arrow-forward" size={19} color={colors.salad} />
