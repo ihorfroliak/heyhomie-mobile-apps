@@ -24,6 +24,7 @@ export * from './availability';
 export * from './tips';
 export * from './billing';
 export * from './scheduling';
+export * from './visitSite';
 export * from './notifications';
 export * from './identity';
 export * from './funnel';

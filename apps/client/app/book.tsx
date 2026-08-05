@@ -34,9 +34,11 @@ import {
     CONTACT_PHONE,
     CANCELLATION_WINDOW_HOURS,
     TRAVEL_BUFFER_MINUTES,
+    accessMethod,
     arrivalSlot,
     arrivalStartIso,
     cleaningPrice,
+    formatVisitSite,
     type CleaningPlan,
     type AddOnId,
     type SelectedAddOn,
@@ -53,7 +55,7 @@ import {
 import { colors, spacing, typography, radii } from '@heyhomie/design';
 import { Card, Button, Segmented, useLocale } from '@heyhomie/ui';
 import { useCurrentCity } from '../lib/useCurrentCity';
-import { parseCount, parseDate, parseFrequency, parsePlan, parseSlot, serviceIdFor } from '../lib/bookingFlow';
+import { parseAccess, parseAddOns, parseCount, parseDate, parseFrequency, parsePlan, parseSlot, parseText, serviceIdFor } from '../lib/bookingFlow';
 import { track } from '../lib/analytics';
 import { orderGateway, type SubmitOrderResult } from '@heyhomie/api';
 
@@ -250,11 +252,28 @@ export default function Book() {
     // Prefill from the ported booking steps (/booking/service → /booking/size), which
     // hand over the plan, cadence and room counts. Absent (opened directly, or a stale
     // link) → the parsers fall back to the standard-cleaning defaults.
-    const params = useLocalSearchParams<{ plan?: string; frequency?: string; rooms?: string; kitchens?: string; bathrooms?: string; date?: string; slot?: string }>();
+    const params = useLocalSearchParams<{
+        plan?: string; frequency?: string; rooms?: string; kitchens?: string; bathrooms?: string; date?: string; slot?: string;
+        line1?: string; flat?: string; floor?: string; entryCode?: string; access?: string; notes?: string; addons?: string;
+    }>();
     // Day + arrival window chosen in step 3. Read once: this screen has no calendar
     // of its own, so re-deriving them on every render would only churn.
     const [bookingDate] = useState(() => parseDate(params.date));
     const [bookingSlot] = useState(() => parseSlot(params.slot));
+    /**
+     * Where the visit happens, from step 4. The frozen OrderGateway contract has no
+     * field for an address, an access method or a note, so this is shown back to the
+     * client here but does not travel with the order — widening the contract is a
+     * versioned change. The add-ons DO reach it, through the submitted price.
+     */
+    const [visitSite] = useState(() => ({
+        line1: parseText(params.line1),
+        flat: parseText(params.flat, 12),
+        floor: parseText(params.floor, 12),
+        entryCode: parseText(params.entryCode, 24),
+        access: parseAccess(params.access),
+        notes: parseText(params.notes),
+    }));
     const map = demoAvailability;
     const cityIds = useMemo(() => enabledCities(map), [map]);
     const homeCity = demoMissions[0]?.address.city ?? cityIds[0];
@@ -352,7 +371,7 @@ export default function Book() {
     const [kitchens, setKitchens] = useState(() => parseCount(params.kitchens, 1));
     const [bathrooms, setBathrooms] = useState(() => parseCount(params.bathrooms, 1));
     const [areaSqm, setAreaSqm] = useState(SQM_DEFAULT);
-    const [selected, setSelected] = useState<Record<string, number>>({});
+    const [selected, setSelected] = useState<Record<string, number>>(() => parseAddOns(params.addons) as Record<string, number>);
     const [pets, setPets] = useState(false);
     // Cleaning-only: does the client already have a mop + vacuum at home?
     const [mopPresent, setMopPresent] = useState(true);
@@ -654,12 +673,19 @@ export default function Book() {
                         <Toggle label="Pets at home (info only)" on={pets} onPress={() => setPets(v => !v)} />
 
                         <Card variant="fill" style={{ marginTop: spacing.lg }}>
+                            {visitSite.line1 ? (
+                                <DetailRow icon="location-outline" label="Address" value={formatVisitSite({ ...visitSite, city: cityName(cityId, locale) })} />
+                            ) : null}
+                            {visitSite.line1 ? (
+                                <DetailRow icon="key-outline" label="Getting in" value={tr(accessMethod(visitSite.access)?.label ?? { pl: '', en: '', uk: '' }, locale)} />
+                            ) : null}
                             <DetailRow icon="calendar-outline" label="Arrives" value={`${prettyDate(bookingDate)} · ${arrivalSlot(bookingSlot)?.window ?? ''}`} />
                             <DetailRow icon="time-outline" label="Estimated time" value={formatDuration(minutes)} />
                             <DetailRow icon="people-outline" label="Homies assigned" value={String(workers)} />
                             <DetailRow icon="resize-outline" label="Apartment size" value={`${areaSqm} m²`} />
                             <DetailRow icon="pricetag-outline" label="Your price" value={formatMoney(cleaningTotal, 'PLN', locale)} />
                             <Txt style={styles.sumNote}>+{TRAVEL_BUFFER_MINUTES} min travel buffer · the price above already includes your add-ons and the equipment fee</Txt>
+                            {visitSite.notes ? <Txt style={styles.sumNote}>Your note: {visitSite.notes}</Txt> : null}
                         </Card>
                     </>
                 ) : null}

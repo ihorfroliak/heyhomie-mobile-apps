@@ -2,6 +2,7 @@
 import { isValidNip, normalizeNip, formatNip, validateBilling } from './billing';
 import { frequenciesFor, isLeadService, CLEANING_FREQUENCIES, DELIVERY_FREQUENCIES, serviceById } from './catalog';
 import { nextOccurrence, generateOccurrences, shiftSeries, moveOccurrence, skipOccurrence, cancellationFee, isLateCancellation, hoursUntil, ARRIVAL_SLOTS, arrivalSlot, arrivalStartIso, bookableDates, BOOKING_HORIZON_DAYS, BOOKING_LEAD_DAYS } from './scheduling';
+import { ACCESS_METHODS, accessMethod, formatVisitSite, validateVisitSite, VISIT_NOTES_MAX } from './visitSite';
 import { channelsFor, buildNotifications, renderNotification, type NotificationRecipient } from './notifications';
 import { validateDelivery, DELIVERY_SLOTS, type DeliveryDetails } from './delivery';
 import { createPaymentIntent, markDue, runCharge, markPaid, isPaid, nextChargeAt, duePayments, payLaterLink, paymentStatusTone, paymentMethodLabel } from './payment';
@@ -157,6 +158,24 @@ eq('start keeps the calendar day', new Date(arrivalStartIso('2026-08-06', 'midda
 eq('unknown slot has no start', arrivalStartIso('2026-08-06', 'night'), undefined);
 eq('unparseable day has no start', arrivalStartIso('x', 'morning'), undefined);
 ok('a booked visit is not a late cancellation on the day it is made', !isLateCancellation(arrivalStartIso('2026-08-07', 'morning')!, '2026-08-05T10:00:00.000Z'));
+
+// ---- where the visit happens, and how the homie gets in ----
+eq('three ways in', ACCESS_METHODS.length, 3);
+ok('every access method is localized', ACCESS_METHODS.every(a => !!a.label.pl && !!a.label.en && !!a.label.uk && !!a.hint.pl));
+eq('only the code option needs a code', ACCESS_METHODS.filter(a => a.requiresCode).map(a => a.id), ['code']);
+eq('unknown access id is undefined', accessMethod('drone'), undefined);
+ok('street with a number is a location', validateVisitSite({ line1: 'ul. Karmelicka 14', access: 'meet' }).valid);
+ok('a street with no number is not', !validateVisitSite({ line1: 'ul. Karmelicka', access: 'meet' }).line1Valid);
+ok('a bare number is not either', !validateVisitSite({ line1: '14', access: 'meet' }).line1Valid);
+ok('missing address blocks', !validateVisitSite({ access: 'meet' }).valid);
+ok('the code option demands a code', validateVisitSite({ line1: 'ul. Długa 5', access: 'code' }).codeMissing);
+ok('…and passes once given', validateVisitSite({ line1: 'ul. Długa 5', access: 'code', entryCode: '1234' }).valid);
+ok('whitespace is not a code', validateVisitSite({ line1: 'ul. Długa 5', access: 'code', entryCode: '  ' }).codeMissing);
+ok('concierge keys need no code', validateVisitSite({ line1: 'ul. Długa 5', access: 'keys' }).valid);
+ok('an over-long note blocks', !validateVisitSite({ line1: 'ul. Długa 5', access: 'meet', notes: 'x'.repeat(VISIT_NOTES_MAX + 1) }).notesValid);
+ok('a note at the cap is fine', validateVisitSite({ line1: 'ul. Długa 5', access: 'meet', notes: 'x'.repeat(VISIT_NOTES_MAX) }).valid);
+eq('summary keeps flat and floor', formatVisitSite({ line1: 'ul. Karmelicka 14', flat: '3', floor: '2', city: 'Kraków' }), 'ul. Karmelicka 14, flat 3, floor 2 · Kraków');
+eq('summary drops what is empty', formatVisitSite({ line1: 'ul. Karmelicka 14', flat: '  ' }), 'ul. Karmelicka 14');
 
 // ---- service details ----
 ok('every catalog service has details', ['standard_cleaning', 'general_cleaning', 'window_cleaning', 'flower_delivery', 'office_cleaning', 'post_renovation'].every(id => !!serviceDetail(id)));

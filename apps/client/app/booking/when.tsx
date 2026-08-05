@@ -69,7 +69,7 @@ export default function BookingWhen() {
 
     const onContinue = () => {
         track({ name: 'funnel_step', stage: 'slot_picked', serviceId: serviceIdFor(plan) });
-        router.push({ pathname: '/book', params: { plan, frequency, rooms, kitchens, bathrooms, date, slot } });
+        router.push({ pathname: '/booking/where', params: { plan, frequency, rooms, kitchens, bathrooms, date, slot } });
     };
 
     return (

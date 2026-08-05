@@ -5,7 +5,20 @@
  * are the one place that parses them, so every step reads the same defaults and a
  * hand-typed or stale URL can never put a screen into an impossible state.
  */
-import { arrivalSlot, bookableDates, CLEANING_FREQUENCIES, FREQ_MULT, type ArrivalSlotId, type CleaningFrequency, type CleaningPlan } from '@heyhomie/domain';
+import {
+    accessMethod,
+    addOns,
+    arrivalSlot,
+    bookableDates,
+    CLEANING_FREQUENCIES,
+    FREQ_MULT,
+    VISIT_NOTES_MAX,
+    type AccessMethodId,
+    type AddOnId,
+    type ArrivalSlotId,
+    type CleaningFrequency,
+    type CleaningPlan,
+} from '@heyhomie/domain';
 
 /** The catalog's cleaning cadences, narrowed to the ones the price table prices. */
 export const BOOKING_FREQUENCIES: CleaningFrequency[] = CLEANING_FREQUENCIES.filter(
@@ -40,3 +53,31 @@ export const parseDate = (v: string | string[] | undefined, days: string[] = boo
     days.find(d => d === first(v)) ?? days[0] ?? todayYmd();
 
 export const parseSlot = (v: string | string[] | undefined): ArrivalSlotId => (arrivalSlot(first(v) ?? '')?.id ?? 'morning');
+
+export const parseAccess = (v: string | string[] | undefined): AccessMethodId => (accessMethod(first(v) ?? '')?.id ?? 'meet');
+
+/** Free text off a URL, trimmed to the domain's cap so a long note can't overflow. */
+export const parseText = (v: string | string[] | undefined, max = VISIT_NOTES_MAX): string => (first(v) ?? '').slice(0, max);
+
+const ADD_ON_IDS = new Set<string>(addOns.map(a => a.id));
+
+/**
+ * Add-on selections travel as `oven:1,windows:3`. Unknown ids and junk quantities
+ * are dropped rather than trusted — the price is computed from whatever survives.
+ */
+export const parseAddOns = (v: string | string[] | undefined): Partial<Record<AddOnId, number>> => {
+    const out: Partial<Record<AddOnId, number>> = {};
+    for (const part of (first(v) ?? '').split(',')) {
+        const [id, qty] = part.split(':');
+        if (!ADD_ON_IDS.has(id)) continue;
+        const n = Math.floor(Number(qty));
+        if (Number.isFinite(n) && n > 0) out[id as AddOnId] = n;
+    }
+    return out;
+};
+
+export const formatAddOns = (sel: Partial<Record<AddOnId, number>>): string =>
+    Object.entries(sel)
+        .filter(([, q]) => Number(q) > 0)
+        .map(([id, q]) => `${id}:${q}`)
+        .join(',');

@@ -81,7 +81,12 @@ Key ones: [catalog.ts](../packages/domain/catalog.ts) (services+details) ·
 ### Apps (apps/* — Expo RN, gateway-only)
 | File | Purpose |
 |---|---|
-| [client/app/book.tsx](../apps/client/app/book.tsx) | Booking flow (config, delivery, payment method, lead callback). |
+| [client/app/booking/service.tsx](../apps/client/app/booking/service.tsx) | Booking step 1 — plan + cadence, room-by-room checklist. Ported from Booking Flow v1. |
+| [client/app/booking/size.tsx](../apps/client/app/booking/size.tsx) | Booking step 2 — presets + room counters, time/crew estimate, running price. |
+| [client/app/booking/when.tsx](../apps/client/app/booking/when.tsx) | Booking step 3 — 14-day calendar (`bookableDates`) + arrival window (`ARRIVAL_SLOTS`). |
+| [client/app/booking/where.tsx](../apps/client/app/booking/where.tsx) | Booking step 4 — address + access method (`visitSite.ts`), add-ons, note. |
+| [client/lib/bookingFlow.ts](../apps/client/lib/bookingFlow.ts) | The one parser for the flow's URL params — every step reads the same defaults. |
+| [client/app/book.tsx](../apps/client/app/book.tsx) | Checkout: consumes the flow's handover, submits `scheduledAt` + `estValue` (config, delivery, payment method, lead callback). |
 | [client/app/(tabs)/activity.tsx](../apps/client/app/(tabs)/activity.tsx) | Orders list + live payment status via gateway snapshot. |
 | [admin/app/pipeline.tsx](../apps/admin/app/pipeline.tsx) | Funnel + Live bookings + payment status + Mark-paid. |
 | [admin/app/pay.tsx](../apps/admin/app/pay.tsx) | Payouts (rates by worker type, overrides, bonus). |

@@ -36,7 +36,15 @@ Grouped by whether it's a future code change, an intentional trade-off, or exter
 5. **Prune legacy seam** — `packages/api/{config,homieClient,accountingClient,marketingClient}.ts`
    + root `.env.example` reference the pre-Build-04 Rails/Go backends. Inert but stale;
    delete when confirmed unused by any screen.
-6. **Fold `toCanonical` into `errors.ts`** — the 4xx-transport→canonical mapping lives
+6. **Visit site on the order (contract-versioned)** — the ported booking flow
+   (`apps/client/app/booking/{service,size,when,where}.tsx`) collects the address,
+   the access method and the note to the homie, and `packages/domain/visitSite.ts`
+   models + validates them. `SubmitBookingInput` has no field for any of the three,
+   so today they are shown back to the client on checkout and stop at the app. The
+   add-ons and the arrival slot DO reach the order (`estValue` + `scheduledAt`).
+   Carrying the site needs an `OrderGateway` version bump — do not widen it in place.
+   Also still app-local: no saved-address book, so step 4 asks every time.
+7. **Fold `toCanonical` into `errors.ts`** — the 4xx-transport→canonical mapping lives
    in `server/src/app.ts`; `fromUnknown` (shared) still wraps a 4xx throwable as 500.
    Latent (single caller today) — fix when a 2nd boundary calls `fromUnknown`.
 
