@@ -15,7 +15,9 @@ import {
     markPaid,
     runCharge,
     duePayments,
+    toStoredVisitSite,
     DELIVERY_NOTE_MAX,
+    type VisitSite,
     type ClientAccount,
     type BookingDraft,
     type Contact,
@@ -209,7 +211,10 @@ export interface SubmitBookingInput {
     cityId: string;
     serviceId: string;
     estValue?: number;
+    /** ISO instant the visit starts. Contract v2 projects this back on the Order. */
     scheduledAt?: string;
+    /** Contract v2: where the cleaning happens and how the homie gets in. */
+    site?: VisitSite;
     /** Flower-delivery bookings: recipient / address / slot / gift note. */
     delivery?: DeliveryDetails;
     /** How the client chose to pay. Defaults to 'card'. */
@@ -246,6 +251,10 @@ export async function submitBooking(input: SubmitBookingInput): Promise<SubmitBo
         updatedAt: new Date().toISOString(),
         estValue: input.estValue,
         delivery,
+        // Contract v2: the visit slot and site now live ON the order, so the client
+        // app no longer has to infer "when" from `updatedAt`.
+        scheduledAt: input.scheduledAt,
+        site: toStoredVisitSite(input.site),
     };
     // Payment intent — nothing is charged now; settlement is post-completion
     // (auto Stripe charge on file, or an emailed link, at 03:00 the next day).

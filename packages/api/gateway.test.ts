@@ -77,6 +77,34 @@ async function runOrderLifecycle(gw: OrderGateway, tag: string) {
 
     // reactive snapshot is a STABLE reference between reads
     ok(`[${tag}] snapshot stable ref`, gw.ordersSnapshot() === gw.ordersSnapshot());
+
+    // ── contract v2: the visit slot and site round-trip, identically per adapter ──
+    const v2 = await gw.submitOrder({
+        contact: { phone: '600 777 000' },
+        cityId: 'krakow',
+        serviceId: 'standard_cleaning',
+        scheduledAt: '2026-08-16T06:00:00.000Z',
+        site: { line1: '  ul. Karmelicka 14  ', flat: '3', floor: '2', access: 'code', entryCode: '4821', city: 'Kraków', notes: 'Cat hides' },
+    });
+    await tick();
+    const v2Order = gw.getOrder(v2.draft.id);
+    eq(`[${tag}] v2 scheduledAt projects back`, v2Order?.scheduledAt, '2026-08-16T06:00:00.000Z');
+    eq(`[${tag}] v2 site line1 is trimmed`, v2Order?.site?.line1, 'ul. Karmelicka 14');
+    eq(`[${tag}] v2 site access survives`, v2Order?.site?.access, 'code');
+    eq(`[${tag}] v2 site entry code survives`, v2Order?.site?.entryCode, '4821');
+    eq(`[${tag}] v2 site note survives`, v2Order?.site?.notes, 'Cat hides');
+    ok(`[${tag}] v2 scheduledAt is not updatedAt`, v2Order?.scheduledAt !== v2Order?.updatedAt);
+    // …and survive a state transition (transitions must not drop payload fields).
+    gw.completeOrder(v2.draft.id, '2026-08-16T10:00:00.000Z');
+    await tick();
+    eq(`[${tag}] v2 slot survives a transition`, gw.getOrder(v2.draft.id)?.scheduledAt, '2026-08-16T06:00:00.000Z');
+    eq(`[${tag}] v2 site survives a transition`, gw.getOrder(v2.draft.id)?.site?.line1, 'ul. Karmelicka 14');
+
+    // An order booked WITHOUT them stays undefined — never defaulted from updatedAt.
+    const bare = await gw.submitOrder({ contact: { phone: '600 888 000' }, cityId: 'krakow', serviceId: 'standard_cleaning' });
+    await tick();
+    eq(`[${tag}] v2 absent slot stays absent`, gw.getOrder(bare.draft.id)?.scheduledAt, undefined);
+    eq(`[${tag}] v2 absent site stays absent`, gw.getOrder(bare.draft.id)?.site, undefined);
 }
 
 async function main() {

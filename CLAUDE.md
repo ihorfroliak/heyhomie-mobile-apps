@@ -40,7 +40,7 @@ npm run test:ops       # rolling deploy + graceful shutdown + soak
 ```
 
 ## Architecture — the one thing to understand: the OrderGateway inversion
-All order state flows through a **frozen contract**, `packages/api/orderContract.ts` (`OrderGateway` — 8 primitives + `subscribe`/snapshots). Everything hangs off this:
+All order state flows through a **frozen contract**, `packages/api/orderContract.ts` (`OrderGateway` — 8 primitives + `subscribe`/snapshots), currently at **v2** (`ORDER_CONTRACT_VERSION`; v2 added optional `Order.scheduledAt` + `Order.site`). Everything hangs off this:
 
 - **UI imports ONLY `orderGateway`** — never the store. Enforced two ways: the store (`packages/api/bookingStore.ts`) is NOT exported from the `@heyhomie/api` barrel (compile wall), and `tools/check-apps.mjs` fails the build if any `apps/` file names a store symbol.
 - Two adapters satisfy the contract identically: **`localOrderGateway`** (offline, wraps the private store; the ACTIVE binding) and **`httpOrderGateway`** (fetch+SSE → the real server). Swapping backends = one line in `orderGateway.ts`; no UI change. `fakeBackend.ts` runs the http adapter over the real `orderService` in-process so the contract test proves both adapters without a live server.

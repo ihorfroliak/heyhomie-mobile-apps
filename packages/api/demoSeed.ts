@@ -61,7 +61,7 @@ export interface DemoSeedOptions {
 }
 
 interface SeedAccount { id: string; phone: string; email: string; firstName: string; lastName: string; createdAt: string; verifiedVia: 'phone' }
-interface SeedDraft { id: string; clientId: string; contact: { phone: string; email: string }; cityId: string; serviceId: string; stage: string; updatedAt: string; estValue: number }
+interface SeedDraft { id: string; clientId: string; contact: { phone: string; email: string }; cityId: string; serviceId: string; stage: string; updatedAt: string; scheduledAt: string; estValue: number }
 interface SeedPayment { id: string; orderId: string; method: string; status: string; provider: string; createdAt: string; amount: number; currency: string; completedAt?: string; paidAt?: string }
 
 export interface DemoSeedData {
@@ -139,6 +139,10 @@ export function buildDemoSeed(opts: DemoSeedOptions = {}): DemoSeedData {
                 serviceId,
                 stage: 'confirmed',
                 updatedAt: at.toISOString(),
+                // Contract v2: the visit instant is its own field. For a past visit it
+                // coincides with `updatedAt`, but the two are no longer the same idea —
+                // the analytics screens key off `updatedAt`, the client app off this.
+                scheduledAt: at.toISOString(),
                 estValue: price,
             });
             if (isCanceled) canceled.push(id);
@@ -169,7 +173,11 @@ export function buildDemoSeed(opts: DemoSeedOptions = {}): DemoSeedData {
                 cityId: city,
                 serviceId,
                 stage: 'confirmed',
-                updatedAt: nextAt.toISOString(),
+                // The booking was made now; the visit is in the future. Before contract
+                // v2 this row had to lie in `updatedAt` to make the client app show an
+                // upcoming visit at all.
+                updatedAt: now.toISOString(),
+                scheduledAt: nextAt.toISOString(),
                 estValue: price,
             });
             payments.push({

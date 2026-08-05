@@ -5,7 +5,18 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Txt, useLocale } from '@heyhomie/ui';
 import { orderGateway } from '@heyhomie/api';
-import { cityName, formatMoney, serviceName, CANCELLATION_WINDOW_HOURS, type Locale } from '@heyhomie/domain';
+import {
+    accessMethod,
+    cancellationFee,
+    cityName,
+    formatMoney,
+    formatVisitSite,
+    isLateCancellation,
+    serviceName,
+    tr,
+    CANCELLATION_WINDOW_HOURS,
+    type Locale,
+} from '@heyhomie/domain';
 import { colors } from '@heyhomie/design';
 
 /**
@@ -102,12 +113,26 @@ export default function Pending() {
         );
     }
 
-    const when = new Date(order.updatedAt);
-    const whenText = `${when.toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short' })} · ${when.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}`;
-    const steps = stepsFor(order.status, order.payment?.status, whenText);
+    const stamp = (iso: string) => {
+        const d = new Date(iso);
+        return `${d.toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short' })} · ${d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}`;
+    };
+    const bookedText = stamp(order.updatedAt);
+    const steps = stepsFor(order.status, order.payment?.status, bookedText);
     const amount = order.payment?.amount;
+    const nowIso = new Date().toISOString();
     const cancellable = order.status === 'confirmed';
     const canceled = order.status === 'canceled';
+
+    /**
+     * Contract v2 — the visit instant is on the order, so the cancellation policy can
+     * finally be COMPUTED rather than merely stated. Before v2 the only timestamp
+     * available was `updatedAt`, and measuring hours to a past moment told every
+     * client they owed 50%.
+     */
+    const visitAt = order.scheduledAt;
+    const late = visitAt ? isLateCancellation(visitAt, nowIso) : false;
+    const fee = visitAt && amount != null ? cancellationFee(visitAt, nowIso, amount) : 0;
 
     const onCancel = () => {
         if (!confirmingCancel) {
@@ -164,18 +189,35 @@ export default function Pending() {
                         <Txt style={styles.detailLabel}>Service</Txt>
                         <Txt style={styles.detailValue}>{serviceName(order.serviceId ?? 'standard_cleaning', locale)}</Txt>
                     </View>
-                    {order.cityId ? (
+                    {/* Contract v2 — the real address, when the order carries one. */}
+                    {order.site ? (
+                        <View style={styles.detailRow}>
+                            <Txt style={styles.detailLabel}>Address</Txt>
+                            <Txt style={styles.detailValue}>{formatVisitSite(order.site)}</Txt>
+                        </View>
+                    ) : order.cityId ? (
                         <View style={styles.detailRow}>
                             <Txt style={styles.detailLabel}>City</Txt>
                             <Txt style={styles.detailValue}>{cityName(order.cityId, locale)}</Txt>
                         </View>
                     ) : null}
-                    {/* "Booked", not "When": the contract Order carries the moment it was
-                        placed, never the visit slot — labelling it as the visit would tell
-                        the client the wrong day. */}
+                    {order.site ? (
+                        <View style={styles.detailRow}>
+                            <Txt style={styles.detailLabel}>Getting in</Txt>
+                            <Txt style={styles.detailValue}>{tr(accessMethod(order.site.access)?.label ?? { pl: '', en: '', uk: '' }, locale)}</Txt>
+                        </View>
+                    ) : null}
+                    {/* Two different facts, kept apart: when the order was placed, and
+                        when someone is cleaning. Contract v2 carries both. */}
+                    {visitAt ? (
+                        <View style={styles.detailRow}>
+                            <Txt style={styles.detailLabel}>Visit</Txt>
+                            <Txt style={styles.detailValue}>{stamp(visitAt)}</Txt>
+                        </View>
+                    ) : null}
                     <View style={styles.detailRow}>
                         <Txt style={styles.detailLabel}>Booked</Txt>
-                        <Txt style={styles.detailValue}>{whenText}</Txt>
+                        <Txt style={styles.detailValue}>{bookedText}</Txt>
                     </View>
                     <View style={[styles.detailRow, styles.detailRowLast]}>
                         <Txt style={styles.detailLabel}>Total</Txt>
@@ -223,15 +265,20 @@ export default function Pending() {
                         accessibilityRole="button"
                         accessibilityLabel={confirmingCancel ? 'Tap again to cancel this cleaning' : 'Cancel this cleaning'}
                     >
-                        <Txt style={styles.cancelText}>{confirmingCancel ? 'Tap again to call it off' : 'Call it off'}</Txt>
+                        <Txt style={styles.cancelText}>
+                            {confirmingCancel
+                                ? 'Tap again to call it off'
+                                : fee > 0
+                                  ? `Call it off · ${formatMoney(fee, 'PLN', locale)} fee`
+                                  : 'Call it off · free'}
+                        </Txt>
                     </Pressable>
                 ) : null}
-                {/* The policy is stated, not computed: `cancellationFee` needs the visit
-                    time and the contract Order does not carry one — deriving a fee from
-                    `updatedAt` would tell every client they owe half. See OPEN_ITEMS. */}
                 {canceled ? null : (
                     <Txt style={styles.cancelNote}>
-                        Free up to {CANCELLATION_WINDOW_HOURS} hours before the visit; inside that window half the price applies.
+                        {visitAt && late
+                            ? `Inside the ${CANCELLATION_WINDOW_HOURS} h window, so half the price applies.`
+                            : `Free up to ${CANCELLATION_WINDOW_HOURS} hours before the visit; inside that window half the price applies.`}
                     </Txt>
                 )}
             </ScrollView>

@@ -6,6 +6,7 @@
  * typed SubmitOrderInput.
  */
 import { ValidationError } from './errors';
+import { normalizeVisitSite, VISIT_NOTES_MAX, type AccessMethodId } from '../domain';
 import type { SubmitOrderInput } from './orderContract';
 
 const MAX_STR = 200; // ids, city, names, phone/email
@@ -55,6 +56,37 @@ export function validateSubmitOrderInput(body: unknown): SubmitOrderInput {
         delivery = d as unknown as SubmitOrderInput['delivery'];
     }
 
+    // Contract v2 — the visit slot. An unparseable instant is rejected rather than
+    // stored, because every screen downstream renders it as a date to the client.
+    let scheduledAt: string | undefined;
+    if (b.scheduledAt !== undefined) {
+        if (!isStr(b.scheduledAt) || !bounded(b.scheduledAt, MAX_STR) || Number.isNaN(new Date(b.scheduledAt).getTime())) {
+            throw new ValidationError('scheduledAt must be an ISO instant');
+        }
+        scheduledAt = new Date(b.scheduledAt).toISOString();
+    }
+
+    // Contract v2 — the visit site. `normalizeVisitSite` trims, caps and drops the
+    // empties, so unknown keys and oversized values cannot reach storage.
+    let site: SubmitOrderInput['site'];
+    if (b.site !== undefined) {
+        if (typeof b.site !== 'object' || b.site === null) throw new ValidationError('site must be an object');
+        const s = b.site as Record<string, unknown>;
+        if (!isStr(s.line1) || !bounded(s.line1, MAX_LINE)) throw new ValidationError('site.line1 is required');
+        if (s.notes !== undefined && (!isStr(s.notes) || s.notes.length > VISIT_NOTES_MAX)) throw new ValidationError('site.notes too long');
+        site = normalizeVisitSite({
+            line1: s.line1,
+            flat: isStr(s.flat) ? s.flat : undefined,
+            floor: isStr(s.floor) ? s.floor : undefined,
+            entryCode: isStr(s.entryCode) ? s.entryCode : undefined,
+            city: isStr(s.city) ? s.city : undefined,
+            // Unknown ids are not an error — `normalizeVisitSite` falls back to 'meet'
+            // rather than persisting an access method no screen can render.
+            access: isStr(s.access) ? (s.access as AccessMethodId) : undefined,
+            notes: isStr(s.notes) ? s.notes : undefined,
+        });
+    }
+
     return {
         contact: { phone, email },
         cityId: b.cityId,
@@ -63,5 +95,7 @@ export function validateSubmitOrderInput(body: unknown): SubmitOrderInput {
         estValue,
         paymentMethod: paymentMethod as SubmitOrderInput['paymentMethod'],
         delivery,
+        scheduledAt,
+        site,
     };
 }

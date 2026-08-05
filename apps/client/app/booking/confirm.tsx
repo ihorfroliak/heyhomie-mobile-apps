@@ -122,6 +122,9 @@ export default function BookingConfirm() {
                 serviceId,
                 estValue: quote.total,
                 scheduledAt: arrivalStartIso(date, slot),
+                // Contract v2 — the address, the way in and the note now travel with
+                // the order instead of stopping at the app.
+                site: site.line1 ? { ...site, city: cityName(cityId, locale) } : undefined,
                 paymentMethod: 'card',
             });
             track({ name: 'mission_booked', plan, minutes: 0, addOns: Object.keys(selectedAddOns).length });

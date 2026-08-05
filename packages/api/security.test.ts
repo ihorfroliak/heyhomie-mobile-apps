@@ -7,6 +7,7 @@ import { validateClaims } from './auth';
 import { validateSubmitOrderInput } from './orderValidation';
 import { RateLimiter } from './rateLimiter';
 import { UnauthorizedError, ValidationError } from './errors';
+import { VISIT_NOTES_MAX, VISIT_SHORT_MAX } from '../domain';
 
 let passed = 0;
 const fail: string[] = [];
@@ -39,6 +40,20 @@ throws('negative estValue rejected', () => validateSubmitOrderInput({ ...goodBod
 throws('NaN estValue rejected', () => validateSubmitOrderInput({ ...goodBody, estValue: Number.NaN }), ValidationError);
 throws('bad paymentMethod rejected', () => validateSubmitOrderInput({ ...goodBody, paymentMethod: 'bitcoin' }), ValidationError);
 ok('unknown fields dropped (not reflected)', !('evil' in validateSubmitOrderInput({ ...goodBody, evil: 'x' } as Record<string, unknown>)));
+
+// ── contract v2 boundary: the visit slot and site are hostile input too ──
+eq('scheduledAt normalized to an instant', validateSubmitOrderInput({ ...goodBody, scheduledAt: '2026-08-16T06:00:00Z' }).scheduledAt, '2026-08-16T06:00:00.000Z');
+throws('unparseable scheduledAt rejected', () => validateSubmitOrderInput({ ...goodBody, scheduledAt: 'next tuesday' }), ValidationError);
+throws('non-string scheduledAt rejected', () => validateSubmitOrderInput({ ...goodBody, scheduledAt: 1755331200000 }), ValidationError);
+throws('non-object site rejected', () => validateSubmitOrderInput({ ...goodBody, site: 'ul. Karmelicka 14' }), ValidationError);
+throws('site without a street rejected', () => validateSubmitOrderInput({ ...goodBody, site: { access: 'meet' } }), ValidationError);
+throws('oversized site.line1 rejected', () => validateSubmitOrderInput({ ...goodBody, site: { line1: 'x'.repeat(500) } }), ValidationError);
+throws('oversized site.notes rejected', () => validateSubmitOrderInput({ ...goodBody, site: { line1: 'ul. Dluga 5', notes: 'x'.repeat(VISIT_NOTES_MAX + 1) } }), ValidationError);
+eq('site.line1 trimmed', validateSubmitOrderInput({ ...goodBody, site: { line1: '  ul. Dluga 5  ' } }).site?.line1, 'ul. Dluga 5');
+eq('unknown access falls back to meet', validateSubmitOrderInput({ ...goodBody, site: { line1: 'ul. Dluga 5', access: 'teleport' } }).site?.access, 'meet');
+eq('oversized entry code is capped', validateSubmitOrderInput({ ...goodBody, site: { line1: 'ul. Dluga 5', entryCode: '9'.repeat(200) } }).site?.entryCode?.length, VISIT_SHORT_MAX);
+ok('unknown site keys dropped', !('evil' in (validateSubmitOrderInput({ ...goodBody, site: { line1: 'ul. Dluga 5', evil: 'x' } }).site ?? {})));
+eq('no site means no site', validateSubmitOrderInput(goodBody).site, undefined);
 
 // ── rate limiter ──
 {

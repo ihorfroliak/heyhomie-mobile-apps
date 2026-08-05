@@ -82,6 +82,43 @@ export function validateVisitSite(site: Partial<VisitSite>): VisitSiteCheck {
     return { valid: line1Valid && !codeMissing && notesValid, line1Valid, codeMissing, notesValid };
 }
 
+/** Field caps, so a hostile or fat-fingered value cannot bloat a stored order. */
+export const VISIT_LINE_MAX = 200;
+export const VISIT_SHORT_MAX = 24;
+
+const clamp = (v: string | undefined, max: number): string | undefined => {
+    const t = (v ?? '').trim().slice(0, max);
+    return t.length > 0 ? t : undefined;
+};
+
+/**
+ * Trim + cap every field and drop the empties, so what gets stored on an order is
+ * the same whichever surface submitted it. Unknown access ids fall back to `meet`
+ * rather than persisting a value no screen can render.
+ */
+export function normalizeVisitSite(site: Partial<VisitSite>): VisitSite {
+    return {
+        line1: clamp(site.line1, VISIT_LINE_MAX) ?? '',
+        flat: clamp(site.flat, VISIT_SHORT_MAX),
+        floor: clamp(site.floor, VISIT_SHORT_MAX),
+        entryCode: clamp(site.entryCode, VISIT_SHORT_MAX),
+        city: clamp(site.city, VISIT_SHORT_MAX * 4),
+        access: accessMethod(site.access ?? '')?.id ?? 'meet',
+        notes: clamp(site.notes, VISIT_NOTES_MAX),
+    };
+}
+
+/**
+ * What actually gets stored on an order: the normalized site, or nothing at all when
+ * there is no street to store. A site without `line1` locates no one, and an empty
+ * one would render as a blank Address row — absent is the honest state.
+ */
+export const toStoredVisitSite = (site: Partial<VisitSite> | undefined): VisitSite | undefined => {
+    if (!site) return undefined;
+    const normalized = normalizeVisitSite(site);
+    return normalized.line1 ? normalized : undefined;
+};
+
 /** One line for a summary row: "ul. Karmelicka 14, flat 3, floor 2 · Kraków". */
 export function formatVisitSite(site: Partial<VisitSite>): string {
     const parts = [(site.line1 ?? '').trim()];

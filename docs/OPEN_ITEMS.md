@@ -36,26 +36,20 @@ Grouped by whether it's a future code change, an intentional trade-off, or exter
 5. **Prune legacy seam** — `packages/api/{config,homieClient,accountingClient,marketingClient}.ts`
    + root `.env.example` reference the pre-Build-04 Rails/Go backends. Inert but stale;
    delete when confirmed unused by any screen.
-6. **Visit site on the order (contract-versioned)** — the ported booking flow
-   (`apps/client/app/booking/{service,size,when,where}.tsx`) collects the address,
-   the access method and the note to the homie, and `packages/domain/visitSite.ts`
-   models + validates them. `SubmitBookingInput` has no field for any of the three,
-   so today they are shown back to the client on checkout and stop at the app. The
-   add-ons and the arrival slot DO reach the order (`estValue` + `scheduledAt`).
-   Carrying the site needs an `OrderGateway` version bump — do not widen it in place.
-   Also still app-local: no saved-address book, so step 4 asks every time.
-   **Same gap, sharper edge — the contract `Order` has no visit time.** `scheduledAt`
-   goes IN on `submitOrder` but never comes back; the projection carries only
-   `updatedAt`. `demoSeed` papers over this by writing future visit dates into
-   `updatedAt`, so seeded orders read as "upcoming" while a real booking reads as
-   "today". Consequences handled in-app, not hidden: `/booking/done` shows the slot
-   the flow just submitted rather than reading a timestamp back; `/pending` labels
-   the row **Booked** (not "When") and states the cancellation policy instead of
-   computing it — `cancellationFee(order.updatedAt, …)` would tell every client they
-   owe 50%. **Still conflated: `(tabs)/index.tsx`** treats `updatedAt >= now` as the
-   next visit and renders "in N days" — correct for seeded data, wrong for a freshly
-   booked order. Fixing it properly means putting `scheduledAt` on the contract
-   `Order` (versioned); do not patch it with another local guess.
+6. ~~**Visit time + visit site on the order**~~ — **DONE (contract v2).**
+   `Order` now carries optional `scheduledAt` and `site`; `ORDER_CONTRACT_VERSION = 2`.
+   Additive and backwards compatible — a v1 backend omits both and every consumer
+   renders their absence rather than substituting `updatedAt`. No migration was
+   needed (the `orders.payload` column is jsonb). Both adapters project them
+   identically (asserted per-adapter in `gateway.test.ts`), the HTTP boundary
+   validates and normalizes them (`orderValidation.ts` + `toStoredVisitSite`), and
+   `pg.test.ts` proves the jsonb round trip plus CAS preservation. This closed three
+   defects that were structurally impossible to fix under v1: the success screen
+   naming the booking day as the visit day, `cancellationFee` measured against a past
+   timestamp (it told every client they owed 50% — now genuinely computed), and Home
+   treating `updatedAt >= now` as "upcoming". `demoSeed` no longer writes visit dates
+   into `updatedAt`.
+   **Still open here:** no saved-address book, so booking step 4 asks every time.
    **Not built: client OTP.** The design has a 4-cell confirmation-code screen, but
    there is no OTP issuer for clients — `homieClient.ts` is the inert pre-Build-04
    Go seam (item 5) and `makeAuthService` is staff password auth. A screen that

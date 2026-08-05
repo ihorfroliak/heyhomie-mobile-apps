@@ -62,6 +62,36 @@ async function main() {
     const svc = makeOrderService(repo);
     const create = async (auth: AuthContext) => (await svc.create({ contact: { phone: '600' }, cityId: 'k', serviceId: 's' }, auth)).draft.id;
 
+    // ── contract v2 through real Postgres: the jsonb payload round-trips ──
+    // No migration was needed (payload is jsonb), so this is the assertion that the
+    // new fields actually survive a serialize → store → read cycle in the DB.
+    {
+        const v2 = await svc.create(
+            {
+                contact: { phone: '600' },
+                cityId: 'krakow',
+                serviceId: 'standard_cleaning',
+                scheduledAt: '2026-08-16T06:00:00.000Z',
+                site: { line1: 'ul. Karmelicka 14', flat: '3', access: 'code', entryCode: '4821', notes: 'Cat hides' },
+            },
+            authA,
+        );
+        const stored = (await repo.get(v2.draft.id, 'T1')) as ServerOrder;
+        eq('pg keeps the visit slot', stored.payload.scheduledAt, '2026-08-16T06:00:00.000Z');
+        eq('pg keeps the site street', stored.payload.site?.line1, 'ul. Karmelicka 14');
+        eq('pg keeps the access method', stored.payload.site?.access, 'code');
+        eq('pg keeps the entry code', stored.payload.site?.entryCode, '4821');
+        ok('slot and updatedAt stay distinct in pg', stored.payload.scheduledAt !== stored.updatedAt);
+        // …and a CAS update must not drop them (the payload is rewritten wholesale).
+        const after = await repo.update({ ...stored, status: 'canceled' }, stored.version);
+        eq('CAS update preserves the slot', after.payload.scheduledAt, '2026-08-16T06:00:00.000Z');
+        eq('CAS update preserves the site', after.payload.site?.line1, 'ul. Karmelicka 14');
+        const bare = await svc.create({ contact: { phone: '600' }, cityId: 'k', serviceId: 's' }, authA);
+        const bareStored = (await repo.get(bare.draft.id, 'T1')) as ServerOrder;
+        eq('pg stores no slot when none given', bareStored.payload.scheduledAt, undefined);
+        eq('pg stores no site when none given', bareStored.payload.site, undefined);
+    }
+
     // ── PHASE 2: CAS semantics identical to memory repo ──
     const id1 = await create(authA);
     const o1 = await repo.get(id1, 'T1') as ServerOrder;

@@ -40,6 +40,11 @@ job (gate + server typecheck + live) runs in parallel with a `postgres` service 
 
 **Things explicitly NOT to change (locked decisions):**
 - The `OrderGateway` contract (`packages/api/orderContract.ts`) — frozen; any change = new build/version.
+  Currently at **v2** (`ORDER_CONTRACT_VERSION`), the one authorized widening: `Order` gained
+  optional `scheduledAt` + `site`. The 8 primitives are unchanged and stay that way without
+  another version. Rule for any future v: **additive and optional only** — a consumer must
+  render the absence of a new field, never substitute a neighbouring one for it (v1's missing
+  `scheduledAt` being read off `updatedAt` is exactly the class of bug that caused).
 - UI must import ONLY `orderGateway`, never the store (compile wall + `check-apps.mjs` guard).
 - `tenantId`/`auth` stay server-side — never in the contract `Order` or UI.
 - Dockerfile CMD must be `node --import tsx` (node PID 1 for SIGTERM drain).
@@ -81,10 +86,14 @@ UI (apps/*)  ──imports only──►  orderGateway  (packages/api/orderContr
                                               memoryOrderRepo   pgOrderRepo (server/)
 ```
 
-- **Contract frozen**: `packages/api/orderContract.ts` — `OrderGateway` (8 primitives:
+- **Contract frozen (at v2)**: `packages/api/orderContract.ts` — `OrderGateway` (8 primitives:
   submitOrder/getOrder/listOrders/confirmOrder/completeOrder/cancelOrder/settleOrder/markPaid
   + init/subscribe/ordersSnapshot/leadsSnapshot/captureLead), `Order`, `OrderStatus`.
   **Never change without a new build.** No `tenantId`/`auth` in it (orthogonal).
+  v2 added `Order.scheduledAt` (when the VISIT is — never `updatedAt`, which is when the row
+  last changed) and `Order.site` (address + access + note). Both optional; both projected
+  identically by the Local and Http adapters, asserted per-adapter in `gateway.test.ts` and
+  round-tripped through real jsonb in `pg.test.ts`. No migration: `orders.payload` is jsonb.
 - **Active binding**: `orderGateway` is **env-selected** (Build 20) — `EXPO_PUBLIC_ORDERS_API_URL`
   set → `httpOrderGateway` wired to the client `auth` facade (`getToken`/`authFetch`); unset →
   `localOrderGateway` (offline default). No UI change either way. Apps call `configureAuth(...)`

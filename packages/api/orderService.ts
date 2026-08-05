@@ -17,7 +17,9 @@ import {
     markPaid as domainMarkPaid,
     runCharge,
     clampLength,
+    toStoredVisitSite,
     DELIVERY_NOTE_MAX,
+    type VisitSite,
     type PaymentIntent,
     type PaymentMethod,
     type DeliveryDetails,
@@ -44,6 +46,10 @@ export interface ServerOrder {
         cityId?: string;
         contact?: Contact;
         delivery?: DeliveryDetails;
+        /** Contract v2 — the visit slot, distinct from the row's `updatedAt`. */
+        scheduledAt?: string;
+        /** Contract v2 — where the visit happens and how the homie gets in. */
+        site?: VisitSite;
         paymentMethod: PaymentMethod;
         payment: PaymentIntent;
     };
@@ -103,6 +109,8 @@ export function toContractOrder(o: ServerOrder): Order {
         contact: o.payload.contact,
         delivery: o.payload.delivery,
         updatedAt: o.updatedAt,
+        scheduledAt: o.payload.scheduledAt,
+        site: o.payload.site,
         status: SERVER_TO_CONTRACT[o.status],
         payment: o.payload.payment,
     };
@@ -212,6 +220,9 @@ export function makeOrderService(repo: OrderRepo, telemetry: ServiceTelemetry = 
             const delivery = input.delivery
                 ? { ...input.delivery, note: input.delivery.note ? clampLength(input.delivery.note, DELIVERY_NOTE_MAX) : undefined }
                 : undefined;
+            // Contract v2 — normalized here as well as at the HTTP boundary, so the
+            // Local adapter (which never crosses that boundary) stores the same shape.
+            const site = toStoredVisitSite(input.site);
             const order: ServerOrder = {
                 id,
                 tenantId: auth.tenantId,
@@ -219,13 +230,13 @@ export function makeOrderService(repo: OrderRepo, telemetry: ServiceTelemetry = 
                 status: 'confirmed',
                 createdAt: now,
                 updatedAt: now,
-                payload: { clientId, serviceId: input.serviceId, cityId: input.cityId, contact: input.contact, delivery, paymentMethod: method, payment },
+                payload: { clientId, serviceId: input.serviceId, cityId: input.cityId, contact: input.contact, delivery, scheduledAt: input.scheduledAt, site, paymentMethod: method, payment },
             };
             await repo.insert(order);
             emit();
             telemetry.mutation?.({ op: 'create', orderId: id, tenantId: auth.tenantId, applied: true, conflictRetries: 0 });
             const account = { id: clientId, firstName: (input.firstName ?? '').trim() || 'Friend', phone: input.contact.phone, email: input.contact.email, createdAt: now };
-            const draft = { id, clientId, contact: input.contact, cityId: input.cityId, serviceId: input.serviceId, stage: 'confirmed' as const, updatedAt: now, delivery };
+            const draft = { id, clientId, contact: input.contact, cityId: input.cityId, serviceId: input.serviceId, stage: 'confirmed' as const, updatedAt: now, delivery, scheduledAt: input.scheduledAt, site };
             return { account, isNewAccount: true, draft, payment };
         },
         get: (id, auth) => repo.get(id, auth.tenantId),

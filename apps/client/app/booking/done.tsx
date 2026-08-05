@@ -29,11 +29,16 @@ export default function BookingDone() {
     const order = useMemo(() => orders.find(o => o.id === orderId), [orders, orderId]);
 
     /**
-     * The visit slot the client just booked. It comes from the flow, not from the
-     * order: the contract `Order` has only `updatedAt` (when it was booked), and
-     * showing that as the visit would tell the client the wrong day.
+     * The visit slot. Contract v2 puts `scheduledAt` on the order, so the stored
+     * value is the source of truth; the flow's own params are only a fallback for a
+     * v1 backend that does not project it. `updatedAt` is never used here — that is
+     * when the order was placed, not when anyone is cleaning.
      */
-    const visit = typeof date === 'string' && date ? `${prettyDay(date, locale)} · ${arrivalSlot(parseSlot(slot))?.window ?? ''}` : null;
+    const visit = order?.scheduledAt
+        ? `${new Date(order.scheduledAt).toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short' })} · ${arrivalSlot(parseSlot(slot))?.window ?? ''}`
+        : typeof date === 'string' && date
+          ? `${prettyDay(date, locale)} · ${arrivalSlot(parseSlot(slot))?.window ?? ''}`
+          : null;
     const amount = order?.payment?.amount;
     const price = amount != null ? formatMoney(amount, order?.payment?.currency ?? 'PLN', locale) : null;
 

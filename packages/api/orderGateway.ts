@@ -31,6 +31,9 @@ function toOrder(d: BookingDraft, canceledIds: string[]): Order {
         contact: d.contact,
         delivery: d.delivery,
         updatedAt: d.updatedAt,
+        // Contract v2 — projected identically by the Http adapter (toContractOrder).
+        scheduledAt: d.scheduledAt,
+        site: d.site,
         status: statusOf(pay, canceledIds.includes(d.id)),
         payment: pay,
     };

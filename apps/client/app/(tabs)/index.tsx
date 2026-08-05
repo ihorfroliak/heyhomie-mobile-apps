@@ -48,11 +48,20 @@ export default function Home() {
     const router = useRouter();
     const orders = useSyncExternalStore(orderGateway.subscribe, orderGateway.ordersSnapshot, orderGateway.ordersSnapshot);
 
+    /**
+     * Contract v2 — "upcoming" means the VISIT is ahead of us (`scheduledAt`), not
+     * that the row was touched recently. Under v1 this had to read `updatedAt`, which
+     * made a cleaning booked a minute ago read as happening today. An order with no
+     * slot (a lead, a hand-quoted service, a v1 backend) is simply not a candidate
+     * for "your next cleaning" rather than being handed a guessed date.
+     */
     const { next, last, who } = useMemo(() => {
         const nowIso = new Date().toISOString();
-        const sorted = [...orders].sort((a, b) => a.updatedAt.localeCompare(b.updatedAt));
-        const upcoming = sorted.find(o => o.updatedAt >= nowIso && o.status === 'confirmed');
-        const past = [...sorted].reverse().find(o => o.updatedAt < nowIso);
+        const scheduled = orders.filter(o => !!o.scheduledAt).sort((a, b) => a.scheduledAt!.localeCompare(b.scheduledAt!));
+        const upcoming = scheduled.find(o => o.scheduledAt! >= nowIso && o.status === 'confirmed');
+        const past =
+            [...scheduled].reverse().find(o => o.scheduledAt! < nowIso) ??
+            [...orders].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0];
         return { next: upcoming, last: past, who: nameFrom((upcoming ?? past)?.contact?.email) };
     }, [orders]);
 
@@ -64,8 +73,8 @@ export default function Home() {
         locale,
     );
 
-    const daysAway = next ? Math.max(0, Math.round((new Date(next.updatedAt).getTime() - Date.now()) / 86400000)) : 0;
-    const when = next ? new Date(next.updatedAt) : null;
+    const when = next?.scheduledAt ? new Date(next.scheduledAt) : null;
+    const daysAway = when ? Math.max(0, Math.round((when.getTime() - Date.now()) / 86400000)) : 0;
 
     return (
         <SafeAreaView style={styles.safe} edges={['top']}>

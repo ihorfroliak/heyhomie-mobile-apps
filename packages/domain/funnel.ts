@@ -28,6 +28,10 @@ export interface BookingDraft {
     estValue?: number; // estimated order value (PLN)
     /** Flower-delivery bookings carry the recipient/slot/note details. */
     delivery?: import('./delivery').DeliveryDetails;
+    /** Contract v2: ISO instant the visit starts — distinct from `updatedAt`. */
+    scheduledAt?: string;
+    /** Contract v2: where the visit happens and how the homie gets in. */
+    site?: import('./visitSite').VisitSite;
 }
 
 export const ABANDON_THRESHOLD_MIN = 30;
