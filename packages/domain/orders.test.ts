@@ -1,7 +1,7 @@
 /** Run with: npx -y tsx packages/domain/orders.test.ts */
 import { isValidNip, normalizeNip, formatNip, validateBilling } from './billing';
 import { frequenciesFor, isLeadService, CLEANING_FREQUENCIES, DELIVERY_FREQUENCIES, serviceById } from './catalog';
-import { nextOccurrence, generateOccurrences, shiftSeries, moveOccurrence, skipOccurrence, cancellationFee, isLateCancellation, hoursUntil } from './scheduling';
+import { nextOccurrence, generateOccurrences, shiftSeries, moveOccurrence, skipOccurrence, cancellationFee, isLateCancellation, hoursUntil, ARRIVAL_SLOTS, arrivalSlot, arrivalStartIso, bookableDates, BOOKING_HORIZON_DAYS, BOOKING_LEAD_DAYS } from './scheduling';
 import { channelsFor, buildNotifications, renderNotification, type NotificationRecipient } from './notifications';
 import { validateDelivery, DELIVERY_SLOTS, type DeliveryDetails } from './delivery';
 import { createPaymentIntent, markDue, runCharge, markPaid, isPaid, nextChargeAt, duePayments, payLaterLink, paymentStatusTone, paymentMethodLabel } from './payment';
@@ -136,6 +136,27 @@ eq('method label localizes', paymentMethodLabel('pay_later', 'uk'), 'Оплат�
 eq('payment_link goes by email', channelsFor('payment_link'), ['email']);
 eq('payment_charged goes by email', channelsFor('payment_charged'), ['email']);
 ok('charged receipt shows the amount', renderNotification({ kind: 'payment_charged', amount: 200, currency: 'PLN' }).body.includes('200'));
+
+// ---- booking a visit: arrival windows + open days ----
+eq('four arrival windows', ARRIVAL_SLOTS.length, 4);
+ok('windows are contiguous 08–20', ARRIVAL_SLOTS.every((s, i) => s.endHour === s.startHour + 3 && (i === 0 || s.startHour === ARRIVAL_SLOTS[i - 1].endHour)));
+ok('every window is localized', ARRIVAL_SLOTS.every(s => !!s.label.pl && !!s.label.en && !!s.label.uk));
+eq('lookup by id', arrivalSlot('midday')?.startHour, 11);
+eq('unknown slot id is undefined', arrivalSlot('night'), undefined);
+eq('calendar opens tomorrow', bookableDates('2026-08-05')[0], '2026-08-06');
+eq('calendar runs a fortnight', bookableDates('2026-08-05').length, BOOKING_HORIZON_DAYS);
+eq('calendar ends 14 days out', bookableDates('2026-08-05')[13], '2026-08-19');
+eq('lead days are honoured', bookableDates('2026-08-05', 1, 3)[0], '2026-08-08');
+eq('default lead is one day', BOOKING_LEAD_DAYS, 1);
+eq('month rolls over', bookableDates('2026-08-30', 3)[2], '2026-09-02');
+eq('leap day is a real day', bookableDates('2028-02-28', 1)[0], '2028-02-29');
+eq('a broken date yields no days', bookableDates('not-a-date').length, 0);
+eq('start lands on the window hour', new Date(arrivalStartIso('2026-08-06', 'morning')!).getHours(), 8);
+eq('evening starts at 17', new Date(arrivalStartIso('2026-08-06', 'evening')!).getHours(), 17);
+eq('start keeps the calendar day', new Date(arrivalStartIso('2026-08-06', 'midday')!).getDate(), 6);
+eq('unknown slot has no start', arrivalStartIso('2026-08-06', 'night'), undefined);
+eq('unparseable day has no start', arrivalStartIso('x', 'morning'), undefined);
+ok('a booked visit is not a late cancellation on the day it is made', !isLateCancellation(arrivalStartIso('2026-08-07', 'morning')!, '2026-08-05T10:00:00.000Z'));
 
 // ---- service details ----
 ok('every catalog service has details', ['standard_cleaning', 'general_cleaning', 'window_cleaning', 'flower_delivery', 'office_cleaning', 'post_renovation'].every(id => !!serviceDetail(id)));

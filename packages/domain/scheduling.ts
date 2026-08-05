@@ -10,8 +10,12 @@
  *                     without touching the rest of the cycle.
  * Plus skipOccurrence — cancel one visit from the cycle (…on, on, off, on…).
  *
+ * Also owns WHEN a visit can be booked in the first place: the arrival windows a
+ * client picks from, and the range of days that are open for booking.
+ *
  * Pure date math on ISO strings; tested.
  */
+import type { Localized } from './cleaning';
 import type { Frequency } from './missions';
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
@@ -109,6 +113,75 @@ export function moveOccurrence(occurrences: string[], index: number, newIso: str
 /** Cancel a single visit from the cycle (the others keep their dates). */
 export function skipOccurrence(occurrences: string[], index: number): string[] {
     return occurrences.filter((_, i) => i !== index);
+}
+
+/* ------------------------------------------------------------------ */
+/* Booking a visit — arrival windows and the open days                 */
+/* ------------------------------------------------------------------ */
+
+const L = (pl: string, en: string, uk: string): Localized => ({ pl, en, uk });
+
+export type ArrivalSlotId = 'morning' | 'midday' | 'afternoon' | 'evening';
+
+/**
+ * A three-hour window the homie arrives inside — not an exact start time, because
+ * the previous visit's real duration moves the day around.
+ */
+export interface ArrivalSlot {
+    id: ArrivalSlotId;
+    label: Localized;
+    /** Display string for the window. */
+    window: string;
+    /** Local hour the window opens / closes (24h). */
+    startHour: number;
+    endHour: number;
+}
+
+export const ARRIVAL_SLOTS: ArrivalSlot[] = [
+    { id: 'morning', label: L('Rano', 'Morning', 'Зранку'), window: '08:00 – 11:00', startHour: 8, endHour: 11 },
+    { id: 'midday', label: L('W południe', 'Midday', 'Опівдні'), window: '11:00 – 14:00', startHour: 11, endHour: 14 },
+    { id: 'afternoon', label: L('Po południu', 'Afternoon', 'Вдень'), window: '14:00 – 17:00', startHour: 14, endHour: 17 },
+    { id: 'evening', label: L('Wieczorem', 'Evening', 'Ввечері'), window: '17:00 – 20:00', startHour: 17, endHour: 20 },
+];
+
+export const arrivalSlot = (id: string): ArrivalSlot | undefined => ARRIVAL_SLOTS.find(s => s.id === id);
+
+/** Earliest a visit can be booked: tomorrow — today never has crew left to plan. */
+export const BOOKING_LEAD_DAYS = 1;
+/** How far ahead the booking calendar goes. */
+export const BOOKING_HORIZON_DAYS = 14;
+
+/**
+ * The days open for booking, as `YYYY-MM-DD`, starting `leadDays` after `fromYmd`.
+ *
+ * Takes and returns plain calendar dates rather than instants: a booking day is
+ * what the client sees on their wall, so anchoring at UTC noon keeps the arithmetic
+ * clear of the ±1 day that timezone offsets would otherwise introduce.
+ */
+export function bookableDates(fromYmd: string, count: number = BOOKING_HORIZON_DAYS, leadDays: number = BOOKING_LEAD_DAYS): string[] {
+    const base = new Date(`${fromYmd}T12:00:00Z`);
+    if (Number.isNaN(base.getTime())) return [];
+    const out: string[] = [];
+    for (let i = 0; i < Math.max(0, count); i++) {
+        const d = new Date(base);
+        d.setUTCDate(d.getUTCDate() + leadDays + i);
+        out.push(d.toISOString().slice(0, 10));
+    }
+    return out;
+}
+
+/**
+ * The instant a booked visit starts: the calendar day plus the window's opening
+ * hour, read in the running device's timezone (a Kraków booking is made in Kraków
+ * time). Returns an ISO instant, which is what `scheduledAt` carries.
+ */
+export function arrivalStartIso(ymd: string, slotId: string): string | undefined {
+    const slot = arrivalSlot(slotId);
+    if (!slot) return undefined;
+    const [y, m, d] = ymd.split('-').map(Number);
+    if (!y || !m || !d) return undefined;
+    const at = new Date(y, m - 1, d, slot.startHour, 0, 0, 0);
+    return Number.isNaN(at.getTime()) ? undefined : at.toISOString();
 }
 
 export const CANCELLATION_WINDOW_HOURS = 24;

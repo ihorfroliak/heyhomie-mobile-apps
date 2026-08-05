@@ -94,7 +94,7 @@ export default function BookingSize() {
 
     const onContinue = () => {
         track({ name: 'funnel_step', stage: 'home_sized', serviceId: serviceIdFor(plan) });
-        router.push({ pathname: '/book', params: { plan, frequency, rooms, kitchens, bathrooms } });
+        router.push({ pathname: '/booking/when', params: { plan, frequency, rooms, kitchens, bathrooms } });
     };
 
     const counters: { key: string; label: string; hint: string; value: number; min: number; set: (fn: (v: number) => number) => void }[] = [

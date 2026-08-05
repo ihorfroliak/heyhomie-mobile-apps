@@ -11,6 +11,7 @@ import {
     estimateMissionMinutes,
     workersFor,
     formatDuration,
+    formatMoney,
     tr,
     enabledCities,
     availableServices,
@@ -33,6 +34,9 @@ import {
     CONTACT_PHONE,
     CANCELLATION_WINDOW_HOURS,
     TRAVEL_BUFFER_MINUTES,
+    arrivalSlot,
+    arrivalStartIso,
+    cleaningPrice,
     type CleaningPlan,
     type AddOnId,
     type SelectedAddOn,
@@ -49,7 +53,7 @@ import {
 import { colors, spacing, typography, radii } from '@heyhomie/design';
 import { Card, Button, Segmented, useLocale } from '@heyhomie/ui';
 import { useCurrentCity } from '../lib/useCurrentCity';
-import { parseCount, parseFrequency, parsePlan, serviceIdFor } from '../lib/bookingFlow';
+import { parseCount, parseDate, parseFrequency, parsePlan, parseSlot, serviceIdFor } from '../lib/bookingFlow';
 import { track } from '../lib/analytics';
 import { orderGateway, type SubmitOrderResult } from '@heyhomie/api';
 
@@ -246,7 +250,11 @@ export default function Book() {
     // Prefill from the ported booking steps (/booking/service → /booking/size), which
     // hand over the plan, cadence and room counts. Absent (opened directly, or a stale
     // link) → the parsers fall back to the standard-cleaning defaults.
-    const params = useLocalSearchParams<{ plan?: string; frequency?: string; rooms?: string; kitchens?: string; bathrooms?: string }>();
+    const params = useLocalSearchParams<{ plan?: string; frequency?: string; rooms?: string; kitchens?: string; bathrooms?: string; date?: string; slot?: string }>();
+    // Day + arrival window chosen in step 3. Read once: this screen has no calendar
+    // of its own, so re-deriving them on every render would only churn.
+    const [bookingDate] = useState(() => parseDate(params.date));
+    const [bookingSlot] = useState(() => parseSlot(params.slot));
     const map = demoAvailability;
     const cityIds = useMemo(() => enabledCities(map), [map]);
     const homeCity = demoMissions[0]?.address.city ?? cityIds[0];
@@ -425,6 +433,25 @@ export default function Book() {
     // Team size follows the real staffing rule (general => 2, unless <=60m² or recurring).
     const workers = workersFor(plan, { areaSqm, recurring: frequency !== 'once' });
 
+    /**
+     * The full canonical quote for a cleaning: the clean at the chosen cadence, plus
+     * the selected add-ons, plus the gear fee when the client has no mop or vacuum of
+     * their own. This is the amount the booking is submitted with, so the order that
+     * comes back carries a real price instead of an empty payment intent.
+     */
+    const cleaningTotal = useMemo(
+        () =>
+            cleaningPrice({
+                plan,
+                rooms,
+                bathrooms,
+                frequency: parseFrequency(frequency),
+                addOns: selected as Partial<Record<AddOnId, number>>,
+                gearOnSite: mopPresent && vacuumPresent,
+            }).total,
+        [plan, rooms, bathrooms, frequency, selected, mopPresent, vacuumPresent],
+    );
+
     const onContinue = async () => {
         if (!activeId) return;
         track({ name: 'funnel_step', stage: 'confirmed', serviceId: activeId });
@@ -436,7 +463,10 @@ export default function Book() {
                 firstName,
                 cityId,
                 serviceId: activeId,
-                estValue: undefined,
+                // Cleaning is the only service with a canonical price and a picked slot;
+                // the rest are still quoted by a manager, so they submit without either.
+                estValue: isCleaning ? cleaningTotal : undefined,
+                scheduledAt: isCleaning ? arrivalStartIso(bookingDate, bookingSlot) : undefined,
                 delivery: isFlower && deliveryCheck.valid ? (deliveryDetails as DeliveryDetails) : undefined,
                 paymentMethod,
             });
@@ -624,10 +654,12 @@ export default function Book() {
                         <Toggle label="Pets at home (info only)" on={pets} onPress={() => setPets(v => !v)} />
 
                         <Card variant="fill" style={{ marginTop: spacing.lg }}>
+                            <DetailRow icon="calendar-outline" label="Arrives" value={`${prettyDate(bookingDate)} · ${arrivalSlot(bookingSlot)?.window ?? ''}`} />
                             <DetailRow icon="time-outline" label="Estimated time" value={formatDuration(minutes)} />
                             <DetailRow icon="people-outline" label="Homies assigned" value={String(workers)} />
                             <DetailRow icon="resize-outline" label="Apartment size" value={`${areaSqm} m²`} />
-                            <Txt style={styles.sumNote}>+{TRAVEL_BUFFER_MINUTES} min travel buffer · price calculated at checkout</Txt>
+                            <DetailRow icon="pricetag-outline" label="Your price" value={formatMoney(cleaningTotal, 'PLN', locale)} />
+                            <Txt style={styles.sumNote}>+{TRAVEL_BUFFER_MINUTES} min travel buffer · the price above already includes your add-ons and the equipment fee</Txt>
                         </Card>
                     </>
                 ) : null}

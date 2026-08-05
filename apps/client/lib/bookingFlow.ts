@@ -5,7 +5,7 @@
  * are the one place that parses them, so every step reads the same defaults and a
  * hand-typed or stale URL can never put a screen into an impossible state.
  */
-import { CLEANING_FREQUENCIES, FREQ_MULT, type CleaningFrequency, type CleaningPlan } from '@heyhomie/domain';
+import { arrivalSlot, bookableDates, CLEANING_FREQUENCIES, FREQ_MULT, type ArrivalSlotId, type CleaningFrequency, type CleaningPlan } from '@heyhomie/domain';
 
 /** The catalog's cleaning cadences, narrowed to the ones the price table prices. */
 export const BOOKING_FREQUENCIES: CleaningFrequency[] = CLEANING_FREQUENCIES.filter(
@@ -30,3 +30,13 @@ export const parseCount = (v: string | string[] | undefined, fallback: number, m
 
 /** The catalog service a cleaning plan maps to. */
 export const serviceIdFor = (plan: CleaningPlan): string => (plan === 'general' ? 'general_cleaning' : 'standard_cleaning');
+
+/** Today as a local `YYYY-MM-DD` — toISOString would shift the day across timezones. */
+export const todayYmd = (d: Date = new Date()): string =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+/** A booking day, accepted only if it is still one the calendar actually offers. */
+export const parseDate = (v: string | string[] | undefined, days: string[] = bookableDates(todayYmd())): string =>
+    days.find(d => d === first(v)) ?? days[0] ?? todayYmd();
+
+export const parseSlot = (v: string | string[] | undefined): ArrivalSlotId => (arrivalSlot(first(v) ?? '')?.id ?? 'morning');
