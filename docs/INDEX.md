@@ -85,6 +85,9 @@ Key ones: [catalog.ts](../packages/domain/catalog.ts) (services+details) ·
 | [client/app/booking/size.tsx](../apps/client/app/booking/size.tsx) | Booking step 2 — presets + room counters, time/crew estimate, running price. |
 | [client/app/booking/when.tsx](../apps/client/app/booking/when.tsx) | Booking step 3 — 14-day calendar (`bookableDates`) + arrival window (`ARRIVAL_SLOTS`). |
 | [client/app/booking/where.tsx](../apps/client/app/booking/where.tsx) | Booking step 4 — address + access method (`visitSite.ts`), add-ons, note. |
+| [client/app/booking/confirm.tsx](../apps/client/app/booking/confirm.tsx) | Booking step 5 — canonical price breakdown, phone, invoice; calls `submitOrder`. |
+| [client/app/booking/done.tsx](../apps/client/app/booking/done.tsx) | "You're booked" — reads the created order back out of the gateway by id. |
+| [client/app/pending.tsx](../apps/client/app/pending.tsx) | Tracking — lifecycle rail on the live order + real `cancelOrder` behind a confirm tap. |
 | [client/lib/bookingFlow.ts](../apps/client/lib/bookingFlow.ts) | The one parser for the flow's URL params — every step reads the same defaults. |
 | [client/app/book.tsx](../apps/client/app/book.tsx) | Checkout: consumes the flow's handover, submits `scheduledAt` + `estValue` (config, delivery, payment method, lead callback). |
 | [client/app/(tabs)/activity.tsx](../apps/client/app/(tabs)/activity.tsx) | Orders list + live payment status via gateway snapshot. |

@@ -44,6 +44,10 @@ export const parseCount = (v: string | string[] | undefined, fallback: number, m
 /** The catalog service a cleaning plan maps to. */
 export const serviceIdFor = (plan: CleaningPlan): string => (plan === 'general' ? 'general_cleaning' : 'standard_cleaning');
 
+/** "Sat, 15 Aug" for a booking day — noon anchor keeps the day stable across zones. */
+export const prettyDay = (ymd: string, locale = 'en'): string =>
+    new Date(`${ymd}T12:00:00`).toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short' });
+
 /** Today as a local `YYYY-MM-DD` — toISOString would shift the day across timezones. */
 export const todayYmd = (d: Date = new Date()): string =>
     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;

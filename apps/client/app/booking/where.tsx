@@ -88,18 +88,21 @@ export default function BookingWhere() {
         });
     const setQty = (id: AddOnId, q: number) => setSelected(prev => ({ ...prev, [id]: Math.max(1, q) }));
 
-    const onContinue = () => {
+    /** `invoice` opens the company-invoice fields straight away on the next screen. */
+    const goToConfirm = (invoice: boolean) => {
         track({ name: 'funnel_step', stage: 'site_given', serviceId: serviceIdFor(plan) });
         router.push({
-            pathname: '/book',
+            pathname: '/booking/confirm',
             params: {
                 plan, frequency, rooms, kitchens, bathrooms,
                 date: params.date ?? '', slot: params.slot ?? '',
                 line1, flat, floor, entryCode, access, notes,
                 addons: formatAddOns(selected),
+                invoice: invoice ? '1' : '',
             },
         });
     };
+    const onContinue = () => goToConfirm(false);
 
     return (
         <SafeAreaView style={styles.safe} edges={['top']}>
@@ -282,12 +285,12 @@ export default function BookingWhere() {
                     <Txt style={styles.noteCount}>{notes.length}/{VISIT_NOTES_MAX}</Txt>
                 </View>
 
-                {/* The invoice fields already live on the checkout screen — this row goes
-                    there rather than duplicating a second NIP form here. */}
+                {/* The NIP form lives on the checkout screen — this row goes there with the
+                    section already open, rather than duplicating a second invoice form here. */}
                 <Pressable
                     style={styles.invoice}
                     disabled={!check.valid}
-                    onPress={onContinue}
+                    onPress={() => goToConfirm(true)}
                     accessibilityRole="button"
                     accessibilityState={{ disabled: !check.valid }}
                     accessibilityLabel="I need a company invoice — continue to checkout"

@@ -1,23 +1,32 @@
-import React, { useMemo, useSyncExternalStore } from 'react';
+import React, { useMemo, useState, useSyncExternalStore } from 'react';
 import { ScrollView, View, Pressable, StyleSheet } from 'react-native';
-import { Txt } from '@heyhomie/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Stack, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { Txt, useLocale } from '@heyhomie/ui';
 import { orderGateway } from '@heyhomie/api';
-import { formatMoney, type Locale } from '@heyhomie/domain';
-import { colors, spacing, typography } from '@heyhomie/design';
-import { Card, Button, EmptyState } from '@heyhomie/ui';
+import { cityName, formatMoney, serviceName, CANCELLATION_WINDOW_HOURS, type Locale } from '@heyhomie/domain';
+import { colors } from '@heyhomie/design';
 
 /**
- * Pending — what happens after "You're booked", for the order that is currently live.
+ * "Your cleaning" — the tracking screen from the "HeyHomie Client · Booking Flow v1"
+ * design, on the live order.
  *
- * The four steps are the real order lifecycle, not decoration: an order is confirmed,
- * a homie is assigned, the visit happens, and payment is taken the morning AFTER the
- * visit (never at booking). The step a customer is on is derived from the order's own
- * status + payment status, so this screen can't drift from what the backend thinks.
+ * The four rail steps are the real order lifecycle: an order is confirmed, a homie
+ * is assigned, the visit happens, and payment is taken the morning AFTER the visit
+ * (never at booking). Which step is live is derived from the order's own status and
+ * payment status, so this screen cannot drift from what the backend thinks.
+ *
+ * The design's second step reads "Olena is your homie" with a personality blurb. The
+ * contract `Order` carries no homie, so that step states what is actually true —
+ * that a homie is matched before the visit — rather than naming an invented person.
+ * Likewise the design's Address and Duration rows are dropped: neither is on the
+ * order (see OPEN_ITEMS — the visit site stops at the app until a contract version
+ * carries it), and a row filled with a plausible guess is worse than one absent.
+ *
+ * "Call it off" is real: it runs `orderGateway.cancelOrder`, behind a confirm tap,
+ * and states the fee the cancellation policy would actually charge.
  */
-const locale: Locale = 'en';
 
 type StepState = 'done' | 'active' | 'todo';
 
@@ -25,119 +34,259 @@ interface Step {
     key: string;
     title: string;
     body: string;
-    icon: keyof typeof Ionicons.glyphMap;
     state: StepState;
 }
 
-/** Map the contract order onto the four customer-visible steps. */
-function stepsFor(status: string, paidStatus?: string): Step[] {
+function stepsFor(status: string, paidStatus: string | undefined, when: string): Step[] {
     const done = status === 'completed' || status === 'paid';
     const paid = status === 'paid' || paidStatus === 'paid';
-    const s = (cond: boolean, active: boolean): StepState => (cond ? 'done' : active ? 'active' : 'todo');
+    const state = (reached: boolean, live: boolean): StepState => (reached ? 'done' : live ? 'active' : 'todo');
     return [
-        { key: 'confirmed', title: 'Order confirmed', body: 'We have your booking.', icon: 'checkmark-circle-outline', state: s(true, false) },
-        { key: 'homie', title: 'Homie assigned', body: 'We match you with a vetted homie before the visit.', icon: 'person-outline', state: s(done, !done) },
-        { key: 'visit', title: 'Cleaning', body: 'Your homie arrives and works through the checklist.', icon: 'sparkles-outline', state: s(done, false) },
-        { key: 'payment', title: 'Payment', body: 'Charged the morning after the visit — never before.', icon: 'card-outline', state: s(paid, done && !paid) },
+        { key: 'confirmed', title: 'Order confirmed', body: when, state: 'done' },
+        { key: 'homie', title: 'Homie assigned', body: 'We match you with a vetted homie before the visit.', state: state(done, !done) },
+        { key: 'visit', title: 'Cleaning in progress', body: 'Your homie works through the checklist.', state: state(done, false) },
+        { key: 'payment', title: 'Payment charged', body: `Charged the morning after the visit — never before.`, state: state(paid, done && !paid) },
     ];
 }
 
-const STATE_COLOR: Record<StepState, string> = {
-    done: colors.success,
+const DOT_COLOR: Record<StepState, string> = {
+    done: colors.salad,
     active: colors.blue,
     todo: colors.border,
 };
 
 export default function Pending() {
+    const locale = useLocale() as Locale;
     const router = useRouter();
+    const { orderId } = useLocalSearchParams<{ orderId?: string }>();
     const orders = useSyncExternalStore(orderGateway.subscribe, orderGateway.ordersSnapshot, orderGateway.ordersSnapshot);
+    const [confirmingCancel, setConfirmingCancel] = useState(false);
 
-    // The live order = the most recent one that isn't finished or called off.
+    /**
+     * A specific order when one was named (arriving from "Track my order"), otherwise
+     * the most recent live one. The explicit id matters: orders sort by `updatedAt`,
+     * which the demo seed uses as the visit date, so a just-booked order would lose
+     * the sort to a seeded future visit and the client would be shown someone else's.
+     */
     const order = useMemo(() => {
+        const named = orderId ? orders.find(o => o.id === orderId) : undefined;
+        if (named) return named;
         const live = orders.filter(o => o.status === 'confirmed' || o.status === 'completed');
         return live.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0];
-    }, [orders]);
+    }, [orders, orderId]);
 
     if (!order) {
         return (
             <SafeAreaView style={styles.safe} edges={['top']}>
-                <Stack.Screen options={{ headerShown: true, title: 'Your cleaning' }} />
-                <View style={styles.emptyWrap}>
-                    <EmptyState title="Nothing booked right now" subtitle="When you book a cleaning, you can follow it here from confirmation to payment." />
-                    <Button label="Book a cleaning" variant="teal" onPress={() => router.push('/book')} style={{ marginTop: spacing.lg }} />
+                <View style={styles.header}>
+                    <Pressable style={styles.back} onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Go back">
+                        <Ionicons name="chevron-back" size={17} color={colors.primary} />
+                    </Pressable>
+                    <Txt style={styles.title}>Your cleaning</Txt>
+                </View>
+                <View style={styles.empty}>
+                    <Txt style={styles.emptyTitle}>Nothing booked right now</Txt>
+                    <Txt style={styles.emptyText}>
+                        When you book a cleaning you can follow it here, from confirmation through to payment.
+                    </Txt>
+                    <Pressable
+                        style={styles.cta}
+                        onPress={() => router.push('/booking/service')}
+                        accessibilityRole="button"
+                        accessibilityLabel="Book a cleaning"
+                    >
+                        <Txt style={styles.ctaText}>Book a cleaning</Txt>
+                    </Pressable>
                 </View>
             </SafeAreaView>
         );
     }
 
-    const steps = stepsFor(order.status, order.payment?.status);
     const when = new Date(order.updatedAt);
+    const whenText = `${when.toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short' })} · ${when.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}`;
+    const steps = stepsFor(order.status, order.payment?.status, whenText);
     const amount = order.payment?.amount;
+    const cancellable = order.status === 'confirmed';
+    const canceled = order.status === 'canceled';
+
+    const onCancel = () => {
+        if (!confirmingCancel) {
+            setConfirmingCancel(true);
+            return;
+        }
+        orderGateway.cancelOrder(order.id);
+        setConfirmingCancel(false);
+    };
 
     return (
         <SafeAreaView style={styles.safe} edges={['top']}>
-            <Stack.Screen options={{ headerShown: true, title: 'Your cleaning' }} />
             <ScrollView contentContainerStyle={styles.body}>
-                <Card style={styles.headline}>
-                    <Txt style={styles.headlineLabel}>
-                        {order.status === 'completed' ? 'Cleaning done' : 'Booked'}
-                    </Txt>
-                    <Txt style={styles.headlineWhen}>
-                        {when.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })} · {when.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
-                    </Txt>
-                    {amount != null ? <Txt style={styles.headlineTotal}>{formatMoney(amount, order.payment?.currency ?? 'PLN', locale)}</Txt> : null}
-                </Card>
+                <View style={styles.header}>
+                    <Pressable style={styles.back} onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Go back">
+                        <Ionicons name="chevron-back" size={17} color={colors.primary} />
+                    </Pressable>
+                    <Txt style={styles.title}>Your cleaning</Txt>
+                </View>
 
-                <Txt style={styles.section}>What happens next</Txt>
-                <Card>
-                    {steps.map((st, i) => (
-                        <View key={st.key} style={styles.step}>
-                            <View style={styles.rail}>
-                                <View style={[styles.dot, { backgroundColor: STATE_COLOR[st.state] }]}>
-                                    {st.state === 'done' ? <Ionicons name="checkmark" size={12} color={colors.white} /> : null}
+                {/* ── the rail (or the fact that there is nothing left to track) ── */}
+                {canceled ? (
+                    <View style={styles.canceledCard}>
+                        <Ionicons name="close-circle-outline" size={20} color={colors.danger} />
+                        <View style={{ flex: 1 }}>
+                            <Txt style={styles.canceledTitle}>Called off</Txt>
+                            <Txt style={styles.canceledBody}>
+                                This cleaning is cancelled and nothing will be charged for it. Book again whenever you need us.
+                            </Txt>
+                        </View>
+                    </View>
+                ) : (
+                <View style={styles.rail}>
+                    {steps.map((s, i) => (
+                        <View key={s.key}>
+                            <View style={styles.step}>
+                                <View style={[styles.dot, { backgroundColor: DOT_COLOR[s.state] }, s.state === 'todo' && styles.dotTodo]} />
+                                <View style={{ flex: 1 }}>
+                                    <Txt style={[styles.stepTitle, s.state === 'todo' && styles.muted]}>{s.title}</Txt>
+                                    <Txt style={styles.stepBody}>{s.body}</Txt>
                                 </View>
-                                {i < steps.length - 1 ? <View style={styles.line} /> : null}
                             </View>
-                            <View style={styles.stepBody}>
-                                <Txt style={[styles.stepTitle, st.state === 'todo' && styles.stepTitleMuted]}>{st.title}</Txt>
-                                <Txt style={styles.stepText}>{st.body}</Txt>
-                            </View>
+                            {i < steps.length - 1 ? (
+                                <View style={[styles.connector, steps[i + 1].state !== 'todo' && styles.connectorOn]} />
+                            ) : null}
                         </View>
                     ))}
-                </Card>
+                </View>
+                )}
 
-                <Txt style={styles.section}>Need a change?</Txt>
-                <Card>
-                    <Pressable style={styles.action} onPress={() => router.push('/book')} accessibilityRole="button">
-                        <Ionicons name="calendar-outline" size={17} color={colors.primary} />
-                        <Txt style={styles.actionText}>Move this visit</Txt>
-                        <Ionicons name="chevron-forward" size={15} color={colors.grey} style={{ marginLeft: 'auto' }} />
+                {/* ── what the order knows ── */}
+                <View style={styles.details}>
+                    <View style={styles.detailRow}>
+                        <Txt style={styles.detailLabel}>Service</Txt>
+                        <Txt style={styles.detailValue}>{serviceName(order.serviceId ?? 'standard_cleaning', locale)}</Txt>
+                    </View>
+                    {order.cityId ? (
+                        <View style={styles.detailRow}>
+                            <Txt style={styles.detailLabel}>City</Txt>
+                            <Txt style={styles.detailValue}>{cityName(order.cityId, locale)}</Txt>
+                        </View>
+                    ) : null}
+                    {/* "Booked", not "When": the contract Order carries the moment it was
+                        placed, never the visit slot — labelling it as the visit would tell
+                        the client the wrong day. */}
+                    <View style={styles.detailRow}>
+                        <Txt style={styles.detailLabel}>Booked</Txt>
+                        <Txt style={styles.detailValue}>{whenText}</Txt>
+                    </View>
+                    <View style={[styles.detailRow, styles.detailRowLast]}>
+                        <Txt style={styles.detailLabel}>Total</Txt>
+                        <Txt style={styles.detailValue}>
+                            {amount != null ? formatMoney(amount, order.payment?.currency ?? 'PLN', locale) : 'Confirmed after the visit'}
+                        </Txt>
+                    </View>
+                </View>
+
+                {/* ── actions ── */}
+                {canceled ? (
+                    <Pressable
+                        style={styles.cta}
+                        onPress={() => router.push('/booking/service')}
+                        accessibilityRole="button"
+                        accessibilityLabel="Book a cleaning"
+                    >
+                        <Txt style={styles.ctaText}>Book a cleaning</Txt>
                     </Pressable>
-                    <Txt style={styles.note}>Free until 24 h before the visit.</Txt>
-                </Card>
+                ) : (
+                <View style={styles.actions}>
+                    <Pressable
+                        style={styles.action}
+                        onPress={() => router.push('/booking/when')}
+                        accessibilityRole="button"
+                        accessibilityLabel="Move this visit"
+                    >
+                        <Txt style={styles.actionText}>Move it</Txt>
+                    </Pressable>
+                    <Pressable
+                        style={styles.action}
+                        onPress={() => router.push('/profile')}
+                        accessibilityRole="button"
+                        accessibilityLabel="Message us"
+                    >
+                        <Txt style={styles.actionText}>Message us</Txt>
+                    </Pressable>
+                </View>
+                )}
+
+                {cancellable ? (
+                    <Pressable
+                        style={styles.cancel}
+                        onPress={onCancel}
+                        accessibilityRole="button"
+                        accessibilityLabel={confirmingCancel ? 'Tap again to cancel this cleaning' : 'Cancel this cleaning'}
+                    >
+                        <Txt style={styles.cancelText}>{confirmingCancel ? 'Tap again to call it off' : 'Call it off'}</Txt>
+                    </Pressable>
+                ) : null}
+                {/* The policy is stated, not computed: `cancellationFee` needs the visit
+                    time and the contract Order does not carry one — deriving a fee from
+                    `updatedAt` would tell every client they owe half. See OPEN_ITEMS. */}
+                {canceled ? null : (
+                    <Txt style={styles.cancelNote}>
+                        Free up to {CANCELLATION_WINDOW_HOURS} hours before the visit; inside that window half the price applies.
+                    </Txt>
+                )}
             </ScrollView>
         </SafeAreaView>
     );
 }
 
+/* Numbers below mirror the design file 1:1; colours resolve through the tokens. */
 const styles = StyleSheet.create({
     safe: { flex: 1, backgroundColor: colors.white },
-    body: { padding: spacing.lg },
-    emptyWrap: { flex: 1, justifyContent: 'center', padding: spacing.xl },
-    headline: { alignItems: 'flex-start' },
-    headlineLabel: { color: colors.grey, fontSize: typography.sizes.caption },
-    headlineWhen: { fontSize: typography.sizes.h3, fontWeight: '700', color: colors.primary, marginTop: 2 },
-    headlineTotal: { fontSize: typography.sizes.h2, fontWeight: '800', color: colors.primary, marginTop: spacing.sm },
-    section: { color: colors.grey, fontSize: typography.sizes.small, marginTop: spacing.xl, marginBottom: spacing.sm },
-    step: { flexDirection: 'row', gap: spacing.md },
-    rail: { alignItems: 'center', width: 22 },
-    dot: { width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-    line: { width: 2, flex: 1, minHeight: 22, backgroundColor: colors.border, marginVertical: 2 },
-    stepBody: { flex: 1, paddingBottom: spacing.lg },
-    stepTitle: { fontWeight: '700', color: colors.primary, fontSize: typography.sizes.small },
-    stepTitleMuted: { color: colors.grey },
-    stepText: { color: colors.grey, fontSize: typography.sizes.caption, marginTop: 2, lineHeight: 16 },
-    action: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.xs },
-    actionText: { color: colors.primary, fontWeight: '600', fontSize: typography.sizes.small },
-    note: { color: colors.grey, fontSize: typography.sizes.caption, marginTop: spacing.sm },
+    body: { paddingHorizontal: 20, paddingTop: 14, paddingBottom: 40 },
+
+    header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 0 },
+    back: {
+        width: 34, height: 34, borderRadius: 17, borderWidth: 1.5, borderColor: colors.border,
+        alignItems: 'center', justifyContent: 'center',
+    },
+    title: { fontSize: 19, fontWeight: '700', color: colors.primary },
+
+    rail: { marginTop: 20, borderRadius: 18, backgroundColor: colors.bgLight, padding: 20 },
+    step: { flexDirection: 'row', gap: 13 },
+    dot: { width: 10, height: 10, borderRadius: 5, marginTop: 4 },
+    dotTodo: { borderWidth: 2, borderColor: colors.border, backgroundColor: 'transparent' },
+    stepTitle: { fontSize: 14, fontWeight: '700', color: colors.primary },
+    muted: { color: colors.grey },
+    stepBody: { fontSize: 12, lineHeight: 17, color: colors.grey, marginTop: 1 },
+    connector: { width: 2, height: 18, backgroundColor: colors.border, marginLeft: 4, marginVertical: 2 },
+    connectorOn: { backgroundColor: colors.salad },
+
+    details: { marginTop: 14, borderWidth: 1.5, borderColor: colors.border, borderRadius: 16, paddingHorizontal: 18, paddingVertical: 6 },
+    detailRow: {
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+        paddingVertical: 13, borderBottomWidth: 1, borderBottomColor: colors.bgLight,
+    },
+    detailRowLast: { borderBottomWidth: 0 },
+    detailLabel: { fontSize: 13.5, color: colors.grey },
+    detailValue: { fontSize: 13.5, fontWeight: '700', color: colors.primary, flexShrink: 1, textAlign: 'right' },
+
+    actions: { flexDirection: 'row', gap: 9, marginTop: 14 },
+    action: { flex: 1, height: 48, borderRadius: 13, borderWidth: 1.5, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
+    actionText: { fontSize: 14, fontWeight: '700', color: colors.primary },
+    cancel: { marginTop: 9, height: 48, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
+    cancelText: { fontSize: 14, fontWeight: '700', color: colors.danger },
+    cancelNote: { fontSize: 11.5, color: colors.grey, textAlign: 'center', marginTop: 2 },
+
+    canceledCard: {
+        marginTop: 20, borderRadius: 18, backgroundColor: colors.bgLight, padding: 20,
+        flexDirection: 'row', alignItems: 'flex-start', gap: 13,
+    },
+    canceledTitle: { fontSize: 14, fontWeight: '700', color: colors.primary },
+    canceledBody: { fontSize: 12.5, lineHeight: 18, color: colors.grey, marginTop: 2 },
+
+    empty: { flex: 1, justifyContent: 'center', paddingHorizontal: 20 },
+    emptyTitle: { fontSize: 19, fontWeight: '700', color: colors.primary },
+    emptyText: { fontSize: 13.5, lineHeight: 20, color: colors.grey, marginTop: 8 },
+    cta: { marginTop: 20, height: 52, borderRadius: 15, backgroundColor: colors.salad, alignItems: 'center', justifyContent: 'center' },
+    ctaText: { fontSize: 16, fontWeight: '700', color: colors.primary },
 });

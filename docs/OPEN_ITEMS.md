@@ -44,6 +44,24 @@ Grouped by whether it's a future code change, an intentional trade-off, or exter
    add-ons and the arrival slot DO reach the order (`estValue` + `scheduledAt`).
    Carrying the site needs an `OrderGateway` version bump — do not widen it in place.
    Also still app-local: no saved-address book, so step 4 asks every time.
+   **Same gap, sharper edge — the contract `Order` has no visit time.** `scheduledAt`
+   goes IN on `submitOrder` but never comes back; the projection carries only
+   `updatedAt`. `demoSeed` papers over this by writing future visit dates into
+   `updatedAt`, so seeded orders read as "upcoming" while a real booking reads as
+   "today". Consequences handled in-app, not hidden: `/booking/done` shows the slot
+   the flow just submitted rather than reading a timestamp back; `/pending` labels
+   the row **Booked** (not "When") and states the cancellation policy instead of
+   computing it — `cancellationFee(order.updatedAt, …)` would tell every client they
+   owe 50%. **Still conflated: `(tabs)/index.tsx`** treats `updatedAt >= now` as the
+   next visit and renders "in N days" — correct for seeded data, wrong for a freshly
+   booked order. Fixing it properly means putting `scheduledAt` on the contract
+   `Order` (versioned); do not patch it with another local guess.
+   **Not built: client OTP.** The design has a 4-cell confirmation-code screen, but
+   there is no OTP issuer for clients — `homieClient.ts` is the inert pre-Build-04
+   Go seam (item 5) and `makeAuthService` is staff password auth. A screen that
+   accepts any 4 digits would present itself as verification while verifying
+   nothing, so the flow books directly. Needs the SMS-OTP issuer from item 3 plus a
+   real `NotificationPort` (item 4).
 7. **Fold `toCanonical` into `errors.ts`** — the 4xx-transport→canonical mapping lives
    in `server/src/app.ts`; `fromUnknown` (shared) still wraps a 4xx throwable as 500.
    Latent (single caller today) — fix when a 2nd boundary calls `fromUnknown`.
