@@ -1,11 +1,13 @@
 import React from 'react';
-import { Pressable, StyleSheet, ActivityIndicator, type StyleProp, type ViewStyle } from 'react-native';
+import { Pressable, StyleSheet, ActivityIndicator, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
 import { Txt } from './Text';
 import { colors, radii, spacing } from '@heyhomie/design';
 
 type Variant = 'primary' | 'teal' | 'ghost';
 
-interface Props {
+/** Accessibility props are part of the public API — an icon-only or busy button must be
+ *  describable to a screen reader, and types are what make that impossible to forget. */
+interface Props extends Pick<PressableProps, 'accessibilityLabel' | 'accessibilityHint' | 'testID'> {
     label: string;
     onPress?: () => void;
     variant?: Variant;
@@ -16,13 +18,16 @@ interface Props {
 }
 
 /** Brand button. `teal` is the main CTA, `ghost` is the outlined secondary. */
-export function Button({ label, onPress, variant = 'primary', loading, disabled, style }: Props) {
+export function Button({ label, onPress, variant = 'primary', loading, disabled, style, accessibilityLabel, accessibilityHint, testID }: Props) {
     const isGhost = variant === 'ghost';
     const bg = variant === 'teal' ? colors.salad : variant === 'primary' ? colors.primary : colors.white;
     const fg = variant === 'primary' ? colors.white : colors.primary;
     return (
         <Pressable
             accessibilityRole="button"
+            accessibilityLabel={accessibilityLabel ?? label}
+            accessibilityHint={accessibilityHint}
+            testID={testID}
             onPress={disabled || loading ? undefined : onPress}
             style={({ pressed }) => [
                 styles.btn,

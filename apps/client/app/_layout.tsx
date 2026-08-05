@@ -3,7 +3,7 @@ import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { LocaleProvider } from '@heyhomie/ui';
-import { orderGateway, configureAuth, auth } from '@heyhomie/api';
+import { orderGateway, configureAuth, auth, seedDemoStore } from '@heyhomie/api';
 import { consents, asyncStore, secureStore } from '../lib/store';
 import {
     useFonts,
@@ -34,6 +34,9 @@ export default function RootLayout() {
                 await orderGateway.init(asyncStore);
                 if (mounted && !authed) { router.replace('/login'); return; } // unauthenticated → login, skip consent
             } else {
+                // Offline demo: no backend, so populate a realistic book of business the
+                // first time only (never overwrites data you already have).
+                await seedDemoStore(asyncStore);
                 await orderGateway.init(asyncStore);
             }
             // Authenticated (or offline): first-run consent gate.

@@ -3,7 +3,7 @@ import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { LocaleProvider } from '@heyhomie/ui';
-import { orderGateway, payoutGateway, configureAuth, auth } from '@heyhomie/api';
+import { orderGateway, payoutGateway, configureAuth, auth, seedDemoStore } from '@heyhomie/api';
 import { kv, secureStore } from '../lib/store';
 import {
     useFonts,
@@ -30,6 +30,9 @@ export default function RootLayout() {
                 await payoutGateway.init(kv); // worker payout ledger (local persisted | http)
                 if (mounted && !authed) router.replace('/login');
             } else {
+                // Offline demo: no backend, so populate a realistic book of business the
+                // first time only (never overwrites data you already have).
+                await seedDemoStore(kv);
                 await orderGateway.init(kv);
                 await payoutGateway.init(kv); // worker payout ledger (local persisted | http)
             }

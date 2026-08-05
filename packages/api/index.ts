@@ -1,5 +1,6 @@
 export * from './mock';
 export * from './demo';
+export * from './demoSeed'; // simulated book of business for demos/dev
 export * from './config';
 export * from './http';
 export * from './homieClient';
