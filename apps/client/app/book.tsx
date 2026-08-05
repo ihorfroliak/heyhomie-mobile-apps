@@ -49,6 +49,7 @@ import {
 import { colors, spacing, typography, radii } from '@heyhomie/design';
 import { Card, Button, Segmented, useLocale } from '@heyhomie/ui';
 import { useCurrentCity } from '../lib/useCurrentCity';
+import { parseCount, parseFrequency, parsePlan, serviceIdFor } from '../lib/bookingFlow';
 import { track } from '../lib/analytics';
 import { orderGateway, type SubmitOrderResult } from '@heyhomie/api';
 
@@ -242,15 +243,16 @@ type ViewMode = 'cleaning' | 'browsing' | 'selected';
 
 export default function Book() {
     const locale = useLocale();
-    // Prefill from booking step 1 (/booking/service), which hands over the chosen
-    // plan + cadence. Absent (opened directly) → the standard-cleaning defaults.
-    const params = useLocalSearchParams<{ plan?: string; frequency?: string }>();
+    // Prefill from the ported booking steps (/booking/service → /booking/size), which
+    // hand over the plan, cadence and room counts. Absent (opened directly, or a stale
+    // link) → the parsers fall back to the standard-cleaning defaults.
+    const params = useLocalSearchParams<{ plan?: string; frequency?: string; rooms?: string; kitchens?: string; bathrooms?: string }>();
     const map = demoAvailability;
     const cityIds = useMemo(() => enabledCities(map), [map]);
     const homeCity = demoMissions[0]?.address.city ?? cityIds[0];
 
     const [cityId, setCityId] = useState<string>(initialCity(map, null, cityIds.includes(homeCity) ? homeCity : cityIds[0]));
-    const [serviceId, setServiceId] = useState<string>(params.plan === 'general' ? 'general_cleaning' : 'standard_cleaning');
+    const [serviceId, setServiceId] = useState<string>(serviceIdFor(parsePlan(params.plan)));
     const [citySettled, setCitySettled] = useState(false);
     // Cleaning is the default, primary flow (our core, highest-revenue service).
     // Other services live one tap away, not competing for the same visual weight.
@@ -273,9 +275,7 @@ export default function Book() {
 
     // Cadence — options depend on the service (cleaning=4, flower=delivery set, rest=one-off).
     const freqs = useMemo(() => (activeId ? frequenciesFor(activeId) : []), [activeId]);
-    const [frequency, setFrequency] = useState<Frequency>(
-        (['once', 'weekly', 'biweekly', 'monthly'] as const).find(f => f === params.frequency) ?? 'once',
-    );
+    const [frequency, setFrequency] = useState<Frequency>(parseFrequency(params.frequency));
     useEffect(() => {
         if (freqs.length && !freqs.includes(frequency)) setFrequency(freqs[0]);
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -339,10 +339,10 @@ export default function Book() {
                 ? "We're not in your area yet — pick a city to explore"
                 : "Don't see your city? We're expanding — more launching soon.";
 
-    // Cleaning config
-    const [rooms, setRooms] = useState(2);
-    const [kitchens, setKitchens] = useState(1);
-    const [bathrooms, setBathrooms] = useState(1);
+    // Cleaning config — seeded from booking step 2 when the client came through it.
+    const [rooms, setRooms] = useState(() => parseCount(params.rooms, 2));
+    const [kitchens, setKitchens] = useState(() => parseCount(params.kitchens, 1));
+    const [bathrooms, setBathrooms] = useState(() => parseCount(params.bathrooms, 1));
     const [areaSqm, setAreaSqm] = useState(SQM_DEFAULT);
     const [selected, setSelected] = useState<Record<string, number>>({});
     const [pets, setPets] = useState(false);

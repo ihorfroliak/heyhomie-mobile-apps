@@ -19,6 +19,7 @@ import {
     type Locale,
 } from '@heyhomie/domain';
 import { colors } from '@heyhomie/design';
+import { BOOKING_FREQUENCIES, serviceIdFor } from '../../lib/bookingFlow';
 import { track } from '../../lib/analytics';
 
 /**
@@ -38,13 +39,7 @@ import { track } from '../../lib/analytics';
 
 const STEPS = 5;
 
-/** Canonical order of the cleaning cadences (matches DOMAIN_RULES §2). */
-const FREQUENCIES: CleaningFrequency[] = ['once', 'weekly', 'biweekly', 'monthly'];
-
-const PLANS: { plan: CleaningPlan; serviceId: string }[] = [
-    { plan: 'standard', serviceId: 'standard_cleaning' },
-    { plan: 'general', serviceId: 'general_cleaning' },
-];
+const PLANS: CleaningPlan[] = ['standard', 'general'];
 
 /** What the checklist below actually covers on the selected plan. */
 const PLAN_NOTE: Record<CleaningPlan, string> = {
@@ -91,8 +86,8 @@ export default function BookingService() {
     };
 
     const onContinue = () => {
-        track({ name: 'funnel_step', stage: 'scope_selected', serviceId: plan === 'general' ? 'general_cleaning' : 'standard_cleaning' });
-        router.push({ pathname: '/book', params: { plan, frequency } });
+        track({ name: 'funnel_step', stage: 'scope_selected', serviceId: serviceIdFor(plan) });
+        router.push({ pathname: '/booking/size', params: { plan, frequency } });
     };
 
     return (
@@ -123,8 +118,9 @@ export default function BookingService() {
             <ScrollView contentContainerStyle={styles.body}>
                 {/* ── plans ── */}
                 <View style={styles.plans}>
-                    {PLANS.map(({ plan: p, serviceId }) => {
+                    {PLANS.map(p => {
                         const on = p === plan;
+                        const serviceId = serviceIdFor(p);
                         return (
                             <Pressable
                                 key={p}
@@ -180,7 +176,7 @@ export default function BookingService() {
                 {/* ── how often ── */}
                 <Txt style={styles.sectionLabel}>How often?</Txt>
                 <View style={styles.freqGrid}>
-                    {FREQUENCIES.map(f => {
+                    {BOOKING_FREQUENCIES.map(f => {
                         const on = f === frequency;
                         const save = saveLabel(f);
                         return (
@@ -209,7 +205,7 @@ export default function BookingService() {
                     style={styles.cta}
                     onPress={onContinue}
                     accessibilityRole="button"
-                    accessibilityLabel="Continue to your home details"
+                    accessibilityLabel="Continue to your home"
                 >
                     <Txt style={styles.ctaText}>Continue</Txt>
                 </Pressable>
